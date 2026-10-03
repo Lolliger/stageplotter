@@ -1,6 +1,8 @@
+import { normalizeDrumConfig } from '../model/drums'
 import { BOX_COLORS, DEFAULT_BOX_INPUTS, DEFAULT_BOX_OUTPUTS, DEFAULT_STAGE, STAGE_LIMITS } from '../model/defaults'
 import type {
   Channel,
+  DrumConfig,
   InstrumentGroup,
   InstrumentType,
   OutputElement,
@@ -66,7 +68,25 @@ function channel(v: unknown, where: string): Channel {
   const o = obj(v, where)
   const c: Channel = { id: id(o.id), name: str(o.name, 'Kanal'), pickup: typeof o.pickup === 'string' ? o.pickup : '' }
   if (typeof o.note === 'string' && o.note !== '') c.note = o.note
+  if (typeof o.slot === 'string' && o.slot !== '') c.slot = o.slot
   return c
+}
+
+function drumConfig(v: unknown): { drumConfig?: DrumConfig } {
+  if (!isObj(v)) return {}
+  const n = (x: unknown) => (typeof x === 'number' ? x : 0)
+  return {
+    drumConfig: normalizeDrumConfig({
+      kick: v.kick as DrumConfig['kick'],
+      snareTop: v.snareTop === true,
+      snareBottom: v.snareBottom === true,
+      hihat: v.hihat === true,
+      toms: n(v.toms),
+      overheads: n(v.overheads),
+      rooms: n(v.rooms),
+      percussion: v.percussion === true,
+    }),
+  }
 }
 
 /**
@@ -109,6 +129,7 @@ export function parseProject(data: unknown): ParseResult {
         pos: vec(g.pos, `groups[${i}].pos`),
         channels: arr(g.channels, `groups[${i}].channels`).map((c, j) => channel(c, `groups[${i}].channels[${j}]`)),
         ...pin(g.pinnedBoxId),
+        ...drumConfig(g.drumConfig),
       }
     })
 

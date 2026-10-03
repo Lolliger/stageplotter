@@ -102,17 +102,21 @@ export function uniqueName(base: string, existing: string[]): string {
   }
 }
 
-/** Position für neue Elemente: Raster um die Bühnenmitte (1,5 m Abstand), damit nichts übereinander liegt. */
-export function spawnPosition(stage: StageSize, index: number): Vec2 {
-  const cols = Math.max(1, Math.min(5, Math.floor(stage.width / 1.5) - 1))
-  const rows = Math.max(1, Math.min(3, Math.floor(stage.depth / 1.5) - 1))
-  const i = index % (cols * rows)
-  const col = i % cols
-  const row = Math.floor(i / cols)
-  return {
-    x: stage.width / 2 + (col - (cols - 1) / 2) * 1.5,
-    y: stage.depth / 2 + (row - (rows - 1) / 2) * 1.5,
-  }
+/**
+ * Position für neue Elemente: Rasterpunkte (1,5 m) nach Abstand zur Bühnenmitte, der erste,
+ * der mindestens 1,2 m von allen vorhandenen Elementen entfernt ist.
+ */
+export function spawnPosition(project: Pick<Project, 'stage' | 'boxes' | 'groups' | 'outputs'>): Vec2 {
+  const { width, depth } = project.stage
+  const center = { x: width / 2, y: depth / 2 }
+  const step = 1.5
+  const cells: Vec2[] = []
+  for (let y = center.y - Math.floor(center.y / step) * step; y <= depth; y += step)
+    for (let x = center.x - Math.floor(center.x / step) * step; x <= width; x += step)
+      cells.push({ x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100 })
+  cells.sort((a, b) => Math.hypot(a.x - center.x, a.y - center.y) - Math.hypot(b.x - center.x, b.y - center.y))
+  const taken = [...project.boxes, ...project.groups, ...project.outputs].map((e) => e.pos)
+  return cells.find((c) => taken.every((t) => Math.hypot(t.x - c.x, t.y - c.y) >= 1.2)) ?? center
 }
 
 export function createDefaultProject(): Project {

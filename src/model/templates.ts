@@ -17,22 +17,8 @@ export interface InstrumentTemplate {
   channels: ChannelTemplate[]
 }
 
+/** Einfache Vorlagen. Drums haben einen eigenen Konfigurator (siehe drums.ts). */
 export const INSTRUMENT_TEMPLATES: InstrumentTemplate[] = [
-  {
-    id: 'drums-standard',
-    type: 'drums',
-    label: 'Drums',
-    name: 'Drums',
-    channels: [
-      { name: 'Kick In', pickup: 'Beta 91A' },
-      { name: 'Snare Top', pickup: 'SM57' },
-      { name: 'Hi-Hat', pickup: 'KM 184' },
-      { name: 'Tom 1', pickup: 'e604' },
-      { name: 'Tom 2', pickup: 'e604' },
-      { name: 'OH L', pickup: 'KM 184' },
-      { name: 'OH R', pickup: 'KM 184' },
-    ],
-  },
   {
     id: 'bass-di-mic',
     type: 'bass',

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { createDefaultProject, createStagebox } from '../model/defaults'
+import { createDefaultProject, createStagebox, spawnPosition } from '../model/defaults'
 import { createGroupFromTemplate, getTemplate } from '../model/templates'
 import type { Project } from '../model/types'
 import { projectReducer } from './reducer'
@@ -31,6 +31,16 @@ describe('default project', () => {
     const c = createStagebox(p)
     for (const b of p.boxes) expect(Math.hypot(b.pos.x - c.pos.x, b.pos.y - c.pos.y)).toBeGreaterThanOrEqual(2)
   })
+})
+
+test('new elements spawn at stage center, then at the nearest free spot', () => {
+  let p = createDefaultProject()
+  const first = spawnPosition(p)
+  expect(first).toEqual({ x: 5, y: 3 })
+  p = withGroup(p, first.x, first.y)
+  const second = spawnPosition(p)
+  expect(Math.hypot(second.x - 5, second.y - 3)).toBeCloseTo(1.5)
+  for (const b of p.boxes) expect(Math.hypot(b.pos.x - second.x, b.pos.y - second.y)).toBeGreaterThanOrEqual(1.2)
 })
 
 describe('projectReducer', () => {

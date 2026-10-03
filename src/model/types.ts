@@ -19,6 +19,8 @@ export interface Channel {
   /** Abnahme: Mikrofontyp oder "DI". Freitext. */
   pickup: string
   note?: string
+  /** Fester Platz aus einem Konfigurator (z. B. "kick-in", "tom-2"). Manuelle Kanäle haben keinen. */
+  slot?: string
 }
 
 export interface Stagebox {
@@ -38,6 +40,24 @@ export interface InstrumentGroup {
   channels: Channel[]
   /** Manuell fest zugewiesene Stagebox. */
   pinnedBoxId?: string
+  /** Nur Drums: Zustand des Konfigurators. */
+  drumConfig?: DrumConfig
+}
+
+export type KickMode = 'in' | 'out' | 'both'
+
+export interface DrumConfig {
+  kick: KickMode
+  snareTop: boolean
+  snareBottom: boolean
+  hihat: boolean
+  /** 0–4 */
+  toms: number
+  /** 0–2 */
+  overheads: number
+  /** 0–2 */
+  rooms: number
+  percussion: boolean
 }
 
 export type OutputKind = 'wedge' | 'iem' | 'sidefill'

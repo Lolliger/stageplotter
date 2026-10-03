@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 import { AddInstrument } from './components/editors/AddInstrument'
+import { DrumConfigurator } from './components/editors/DrumConfigurator'
 import { GroupEditor } from './components/editors/GroupEditor'
 import { ProjectSettings } from './components/editors/ProjectSettings'
 import { Sheet } from './components/editors/Sheet'
@@ -16,7 +17,12 @@ import './styles/layout.css'
 import './styles/lists.css'
 import './styles/ui.css'
 
-type Panel = { kind: 'edit'; target: ElementRef } | { kind: 'addInstrument' } | { kind: 'settings' } | null
+type Panel =
+  | { kind: 'edit'; target: ElementRef }
+  | { kind: 'addInstrument' }
+  | { kind: 'drums'; groupId?: string }
+  | { kind: 'settings' }
+  | null
 
 function Workspace() {
   const { project, dispatch } = useProject()
@@ -36,7 +42,18 @@ function Workspace() {
   if (panel?.kind === 'addInstrument') {
     sheet = (
       <Sheet title="Instrument hinzufügen" onClose={close}>
-        <AddInstrument onAdded={close} />
+        <AddInstrument onAdded={close} onConfigureDrums={() => setPanel({ kind: 'drums' })} />
+      </Sheet>
+    )
+  } else if (panel?.kind === 'drums') {
+    const group = panel.groupId ? project.groups.find((g) => g.id === panel.groupId) : undefined
+    sheet = (
+      <Sheet title={group ? `${group.name} konfigurieren` : 'Drumset konfigurieren'} onClose={close}>
+        <DrumConfigurator
+          key={panel.groupId ?? 'new'}
+          group={group}
+          onDone={(id) => (group ? select({ kind: 'group', id }) : close())}
+        />
       </Sheet>
     )
   } else if (panel?.kind === 'settings') {
@@ -50,7 +67,7 @@ function Workspace() {
     if (group)
       sheet = (
         <Sheet title={group.name} onClose={close}>
-          <GroupEditor group={group} onDone={close} />
+          <GroupEditor group={group} onDone={close} onConfigureDrums={() => setPanel({ kind: 'drums', groupId: group.id })} />
         </Sheet>
       )
   } else if (selected?.kind === 'box') {
@@ -69,7 +86,11 @@ function Workspace() {
         <h1>
           stageplot<small>{project.name}</small>
         </h1>
-        <Toolbar onAddInstrument={() => setPanel({ kind: 'addInstrument' })} onAddBox={addBox} onSettings={() => setPanel({ kind: 'settings' })} />
+        <Toolbar
+          onAddInstrument={() => setPanel({ kind: 'addInstrument' })}
+          onAddBox={addBox}
+          onSettings={() => setPanel({ kind: 'settings' })}
+        />
       </header>
       <main className="workspace">
         <section className="stage-panel" aria-label="Bühnenplan">

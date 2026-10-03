@@ -1,12 +1,14 @@
 import { describe, expect, test } from 'vitest'
 import { createDefaultProject } from '../model/defaults'
+import { DRUM_PRESETS, createDrumGroup } from '../model/drums'
 import { createGroupFromTemplate, getTemplate } from '../model/templates'
 import { parseProject } from './schema'
 
 describe('parseProject', () => {
   test('round-trips a valid project unchanged', () => {
     const p = createDefaultProject()
-    p.groups.push({ ...createGroupFromTemplate(getTemplate('drums-standard')!, { x: 2, y: 2 }), pinnedBoxId: p.boxes[0].id })
+    p.groups.push({ ...createDrumGroup(DRUM_PRESETS.full.config, { x: 2, y: 2 }), pinnedBoxId: p.boxes[0].id })
+    p.groups.push(createGroupFromTemplate(getTemplate('keys-stereo')!, { x: 4, y: 2 }))
     p.groups[0].channels[0].note = '48V'
     p.outputs.push({ id: 'o1', kind: 'iem', name: 'IEM Vox', pos: { x: 5, y: 5 } })
     const r = parseProject(JSON.parse(JSON.stringify(p)))

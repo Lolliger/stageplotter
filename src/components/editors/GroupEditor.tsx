@@ -5,7 +5,13 @@ import { useProject } from '../../state/useProject'
 import { ConfirmButton } from '../ui/ConfirmButton'
 import { TextField } from '../ui/TextField'
 
-export function GroupEditor({ group, onDone }: { group: InstrumentGroup; onDone: () => void }) {
+interface Props {
+  group: InstrumentGroup
+  onDone: () => void
+  onConfigureDrums: () => void
+}
+
+export function GroupEditor({ group, onDone, onConfigureDrums }: Props) {
   const { project, dispatch, assignment } = useProject()
   const a = assignment.groups[group.id]
   const boxById = new Map(project.boxes.map((b) => [b.id, b]))
@@ -54,6 +60,11 @@ export function GroupEditor({ group, onDone }: { group: InstrumentGroup; onDone:
       </div>
 
       <div className="editor-actions">
+        {group.type === 'drums' && (
+          <button type="button" className="btn" onClick={onConfigureDrums}>
+            Konfigurator
+          </button>
+        )}
         <ConfirmButton
           onConfirm={() => {
             dispatch({ type: 'delete', target: { kind: 'group', id: group.id } })

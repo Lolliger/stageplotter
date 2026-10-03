@@ -2,13 +2,18 @@ import { TYPE_LABELS, TYPE_ORDER, spawnPosition, uniqueName } from '../../model/
 import { INSTRUMENT_TEMPLATES, createGroupFromTemplate, type InstrumentTemplate } from '../../model/templates'
 import { useProject } from '../../state/useProject'
 
-export function AddInstrument({ onAdded }: { onAdded: (groupId: string) => void }) {
+interface Props {
+  onAdded: (groupId: string) => void
+  onConfigureDrums: () => void
+}
+
+export function AddInstrument({ onAdded, onConfigureDrums }: Props) {
   const { project, dispatch, assignment } = useProject()
   const freeInputs = Object.values(assignment.usage).reduce((sum, u) => sum + (u.inputs - u.inputsUsed), 0)
 
   const add = (template: InstrumentTemplate) => {
     const name = uniqueName(template.name, project.groups.map((g) => g.name))
-    const group = createGroupFromTemplate(template, spawnPosition(project.stage, project.groups.length), name)
+    const group = createGroupFromTemplate(template, spawnPosition(project), name)
     dispatch({ type: 'addGroup', group })
     onAdded(group.id)
   }
@@ -18,6 +23,15 @@ export function AddInstrument({ onAdded }: { onAdded: (groupId: string) => void 
   return (
     <div className="editor">
       <p className="hint">Noch {freeInputs} Inputs frei auf allen Stageboxen.</p>
+      <section className="template-group">
+        <h3>{TYPE_LABELS.drums}</h3>
+        <div className="template-grid">
+          <button type="button" className="template-btn" onClick={onConfigureDrums}>
+            <span className="template-label">Drumset …</span>
+            <span className="template-meta">Konfigurator: Kick, Snare, Toms, OH …</span>
+          </button>
+        </div>
+      </section>
       {types.map((type) => (
         <section key={type} className="template-group">
           <h3>{TYPE_LABELS[type]}</h3>
