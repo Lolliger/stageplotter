@@ -282,3 +282,130 @@ select:focus-visible {
     font-size: 0.9rem;
   }
 }
+
+.hint-warning {
+  color: var(--warning);
+  font-weight: 600;
+}
+
+/* Vorlagen */
+.template-group h3 {
+  margin: 0 0 6px;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.template-btn {
+  min-height: 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  text-align: left;
+  cursor: pointer;
+}
+
+.template-btn:active {
+  transform: translateY(1px);
+}
+
+.template-label {
+  font-weight: 600;
+}
+
+.template-meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.template-btn.too-big .template-meta {
+  color: var(--danger);
+}
+
+/* Zuordnung und Kanäle */
+.assign-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 2px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.channel-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: ch;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.channel-list li {
+  counter-increment: ch;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 6px 12px;
+}
+
+.channel-list li + li {
+  border-top: 1px solid var(--border);
+}
+
+.channel-list li::before {
+  content: counter(ch);
+  width: 1.5em;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.85rem;
+}
+
+.channel-name {
+  flex: 1;
+  font-weight: 600;
+}
+
+.channel-pickup {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
