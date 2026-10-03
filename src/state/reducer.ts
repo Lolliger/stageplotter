@@ -1,5 +1,5 @@
-import { clampToStage } from '../lib/geometry'
-import { BOX_STAGE_MARGIN, STAGE_LIMITS } from '../model/defaults'
+import { clampToStage, snap } from '../lib/geometry'
+import { BOX_STAGE_MARGIN, SNAP_STEP, STAGE_LIMITS } from '../model/defaults'
 import type {
   CableView,
   ElementRef,
@@ -15,6 +15,7 @@ export type Action =
   | { type: 'setName'; name: string }
   | { type: 'setStage'; stage: StageSize }
   | { type: 'setCableView'; cableView: CableView }
+  | { type: 'setSnap'; snap: boolean }
   /** `coalesce`: gleicher Schlüssel = gleicher Undo-Schritt (z. B. alle Bewegungen eines Drags). */
   | { type: 'move'; target: ElementRef; pos: Vec2; coalesce?: string }
   | { type: 'addBox'; box: Stagebox }
@@ -80,6 +81,9 @@ export function projectReducer(state: Project, action: Action): Project {
     case 'setCableView':
       return { ...state, cableView: action.cableView }
 
+    case 'setSnap':
+      return { ...state, snap: action.snap }
+
     case 'setStage': {
       const stage = clampStageSize(action.stage)
       return {
@@ -92,7 +96,8 @@ export function projectReducer(state: Project, action: Action): Project {
     }
 
     case 'move': {
-      const { target, pos } = action
+      const { target } = action
+      const pos = state.snap ? { x: snap(action.pos.x, SNAP_STEP), y: snap(action.pos.y, SNAP_STEP) } : action.pos
       switch (target.kind) {
         case 'box':
           return {

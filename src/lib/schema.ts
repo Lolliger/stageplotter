@@ -151,6 +151,7 @@ export function parseProject(data: unknown): ParseResult {
         name: str(o.name, 'Projekt'),
         stage,
         ...(o.cableView === 'direct' || o.cableView === 'bundled' ? { cableView: o.cableView } : {}),
+        ...(typeof o.snap === 'boolean' ? { snap: o.snap } : {}),
         boxes,
         groups,
         outputs,

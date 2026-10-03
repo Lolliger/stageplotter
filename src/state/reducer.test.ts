@@ -64,6 +64,16 @@ describe('projectReducer', () => {
     expect(moved.groups[0].pos).toEqual({ x: 10, y: 0 })
   })
 
+  test('snap rounds moves to 25 cm when enabled', () => {
+    let p = withGroup(createDefaultProject())
+    const target = { kind: 'group' as const, id: p.groups[0].id }
+    p = projectReducer(p, { type: 'move', target, pos: { x: 2.37, y: 1.12 } })
+    expect(p.groups[0].pos).toEqual({ x: 2.37, y: 1.12 })
+    p = projectReducer(p, { type: 'setSnap', snap: true })
+    p = projectReducer(p, { type: 'move', target, pos: { x: 2.37, y: 1.12 } })
+    expect(p.groups[0].pos).toEqual({ x: 2.25, y: 1 })
+  })
+
   test('boxes may stand up to 1 m outside the stage', () => {
     const p = createDefaultProject()
     const id = p.boxes[0].id

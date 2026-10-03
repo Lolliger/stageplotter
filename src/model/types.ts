@@ -85,6 +85,8 @@ export interface Project {
   stage: StageSize
   /** Darstellung der Kabel im Plan; Standard gebündelt. */
   cableView?: CableView
+  /** Beim Verschieben auf 25 cm einrasten. */
+  snap?: boolean
   boxes: Stagebox[]
   /** Reihenfolge im Array = Erstellungsreihenfolge. */
   groups: InstrumentGroup[]

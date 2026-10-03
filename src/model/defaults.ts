@@ -10,6 +10,9 @@ export const STAGE_LIMITS = { min: 2, max: 40, step: 0.5 }
 export const DEFAULT_BOX_INPUTS = 16
 export const DEFAULT_BOX_OUTPUTS = 8
 
+/** Rastermaß beim Einrasten, in Metern. */
+export const SNAP_STEP = 0.25
+
 /** Stageboxen dürfen so weit (in Metern) außerhalb der Bühne stehen. */
 export const BOX_STAGE_MARGIN = 1
 

@@ -2,7 +2,7 @@ import { STAGE_LIMITS } from '../../model/defaults'
 import { useProject } from '../../state/useProject'
 import { Stepper } from '../ui/Stepper'
 import { TextField } from '../ui/TextField'
-import { Segmented } from '../ui/Toggle'
+import { Segmented, Toggle } from '../ui/Toggle'
 
 const PRESETS = [
   { label: 'Club', width: 6, depth: 4 },
@@ -69,6 +69,14 @@ export function ProjectSettings() {
         ]}
         onChange={(cableView) => dispatch({ type: 'setCableView', cableView })}
       />
+      <div className="field">
+        <span className="field-label">Verschieben</span>
+        <div className="toggle-row">
+          <Toggle pressed={!!project.snap} onChange={(snap) => dispatch({ type: 'setSnap', snap })}>
+            Am Raster einrasten (25 cm)
+          </Toggle>
+        </div>
+      </div>
       <p className="hint">
         Breite = von links nach rechts (Sicht Publikum), Tiefe = von der Rückwand bis zur Bühnenkante. Beim
         Verkleinern werden Elemente an den Rand geschoben.
