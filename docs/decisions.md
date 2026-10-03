@@ -148,3 +148,13 @@ Rewrite `/stageplot/:path*` → stageplot-Deployment plus Redirect `/stageplot` 
 (ohne Schrägstrich am Ende würden relative Pfade ins Leere zeigen). Beide Projekte werden
 getrennt deployt; die AK-Seite bekommt Updates automatisch. Gespeicherte Projekte hängen am
 Origin: unter der AK-Domain sind es andere Daten als unter `*.vercel.app` (Umzug per JSON-Export).
+
+## D24 – Einbindung als Reiter in die AK-App (Repo Lolliger/aktapp)
+Statt eines Links auf eine fremde Seite gibt es in der AK-App einen Reiter `/stageplot`, der den
+Editor per iframe unter der AK-Navigation zeigt. Das iframe lädt `/stageplot-app/index.html`
+(Rewrite auf dieses Projekt) – direkt die Datei, weil Next.js `/stageplot-app/` auf den Pfad
+ohne Schrägstrich umleitet und relative Pfade dann brechen würden. Aus demselben Grund cacht der
+Service Worker `index.html` statt der Ordner-URL (umgeleitete Antworten taugen nicht als
+Offline-Seite). Die AK-App setzt für diesen Pfad eine eigene CSP (`script-src 'self'`, kein
+Nonce) und erlaubt Einbetten nur von der eigenen Domain. Konfiguriert wird dort über die
+Umgebungsvariable `STAGEPLOT_ORIGIN`.

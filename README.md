@@ -89,4 +89,8 @@ stageplot-Deployments anpassen:
 
 Bei einer Next.js-Seite geht dasselbe in `next.config.js` über `redirects()` und `rewrites()`.
 Die Seite zeigt dann `/stageplot/`, ausgeliefert wird weiter vom stageplot-Projekt – Updates
-kommen automatisch. Der Schrägstrich am Ende ist wichtig, darum der Redirect.
+kommen automatisch. Der Schrägstrich am Ende ist wichtig, darum der Redirect. Alternativ direkt
+`/stageplot/index.html` verlinken bzw. einbetten.
+
+Die AK-App (Repo `Lolliger/aktapp`) bindet den Editor als Reiter `/stageplot` per iframe ein;
+dort reicht die Umgebungsvariable `STAGEPLOT_ORIGIN` (siehe deren `ARCHITECTURE.md`).

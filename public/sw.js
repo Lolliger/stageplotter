@@ -5,8 +5,11 @@
  * Alle Pfade sind relativ zum Worker, die App kann also auch unter einem Unterpfad liegen. */
 const BUILD = new URL(self.location.href).searchParams.get('build') || 'dev'
 const CACHE = `stageplot-${BUILD}`
-/** Startseite der App, z. B. https://ak-seite.de/stageplot/ */
+/** Ordner der App, z. B. https://ak-seite.de/stageplot-app/ */
 const APP_ROOT = new URL('./', self.location.href).href
+/** Gecachte Startseite. Bewusst index.html statt des Ordners: manche Hosts (z. B. Next.js)
+ * leiten Ordner-URLs um, umgeleitete Antworten taugen nicht als Offline-Seite. */
+const APP_INDEX = new URL('index.html', APP_ROOT).href
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -14,7 +17,7 @@ self.addEventListener('install', (event) => {
       const res = await fetch(new URL('precache-manifest.json', APP_ROOT), { cache: 'no-store' })
       const { files } = await res.json()
       const cache = await caches.open(CACHE)
-      await cache.addAll([APP_ROOT, ...files.map((f) => new URL(f, APP_ROOT).href)])
+      await cache.addAll([APP_INDEX, ...files.map((f) => new URL(f, APP_ROOT).href)])
       await self.skipWaiting()
     })(),
   )
@@ -37,7 +40,7 @@ self.addEventListener('fetch', (event) => {
   // Seitenaufrufe: erst Netz (aktuelle Version), offline die zwischengespeicherte App.
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request).catch(async () => (await caches.match(APP_ROOT)) || Response.error()),
+      fetch(request).catch(async () => (await caches.match(APP_INDEX)) || Response.error()),
     )
     return
   }

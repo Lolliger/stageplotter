@@ -3,7 +3,7 @@
   "short_name": "stageplot",
   "description": "Bühnenplan, Stagebox-Zuordnung, Input- und Outputliste für Veranstaltungstechnik.",
   "lang": "de",
-  "start_url": "./",
+  "start_url": "index.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#14161a",
