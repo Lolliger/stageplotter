@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 import { AddInstrument } from './components/editors/AddInstrument'
 import { GroupEditor } from './components/editors/GroupEditor'
+import { ProjectSettings } from './components/editors/ProjectSettings'
 import { Sheet } from './components/editors/Sheet'
 import { StageboxEditor } from './components/editors/StageboxEditor'
 import { StagePlot } from './components/stage/StagePlot'
@@ -12,7 +13,7 @@ import { useProject } from './state/useProject'
 import './styles/layout.css'
 import './styles/ui.css'
 
-type Panel = { kind: 'edit'; target: ElementRef } | { kind: 'addInstrument' } | null
+type Panel = { kind: 'edit'; target: ElementRef } | { kind: 'addInstrument' } | { kind: 'settings' } | null
 
 function Workspace() {
   const { project, dispatch } = useProject()
@@ -33,6 +34,12 @@ function Workspace() {
     sheet = (
       <Sheet title="Instrument hinzufügen" onClose={close}>
         <AddInstrument onAdded={close} />
+      </Sheet>
+    )
+  } else if (panel?.kind === 'settings') {
+    sheet = (
+      <Sheet title="Bühne & Projekt" onClose={close}>
+        <ProjectSettings />
       </Sheet>
     )
   } else if (selected?.kind === 'group') {
@@ -59,7 +66,7 @@ function Workspace() {
         <h1>
           stageplot<small>{project.name}</small>
         </h1>
-        <Toolbar onAddInstrument={() => setPanel({ kind: 'addInstrument' })} onAddBox={addBox} onSettings={() => {}} />
+        <Toolbar onAddInstrument={() => setPanel({ kind: 'addInstrument' })} onAddBox={addBox} onSettings={() => setPanel({ kind: 'settings' })} />
       </header>
       <main className="workspace">
         <section className="stage-panel" aria-label="Bühnenplan">

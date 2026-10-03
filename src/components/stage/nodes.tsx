@@ -84,8 +84,11 @@ export function BoxNode({ box, usage, k, selected, bind }: BoxNodeProps) {
   const outUsed = usage?.outputsUsed ?? 0
   const inProblem = (usage?.inputsMissing ?? 0) > 0
   const outProblem = (usage?.outputsMissing ?? 0) > 0
-  const capW = 106 * k
-  const capH = 17 * k
+  const inText = `${inUsed}/${box.inputs} In`
+  const outText = `${outUsed}/${box.outputs} Out`
+  const capW = (Math.max(inText.length, outText.length) * 6.6 + 12) * k
+  const lineH = 12 * k
+  const capH = 2 * lineH + 4 * k
 
   return (
     <g
@@ -103,15 +106,14 @@ export function BoxNode({ box, usage, k, selected, bind }: BoxNodeProps) {
       <text className="box-name" style={{ fontSize: 15 * k }} dominantBaseline="central" textAnchor="middle">
         {box.name}
       </text>
-      <g transform={`translate(0 ${s / 2 + 4 * k + capH / 2})`}>
-        <rect className="cap-bg" x={-capW / 2} y={-capH / 2} width={capW} height={capH} rx={capH / 2} />
-        <text className="cap" style={{ fontSize: 10.5 * k }} dominantBaseline="central" textAnchor="middle">
-          <tspan className={inProblem ? 'over' : ''}>
-            {inUsed}/{box.inputs} In
+      <g transform={`translate(0 ${s / 2 + 4 * k})`}>
+        <rect className="cap-bg" x={-capW / 2} y={0} width={capW} height={capH} rx={6 * k} />
+        <text className="cap" style={{ fontSize: 10.5 * k }} textAnchor="middle">
+          <tspan x={0} y={2 * k + lineH / 2} dominantBaseline="central" className={inProblem ? 'over' : ''}>
+            {inText}
           </tspan>
-          {' · '}
-          <tspan className={outProblem ? 'over' : ''}>
-            {outUsed}/{box.outputs} Out
+          <tspan x={0} y={2 * k + lineH * 1.5} dominantBaseline="central" className={outProblem ? 'over' : ''}>
+            {outText}
           </tspan>
         </text>
       </g>

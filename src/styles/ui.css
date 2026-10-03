@@ -409,3 +409,28 @@ select:focus-visible {
   color: var(--text-muted);
   font-size: 0.9rem;
 }
+
+.preset-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px;
+}
+
+.preset-row .btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 52px;
+  padding: 6px 12px;
+}
+
+.preset-row .btn small {
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.btn[aria-pressed='true'] {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
