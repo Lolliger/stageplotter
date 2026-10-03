@@ -1,7 +1,8 @@
 import { newId } from '../lib/id'
-import { uniqueName } from './defaults'
+import { OUTPUT_LABELS, uniqueName } from './defaults'
 import type {
   ConnectorType,
+  OutputKind,
   Device,
   DeviceInput,
   DeviceKind,
@@ -25,6 +26,21 @@ export const DEVICE_LABELS: Record<DeviceKind, string> = {
 export const DEVICE_ABBR: Record<DeviceKind, string> = {
   crossover: 'XO',
   amp: 'PWR',
+}
+
+/** Art eines Box-Output-Ziels: Lautsprecher-Art oder Gerät. */
+export function targetKindLabel(kind: OutputKind | DeviceKind): string {
+  return kind === 'crossover' || kind === 'amp' ? DEVICE_LABELS[kind] : OUTPUT_LABELS[kind]
+}
+
+/** Name eines Ziels ohne Box-Output (Lautsprecher oder Geräte-Eingang) für Listen. */
+export function unpatchedTargetName(project: Pick<Project, 'outputs' | 'devices'>, outputId: string, inputIndex?: number) {
+  if (inputIndex === undefined) {
+    const o = project.outputs.find((x) => x.id === outputId)
+    return o ? { name: o.name, kind: targetKindLabel(o.kind) } : null
+  }
+  const d = project.devices.find((x) => x.id === outputId)
+  return d ? { name: `${d.name} · ${inputLabel(d, inputIndex)}`, kind: DEVICE_LABELS[d.kind] } : null
 }
 
 export const CONNECTOR_LABELS: Record<ConnectorType, string> = {

@@ -1,5 +1,5 @@
 import { roundMeters } from '../../lib/geometry'
-import { OUTPUT_LABELS } from '../../model/defaults'
+import { targetKindLabel, unpatchedTargetName } from '../../model/devices'
 import type { ElementRef } from '../../model/types'
 import { useProject } from '../../state/useProject'
 
@@ -10,7 +10,7 @@ function fmtM(m: number): string {
 export function OutputList({ onSelect }: { onSelect: (target: ElementRef) => void }) {
   const { project, assignment } = useProject()
 
-  if (project.outputs.length === 0) {
+  if (project.outputs.length === 0 && project.devices.length === 0) {
     return (
       <div className="empty">
         <p className="hint">Noch keine Wedges, IEMs oder Sidefills. Tippe auf „+ Output“.</p>
@@ -52,12 +52,15 @@ export function OutputList({ onSelect }: { onSelect: (target: ElementRef) => voi
               </thead>
               <tbody>
                 {ports.map((p) => (
-                  <tr key={p.outputId} onClick={() => onSelect({ kind: 'output', id: p.outputId })}>
+                  <tr
+                    key={`${p.outputId}:${p.inputIndex ?? ''}`}
+                    onClick={() => onSelect({ kind: p.inputIndex === undefined ? 'output' : 'device', id: p.outputId })}
+                  >
                     <td className="port">{p.label}</td>
                     <td>
                       <span className="src">{p.name}</span>
                     </td>
-                    <td>{OUTPUT_LABELS[p.kind]}</td>
+                    <td>{targetKindLabel(p.kind)}</td>
                     <td className="num">{fmtM(p.distance)}</td>
                   </tr>
                 ))}
@@ -75,14 +78,18 @@ export function OutputList({ onSelect }: { onSelect: (target: ElementRef) => voi
           <table className="io-table">
             <tbody>
               {unpatched.map((u) => {
-                const o = project.outputs.find((x) => x.id === u.outputId)!
+                const target = unpatchedTargetName(project, u.outputId, u.inputIndex)
+                if (!target) return null
                 return (
-                  <tr key={u.outputId} onClick={() => onSelect({ kind: 'output', id: u.outputId })}>
+                  <tr
+                    key={`${u.outputId}:${u.inputIndex ?? ''}`}
+                    onClick={() => onSelect({ kind: u.inputIndex === undefined ? 'output' : 'device', id: u.outputId })}
+                  >
                     <td className="port">–</td>
                     <td>
-                      <span className="src">{o.name}</span>
+                      <span className="src">{target.name}</span>
                     </td>
-                    <td>{OUTPUT_LABELS[o.kind]}</td>
+                    <td>{target.kind}</td>
                   </tr>
                 )
               })}

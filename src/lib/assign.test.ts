@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import type { InstrumentGroup, InstrumentType, OutputElement, Project, Stagebox } from '../model/types'
+import type { Device, InstrumentGroup, InstrumentType, OutputElement, Project, Stagebox } from '../model/types'
 import { assign } from './assign'
 import { manhattan, type DistanceFn } from './geometry'
 
@@ -282,4 +282,79 @@ test('is deterministic and does not mutate the project', () => {
   const snapshot = structuredClone(p)
   expect(assign(p)).toEqual(assign(p))
   expect(p).toEqual(snapshot)
+})
+
+describe('assign – PA signal chain', () => {
+  // Weiche neben der Bühne rechts (nahe B), Endstufe ebenfalls, PA L/R gespeist von der Endstufe
+  function chain() {
+    const xo: Device = {
+      id: 'xo',
+      kind: 'crossover',
+      name: 'Weiche',
+      pos: { x: 10.6, y: 3 },
+      inputs: [
+        { name: 'L', connector: 'xlr' },
+        { name: 'R', connector: 'xlr' },
+      ],
+      outputs: [
+        { name: 'Top L', connector: 'xlr', from: [0], hp: 100 },
+        { name: 'Top R', connector: 'xlr', from: [1], hp: 100 },
+        { name: 'Sub', connector: 'xlr', from: [0, 1], lp: 100 },
+      ],
+    }
+    const amp: Device = {
+      id: 'amp',
+      kind: 'amp',
+      name: 'Endstufe',
+      pos: { x: 10.6, y: 4.5 },
+      inputs: [
+        { name: 'Kanal A', connector: 'xlr', source: { deviceId: 'xo', output: 0 } },
+        { name: 'Kanal B', connector: 'xlr' }, // direkt von der Stagebox
+      ],
+      outputs: [
+        { name: 'Kanal A', connector: 'speakon-nl4' },
+        { name: 'Kanal B', connector: 'speakon-nl4' },
+      ],
+      power: { watts: 1000, ohms: 4 },
+    }
+    const p = project(
+      [A, B],
+      [],
+      [
+        { ...output('PA L', -0.6, 5.5), source: { deviceId: 'amp', output: 0 } },
+        output('Wedge 1', 9, 5),
+      ],
+    )
+    return { ...p, devices: [xo, amp] }
+  }
+
+  test('only stagebox-fed targets use box outputs', () => {
+    const r = assign(chain())
+    // Wedge + 2 Weichen-Eingänge + Endstufe Kanal B hängen an der Box, PA L und Kanal A nicht
+    expect(r.outputs['box-B'].map((o) => [o.label, o.name])).toEqual([
+      ['B-Out 1', 'Wedge 1'],
+      ['B-Out 2', 'Weiche · In A (L)'],
+      ['B-Out 3', 'Weiche · In B (R)'],
+      ['B-Out 4', 'Endstufe · Kanal B'],
+    ])
+    expect(r.outputs['box-B'][1]).toMatchObject({ outputId: 'xo', inputIndex: 0, kind: 'crossover' })
+    expect(r.outputElements['PA L']).toEqual({ boxId: null, label: null, pinned: false, source: { deviceId: 'amp', output: 0 } })
+    expect(r.deviceInputs.amp[0].source).toEqual({ deviceId: 'xo', output: 0 })
+    expect(r.deviceInputs.xo.map((a) => a.label)).toEqual(['B-Out 2', 'B-Out 3'])
+    expect(r.usage['box-B'].outputsUsed).toBe(4)
+  })
+
+  test('device inputs count towards missing outputs with readable names', () => {
+    const p = chain()
+    p.boxes = [box('B', 10, 0, 16, 2)]
+    const r = assign(p)
+    const err = r.warnings.find((w) => w.code === 'outputs-missing')!
+    expect(err.message).toBe(
+      'Box B: 2 Outputs fehlen (Weiche · In B (R), Endstufe · Kanal B). Box B auf 4 Outputs erhöhen oder weitere Stagebox hinzufügen.',
+    )
+    expect(r.unpatchedOutputs).toEqual([
+      { outputId: 'xo', inputIndex: 1, wantedBoxId: 'box-B' },
+      { outputId: 'amp', inputIndex: 1, wantedBoxId: 'box-B' },
+    ])
+  })
 })

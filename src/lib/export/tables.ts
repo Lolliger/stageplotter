@@ -1,4 +1,4 @@
-import { OUTPUT_LABELS } from '../../model/defaults'
+import { targetKindLabel, unpatchedTargetName } from '../../model/devices'
 import type { Project, Stagebox } from '../../model/types'
 import type { Assignment } from '../assign'
 import { roundMeters } from '../geometry'
@@ -62,22 +62,22 @@ export function inputTables(project: Project, assignment: Assignment): { boxes: 
 
 /** Outputliste je Box für den Export. Boxen ohne Outputs werden weggelassen. */
 export function outputTables(project: Project, assignment: Assignment): { boxes: BoxTable<OutputRow>[]; unpatched: OutputRow[] } {
-  const outputById = new Map(project.outputs.map((o) => [o.id, o]))
   const boxes = project.boxes
     .map((box) => {
       const ports = assignment.outputs[box.id] ?? []
       const usage = assignment.usage[box.id]
       const pinned = new Set<number>()
       const rows = ports.map((p, i) => {
-        if (assignment.outputElements[p.outputId]?.pinned) pinned.add(i)
-        return { port: p.label, name: p.name, kind: OUTPUT_LABELS[p.kind], distance: formatMeters(p.distance) }
+        const a = p.inputIndex === undefined ? assignment.outputElements[p.outputId] : assignment.deviceInputs[p.outputId]?.[p.inputIndex]
+        if (a?.pinned) pinned.add(i)
+        return { port: p.label, name: p.name, kind: targetKindLabel(p.kind), distance: formatMeters(p.distance) }
       })
       return { box, usage: `${usage.outputsUsed}/${usage.outputs} Out`, missing: usage.outputsMissing, pinned, rows }
     })
     .filter((t) => t.rows.length > 0 || t.missing > 0)
-  const unpatched = assignment.unpatchedOutputs.map((u) => {
-    const o = outputById.get(u.outputId)!
-    return { port: '–', name: o.name, kind: OUTPUT_LABELS[o.kind], distance: '' }
+  const unpatched = assignment.unpatchedOutputs.flatMap((u) => {
+    const target = unpatchedTargetName(project, u.outputId, u.inputIndex)
+    return target ? [{ port: '–', name: target.name, kind: target.kind, distance: '' }] : []
   })
   return { boxes, unpatched }
 }

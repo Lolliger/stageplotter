@@ -1,5 +1,6 @@
 import { TYPE_ORDER } from '../model/defaults'
-import type { InstrumentGroup, OutputElement, OutputKind, Project, Stagebox, Vec2 } from '../model/types'
+import { inputLabel, isValidSource } from '../model/devices'
+import type { DeviceKind, InstrumentGroup, OutputKind, Project, SignalSource, Stagebox, Vec2 } from '../model/types'
 import { euclidean, type DistanceFn } from './geometry'
 
 export interface InputPort {
@@ -23,9 +24,12 @@ export interface OutputPort {
   port: number
   /** z. B. "A-Out 1" */
   label: string
+  /** Output-Element oder Gerät (dann mit inputIndex). */
   outputId: string
+  /** Nur bei Geräten: gespeister Eingang. */
+  inputIndex?: number
   name: string
-  kind: OutputKind
+  kind: OutputKind | DeviceKind
   distance: number
 }
 
@@ -53,6 +57,8 @@ export interface OutputAssignment {
   boxId: string | null
   label: string | null
   pinned: boolean
+  /** Gespeist von einem Geräte-Ausgang statt von der Stagebox (belegt dann keinen Box-Output). */
+  source?: SignalSource
 }
 
 export interface UnpatchedChannel {
@@ -64,6 +70,7 @@ export interface UnpatchedChannel {
 
 export interface UnpatchedOutput {
   outputId: string
+  inputIndex?: number
   wantedBoxId: string | null
 }
 
@@ -84,6 +91,8 @@ export interface Assignment {
   usage: Record<string, BoxUsage>
   groups: Record<string, GroupAssignment>
   outputElements: Record<string, OutputAssignment>
+  /** Je Gerät ein Eintrag pro Eingang. */
+  deviceInputs: Record<string, OutputAssignment[]>
   unpatchedInputs: UnpatchedChannel[]
   unpatchedOutputs: UnpatchedOutput[]
   warnings: Warning[]
@@ -126,7 +135,7 @@ export function assign(project: Project, distance: DistanceFn = euclidean): Assi
   const freeOut = new Map(boxes.map((b) => [b.id, b.outputs]))
   const allocations = new Map<string, Allocation[]>(boxes.map((b) => [b.id, []]))
   const missingIn = new Map<string, { count: number; groupIds: Set<string> }>()
-  const missingOut = new Map<string, { count: number; outputIds: string[] }>()
+  const missingOut = new Map<string, { count: number; outputIds: string[]; names: string[]; pinned: boolean }>()
 
   const result: Assignment = {
     inputs: {},
@@ -134,6 +143,7 @@ export function assign(project: Project, distance: DistanceFn = euclidean): Assi
     usage: {},
     groups: {},
     outputElements: {},
+    deviceInputs: {},
     unpatchedInputs: [],
     unpatchedOutputs: [],
     warnings: [],
@@ -250,45 +260,101 @@ export function assign(project: Project, distance: DistanceFn = euclidean): Assi
   }
 
   // ---------- Outputs ----------
+  // Box-Outputs belegen Lautsprecher und Geräte-Eingänge, die direkt an der Stagebox hängen.
+  // Wer von einem Geräte-Ausgang gespeist wird (Weiche → Endstufe → Lautsprecher), belegt keinen.
 
-  const isOutputPinned = (o: OutputElement) => o.pinnedBoxId !== undefined && boxById.has(o.pinnedBoxId)
-  const outputOrder = [...outputs.filter(isOutputPinned), ...outputs.filter((o) => !isOutputPinned(o))]
-  const outputAlloc = new Map<string, OutputElement[]>(boxes.map((b) => [b.id, []]))
+  interface OutputConsumer {
+    key: string
+    targetId: string
+    inputIndex?: number
+    name: string
+    kind: OutputKind | DeviceKind
+    pos: Vec2
+    pinnedBoxId?: string
+    order: number
+  }
 
-  for (const output of outputOrder) {
-    const pinnedBox = isOutputPinned(output) ? boxById.get(output.pinnedBoxId!)! : undefined
-    const candidates = pinnedBox ? [pinnedBox] : boxesByDistance(boxes, output.pos, distance)
+  const consumers: OutputConsumer[] = []
+  outputs.forEach((o, i) => {
+    if (isValidSource(project, o.source, { kind: 'element' })) {
+      result.outputElements[o.id] = { boxId: null, label: null, pinned: false, source: o.source }
+      return
+    }
+    consumers.push({ key: o.id, targetId: o.id, name: o.name, kind: o.kind, pos: o.pos, pinnedBoxId: o.pinnedBoxId, order: i })
+  })
+  project.devices.forEach((d, di) => {
+    result.deviceInputs[d.id] = d.inputs.map(() => ({ boxId: null, label: null, pinned: false }))
+    d.inputs.forEach((input, ii) => {
+      if (isValidSource(project, input.source, { kind: 'device', device: d })) {
+        result.deviceInputs[d.id][ii].source = input.source
+        return
+      }
+      consumers.push({
+        key: `${d.id}:${ii}`,
+        targetId: d.id,
+        inputIndex: ii,
+        name: `${d.name} · ${inputLabel(d, ii)}${input.name && input.name !== inputLabel(d, ii) ? ` (${input.name})` : ''}`,
+        kind: d.kind,
+        pos: d.pos,
+        pinnedBoxId: d.pinnedBoxId,
+        // nach den Lautsprechern, Geräte in Reihenfolge ihrer Eingänge
+        order: outputs.length + di * 100 + ii,
+      })
+    })
+  })
+
+  const assignmentOf = (c: OutputConsumer): OutputAssignment => {
+    if (c.inputIndex === undefined) {
+      result.outputElements[c.targetId] ??= { boxId: null, label: null, pinned: false }
+      return result.outputElements[c.targetId]
+    }
+    return result.deviceInputs[c.targetId][c.inputIndex]
+  }
+
+  const isConsumerPinned = (c: OutputConsumer) => c.pinnedBoxId !== undefined && boxById.has(c.pinnedBoxId)
+  const consumerOrder = [...consumers.filter(isConsumerPinned), ...consumers.filter((c) => !isConsumerPinned(c))]
+  const outputAlloc = new Map<string, OutputConsumer[]>(boxes.map((b) => [b.id, []]))
+
+  for (const consumer of consumerOrder) {
+    const pinnedBox = isConsumerPinned(consumer) ? boxById.get(consumer.pinnedBoxId!)! : undefined
+    const candidates = pinnedBox ? [pinnedBox] : boxesByDistance(boxes, consumer.pos, distance)
     const box = candidates.find((b) => freeOut.get(b.id)! > 0)
-    result.outputElements[output.id] = { boxId: box?.id ?? null, label: null, pinned: pinnedBox !== undefined }
+    Object.assign(assignmentOf(consumer), { boxId: box?.id ?? null, label: null, pinned: pinnedBox !== undefined })
     if (box) {
       freeOut.set(box.id, freeOut.get(box.id)! - 1)
-      outputAlloc.get(box.id)!.push(output)
+      outputAlloc.get(box.id)!.push(consumer)
     } else {
       const wantedBoxId = candidates[0]?.id ?? null
-      result.unpatchedOutputs.push({ outputId: output.id, wantedBoxId })
+      result.unpatchedOutputs.push({
+        outputId: consumer.targetId,
+        ...(consumer.inputIndex !== undefined ? { inputIndex: consumer.inputIndex } : {}),
+        wantedBoxId,
+      })
       if (wantedBoxId) {
-        const entry = missingOut.get(wantedBoxId) ?? { count: 0, outputIds: [] }
+        const entry = missingOut.get(wantedBoxId) ?? { count: 0, outputIds: [], names: [], pinned: false }
         entry.count++
-        entry.outputIds.push(output.id)
+        if (!entry.outputIds.includes(consumer.targetId)) entry.outputIds.push(consumer.targetId)
+        entry.names.push(consumer.name)
+        entry.pinned ||= pinnedBox !== undefined
         missingOut.set(wantedBoxId, entry)
       }
     }
   }
 
-  const outputIndex = new Map(outputs.map((o, i) => [o.id, i]))
   for (const box of boxes) {
-    const list = outputAlloc.get(box.id)!.slice().sort((a, b) => outputIndex.get(a.id)! - outputIndex.get(b.id)!)
-    result.outputs[box.id] = list.map((output, i) => {
+    const list = outputAlloc.get(box.id)!.slice().sort((a, b) => a.order - b.order)
+    result.outputs[box.id] = list.map((consumer, i) => {
       const label = `${box.name}-Out ${i + 1}`
-      result.outputElements[output.id].label = label
+      assignmentOf(consumer).label = label
       return {
         boxId: box.id,
         port: i + 1,
         label,
-        outputId: output.id,
-        name: output.name,
-        kind: output.kind,
-        distance: distance(output.pos, box.pos),
+        outputId: consumer.targetId,
+        ...(consumer.inputIndex !== undefined ? { inputIndex: consumer.inputIndex } : {}),
+        name: consumer.name,
+        kind: consumer.kind,
+        distance: distance(consumer.pos, box.pos),
       }
     })
   }
@@ -345,8 +411,8 @@ export function assign(project: Project, distance: DistanceFn = euclidean): Assi
     }
     const outMissing = missingOut.get(box.id)
     if (outMissing) {
-      const names = outMissing.outputIds.map((id) => outputs.find((o) => o.id === id)!.name).join(', ')
-      const pinnedHere = outMissing.outputIds.some((id) => result.outputElements[id].pinned)
+      const names = outMissing.names.join(', ')
+      const pinnedHere = outMissing.pinned
       const fix = [
         `Box ${box.name} auf ${box.outputs + outMissing.count} Outputs erhöhen`,
         'weitere Stagebox hinzufügen',
