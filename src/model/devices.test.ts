@@ -92,7 +92,9 @@ describe('signal sources', () => {
   })
 
   test('consumers of a device output and cleanup when devices change', () => {
-    let { p, xo, amp, paL, paR } = rig()
+    const r = rig()
+    const { xo, amp, paL, paR } = r
+    let { p } = r
     const ampFed = { ...amp, inputs: amp.inputs.map((i, n) => ({ ...i, source: { deviceId: xo.id, output: n } })) }
     p = projectReducer(p, { type: 'updateDevice', id: amp.id, device: ampFed })
     p = projectReducer(p, { type: 'updateOutput', id: paL.id, patch: { source: { deviceId: amp.id, output: 0 } } })
