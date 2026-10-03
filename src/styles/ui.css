@@ -688,3 +688,48 @@ select:focus-visible {
   box-shadow: inset 0 0 0 2px var(--box-color, var(--accent));
   background: var(--surface);
 }
+
+/* Projekt-Menü */
+.menu-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.menu-section h3 {
+  margin: 0;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.menu-grid {
+  align-self: stretch;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+}
+
+.confirm-box {
+  align-self: stretch;
+  padding: 12px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+}
+
+.confirm-box p {
+  margin: 0 0 8px;
+}
+
+.topbar-actions {
+  display: flex;
+  gap: 2px;
+}
+
+.topbar-actions .icon-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}

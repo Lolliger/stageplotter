@@ -4,6 +4,7 @@ import { AddOutput } from './components/editors/AddOutput'
 import { DrumConfigurator } from './components/editors/DrumConfigurator'
 import { GroupEditor } from './components/editors/GroupEditor'
 import { OutputEditor } from './components/editors/OutputEditor'
+import { ProjectMenu } from './components/editors/ProjectMenu'
 import { ProjectSettings } from './components/editors/ProjectSettings'
 import { Sheet } from './components/editors/Sheet'
 import { StageboxEditor } from './components/editors/StageboxEditor'
@@ -26,6 +27,7 @@ type Panel =
   | { kind: 'addOutput' }
   | { kind: 'drums'; groupId?: string }
   | { kind: 'settings' }
+  | { kind: 'project' }
   | null
 
 function Workspace() {
@@ -64,6 +66,12 @@ function Workspace() {
           group={group}
           onDone={(id) => (group ? select({ kind: 'group', id }) : close())}
         />
+      </Sheet>
+    )
+  } else if (panel?.kind === 'project') {
+    sheet = (
+      <Sheet title="Projekt & Export" onClose={close}>
+        <ProjectMenu onDone={close} />
       </Sheet>
     )
   } else if (panel?.kind === 'settings') {
@@ -110,6 +118,26 @@ function Workspace() {
           onAddBox={addBox}
           onSettings={() => setPanel({ kind: 'settings' })}
         />
+        <div className="topbar-actions">
+          <button
+            type="button"
+            className="icon-btn"
+            aria-label="Projekt & Export"
+            title="Projekt & Export"
+            onClick={() => setPanel({ kind: 'project' })}
+          >
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+              <path
+                d="M12 3v12M7 8l5-5 5 5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        </div>
       </header>
       <main className="workspace">
         <section className="stage-panel" aria-label="Bühnenplan">

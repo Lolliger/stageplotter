@@ -104,3 +104,10 @@ Neue Elemente landen auf dem nächsten freien Punkt eines 1,5-m-Rasters um einen
 (mind. 1,2 m Abstand zu allem anderen): Instrumente um die Bühnenmitte, Wedges in einer Reihe vor
 der Bühnenkante, Sidefills abwechselnd links/rechts vorne, IEMs mittig. Neue Stageboxen suchen
 einen Platz mit mind. 2 m Abstand zu anderen Boxen.
+
+## D19 – Dateien ausgeben: Teilen-Menü auf Touch-Geräten, sonst Download
+Exporte (JSON, PDF) gehen auf Touch-Geräten über `navigator.share` mit Datei – auf iPhone/iPad
+erscheint das Teilen-Menü („In Dateien sichern“, AirDrop, Mail). Auf Geräten mit Maus oder wenn
+Teilen nicht verfügbar ist, wird normal heruntergeladen. Exportierte JSON-Dateien tragen
+`"app": "stageplot"` und ein Exportdatum; der Import prüft beides nicht streng, lehnt aber
+Dateien mit fremder `app`-Kennung ab und fragt vor dem Ersetzen des aktuellen Projekts nach.
