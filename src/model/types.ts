@@ -44,6 +44,8 @@ export interface InstrumentGroup {
   drumConfig?: DrumConfig
   /** Darstellung im Plan: 'amp' = Verstärker (Kasten statt Kreis). Typ bleibt für die Reihenfolge. */
   form?: GroupForm
+  /** Drehung in Grad im Uhrzeigersinn (nur für Formen mit Richtung, z. B. Amps). */
+  rotation?: number
 }
 
 export type GroupForm = 'amp'
@@ -72,6 +74,8 @@ export interface OutputElement {
   name: string
   pos: Vec2
   pinnedBoxId?: string
+  /** Drehung in Grad im Uhrzeigersinn; 0 = Grundausrichtung der Form (siehe model/shapes.ts). */
+  rotation?: number
 }
 
 export interface StageSize {

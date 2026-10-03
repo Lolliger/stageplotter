@@ -5,7 +5,9 @@ import { useProject } from '../../state/useProject'
 import { ConfirmButton } from '../ui/ConfirmButton'
 import { TextField } from '../ui/TextField'
 import { Segmented } from '../ui/Toggle'
+import { OUTPUT_SHAPES } from '../../model/shapes'
 import { BoxPicker } from './BoxPicker'
+import { RotationControl } from './RotationControl'
 
 export function OutputEditor({ output, onDone }: { output: OutputElement; onDone: () => void }) {
   const { project, dispatch, assignment } = useProject()
@@ -22,6 +24,13 @@ export function OutputEditor({ output, onDone }: { output: OutputElement; onDone
         options={(Object.keys(OUTPUT_LABELS) as OutputKind[]).map((k) => ({ value: k, label: OUTPUT_LABELS[k] }))}
         onChange={(kind) => update({ kind })}
       />
+      {OUTPUT_SHAPES[output.kind].front && (
+        <RotationControl
+          front={OUTPUT_SHAPES[output.kind].front!}
+          rotation={output.rotation ?? 0}
+          onChange={(rotation) => update({ rotation })}
+        />
+      )}
       <BoxPicker boxes={project.boxes} pinnedBoxId={output.pinnedBoxId} onChange={(pinnedBoxId) => update({ pinnedBoxId })} />
       <div className="assign-summary">
         <span className="field-label">Zuordnung</span>

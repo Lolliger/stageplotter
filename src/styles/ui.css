@@ -733,3 +733,48 @@ select:focus-visible {
   opacity: 0.35;
   cursor: default;
 }
+
+/* Ausrichtung */
+.rotation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.rotation-dirs {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+
+.rotation-dirs button {
+  width: 40px;
+  min-height: 40px;
+  border: none;
+  border-radius: calc(var(--radius) - 3px);
+  background: transparent;
+  font-size: 1.15rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.rotation-dirs button[aria-checked='true'] {
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  color: var(--accent);
+}
+
+.rotation-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.rotation-steps .btn {
+  min-width: 64px;
+  padding: 0 10px;
+  font-variant-numeric: tabular-nums;
+}

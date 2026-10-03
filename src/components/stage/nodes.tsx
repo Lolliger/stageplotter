@@ -1,7 +1,7 @@
 import type { PointerEventHandler } from 'react'
 import type { BoxUsage, GroupAssignment, OutputAssignment } from '../../lib/assign'
 import { PX_PER_M } from '../../model/defaults'
-import { AMP_SHAPE, OUTPUT_SHAPES } from '../../model/shapes'
+import { AMP_SHAPE, OUTPUT_SHAPES, frontArrowPoints } from '../../model/shapes'
 import type { InstrumentGroup, InstrumentType, OutputElement, Stagebox } from '../../model/types'
 
 interface DragBindings {
@@ -81,16 +81,23 @@ export function GroupNode({ group, assignment, boxById, k, selected, bind }: Gro
           <circle className="selection" r={r + 5 * k} strokeWidth={2 * k} />
         ))}
       {amp ? (
-        <rect
-          className="body"
-          x={-halfW}
-          y={-halfH}
-          width={2 * halfW}
-          height={2 * halfH}
-          rx={AMP_SHAPE.rx * k}
-          strokeWidth={3 * k}
-          style={bodyStyle}
-        />
+        <g transform={`rotate(${group.rotation ?? 0})`}>
+          <rect
+            className="body"
+            x={-halfW}
+            y={-halfH}
+            width={2 * halfW}
+            height={2 * halfH}
+            rx={AMP_SHAPE.rx * k}
+            strokeWidth={3 * k}
+            style={bodyStyle}
+          />
+          <polygon
+            className="front"
+            points={frontArrowPoints(AMP_SHAPE, k)!}
+            style={primary ? { fill: primary.color } : undefined}
+          />
+        </g>
       ) : (
         <circle className="body" r={r} strokeWidth={3 * k} style={bodyStyle} />
       )}
@@ -198,6 +205,8 @@ export function OutputNode({ output, assignment, boxById, k, selected, bind }: O
       <rect className="body" x={-w / 2} y={-h / 2} width={w} height={h} rx={spec.rx * k} strokeWidth={sw} style={stroke} />
     )
   const abbr = spec.abbr
+  const arrow = frontArrowPoints(spec, k)
+  const rotation = output.rotation ?? 0
 
   return (
     <g
@@ -209,7 +218,10 @@ export function OutputNode({ output, assignment, boxById, k, selected, bind }: O
     >
       <circle className="hit" r={Math.max(HIT_RADIUS * k, Math.max(w, h) / 2 + 6 * k)} />
       {selected && <circle className="selection" r={Math.max(w, h) / 2 + 6 * k} strokeWidth={2 * k} />}
-      {shape}
+      <g transform={`rotate(${rotation})`}>
+        {shape}
+        {arrow && <polygon className="front" points={arrow} style={stroke ? { fill: stroke.stroke } : undefined} />}
+      </g>
       <text className="abbr" style={{ fontSize: 9 * k }} dominantBaseline="central" textAnchor="middle">
         {abbr}
       </text>

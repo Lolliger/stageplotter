@@ -1,6 +1,6 @@
 import { clampToStage, snap } from '../lib/geometry'
 import { BOX_STAGE_MARGIN, SNAP_STEP, STAGE_LIMITS } from '../model/defaults'
-import { OFFSTAGE_OUTPUTS } from '../model/shapes'
+import { OFFSTAGE_OUTPUTS, normalizeRotation } from '../model/shapes'
 import type {
   CableView,
   ElementRef,
@@ -70,6 +70,10 @@ function dropEmptyPin<T extends { pinnedBoxId?: string }>(item: T): T {
   const copy = { ...item }
   delete copy.pinnedBoxId
   return copy
+}
+
+function withRotation<T extends { rotation?: number }>(item: T): T {
+  return item.rotation === undefined ? item : { ...item, rotation: normalizeRotation(item.rotation) }
 }
 
 function unpin<T extends { pinnedBoxId?: string }>(item: T, boxId: string): T {
@@ -149,7 +153,7 @@ export function projectReducer(state: Project, action: Action): Project {
       return {
         ...state,
         groups: updateById(state.groups, action.id, (g) => {
-          const next = dropEmptyPin({ ...g, ...action.patch })
+          const next = withRotation(dropEmptyPin({ ...g, ...action.patch }))
           return { ...next, pos: placeElement(next.pos, state.stage) }
         }),
       }
@@ -164,7 +168,7 @@ export function projectReducer(state: Project, action: Action): Project {
       return {
         ...state,
         outputs: updateById(state.outputs, action.id, (o) => {
-          const next = dropEmptyPin({ ...o, ...action.patch })
+          const next = withRotation(dropEmptyPin({ ...o, ...action.patch }))
           return { ...next, pos: placeOutput(next, next.pos, state.stage) }
         }),
       }

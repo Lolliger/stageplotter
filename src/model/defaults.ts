@@ -1,4 +1,5 @@
 import { newId } from '../lib/id'
+import { rotationFacing } from './shapes'
 import type { InstrumentType, OutputElement, OutputKind, Project, Stagebox, StageSize, Vec2 } from './types'
 
 /** Maßstab: 1 m entspricht 30 SVG-Einheiten. */
@@ -168,7 +169,10 @@ export function createOutput(project: SpawnProject, kind: Exclude<OutputKind, 'p
     iem: { x: width / 2, y: depth / 2 },
     sidefill: { x: sidefills % 2 === 0 ? 0.5 : Math.max(0, width - 0.5), y: Math.max(0, depth - 1.5) },
   }
-  return { id: newId(), kind, name, pos: spawnPosition(project, prefer[kind]) }
+  const output: OutputElement = { id: newId(), kind, name, pos: spawnPosition(project, prefer[kind]) }
+  // Sidefills strahlen quer über die Bühne zur Mitte
+  if (kind === 'sidefill') output.rotation = rotationFacing('up', output.pos.x < width / 2 ? 'right' : 'left')
+  return output
 }
 
 /** PA links und rechts neben der Bühnenkante (aus Sicht des Publikums), je ein Output. */

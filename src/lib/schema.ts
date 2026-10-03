@@ -1,4 +1,5 @@
 import { normalizeDrumConfig } from '../model/drums'
+import { normalizeRotation } from '../model/shapes'
 import { BOX_COLORS, DEFAULT_BOX_INPUTS, DEFAULT_BOX_OUTPUTS, DEFAULT_STAGE, STAGE_LIMITS } from '../model/defaults'
 import type {
   Channel,
@@ -72,6 +73,10 @@ function channel(v: unknown, where: string): Channel {
   return c
 }
 
+function rotation(v: unknown): { rotation?: number } {
+  return typeof v === 'number' && Number.isFinite(v) ? { rotation: normalizeRotation(v) } : {}
+}
+
 function drumConfig(v: unknown): { drumConfig?: DrumConfig } {
   if (!isObj(v)) return {}
   const n = (x: unknown) => (typeof x === 'number' ? x : 0)
@@ -131,6 +136,7 @@ export function parseProject(data: unknown): ParseResult {
         ...pin(g.pinnedBoxId),
         ...drumConfig(g.drumConfig),
         ...(g.form === 'amp' ? { form: 'amp' as const } : {}),
+        ...rotation(g.rotation),
       }
     })
 
@@ -142,6 +148,7 @@ export function parseProject(data: unknown): ParseResult {
         name: str(e.name, 'Output'),
         pos: vec(e.pos, `outputs[${i}].pos`),
         ...pin(e.pinnedBoxId),
+        ...rotation(e.rotation),
       }
     })
 

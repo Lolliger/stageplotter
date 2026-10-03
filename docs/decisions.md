@@ -176,3 +176,12 @@ einen Output. PA und Subs dürfen wie Stageboxen bis 1 m neben/vor der Bühne st
 Outputs bleiben auf der Bühne. Formen und Maße stehen gemeinsam in `src/model/shapes.ts` für
 Bildschirm und PDF. Die Publikumszeile steht unter allem, was vor der Bühne steht; die
 Zoom-Buttons liegen auf dem Handy unter dem Plan, damit sie nichts am Bühnenrand verdecken.
+
+## D27 – Drehen von Elementen mit Richtung
+Wedges, Sidefills, PA, Subs und Backline-Amps haben eine Drehung in ganzen Grad (im
+Uhrzeigersinn, 0–359). Jede Form kennt ihre Abstrahlrichtung bei 0° (`front` in
+`model/shapes.ts`: Wedge/Sidefill nach hinten zum Musiker, PA/Sub/Amp zum Publikum); ein kleiner
+Pfeil vor der Front zeigt die aktuelle Richtung, die Beschriftung bleibt waagerecht. Gedreht wird
+im Editor über Richtungsknöpfe („strahlt zum Publikum/nach links/…“) und Feinschritte ±15°/±45°
+statt über eine Geste im Plan – auf dem Handy treffsicherer und ohne Konflikt mit Drag und Pinch.
+Neue Sidefills zeigen automatisch zur Bühnenmitte. IEMs haben keine Richtung.

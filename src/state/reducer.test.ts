@@ -177,3 +177,14 @@ test('amp templates create groups drawn as amps, sorted by their instrument type
   expect(amp.channels.map((c) => c.pickup)).toEqual(['DI', 'RE20'])
   expect('form' in createGroupFromTemplate(getTemplate('bass-di')!, { x: 1, y: 1 })).toBe(false)
 })
+
+test('rotation is normalized and sidefills face the stage center', () => {
+  let p = createDefaultProject()
+  const left = createOutput(p, 'sidefill')
+  expect(left.rotation).toBe(90) // links → strahlt nach rechts
+  p = projectReducer(p, { type: 'addOutput', output: left })
+  const right = createOutput(p, 'sidefill')
+  expect(right.rotation).toBe(270)
+  p = projectReducer(p, { type: 'updateOutput', id: left.id, patch: { rotation: -15 } })
+  expect(p.outputs[0].rotation).toBe(345)
+})

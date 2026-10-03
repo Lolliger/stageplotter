@@ -1,5 +1,5 @@
 import { PX_PER_M } from '../../model/defaults'
-import { AMP_SHAPE, OUTPUT_SHAPES } from '../../model/shapes'
+import { AMP_SHAPE, OUTPUT_SHAPES, frontArrowPoints } from '../../model/shapes'
 import type { InstrumentType, Project } from '../../model/types'
 import type { Assignment } from '../assign'
 import { routeProject, trunkLabels } from '../cables'
@@ -224,11 +224,17 @@ export function renderPlotSvg(project: Project, assignment: Assignment, k: numbe
         ? el('path', { d: `M ${n(-w / 2)} ${n(h / 2)} L ${n(w / 2)} ${n(h / 2)} L ${n(w / 3)} ${n(-h / 2)} L ${n(-w / 3)} ${n(-h / 2)} Z`, ...common })
         : el('rect', { x: -w / 2, y: -h / 2, width: w, height: h, rx: spec.rx * k, ...common })
     const abbr = spec.abbr
+    const arrow = frontArrowPoints(spec, k)
+    const rotated = el(
+      'g',
+      { transform: `rotate(${o.rotation ?? 0})` },
+      shape + (arrow ? el('polygon', { points: arrow, fill: stroke }) : ''),
+    )
     parts.push(
       el(
         'g',
         { transform: `translate(${n(P(o.pos.x))} ${n(P(o.pos.y))})` },
-        shape +
+        rotated +
           text(0, 0, 9 * k, abbr, { fill: C.text, 'font-weight': 'bold' }) +
           (a?.pinned ? pinMark(-w / 2, -h / 2 - 2 * k, k) : '') +
           haloText(0, h / 2 + 9 * k, 9.5 * k, o.name, C.muted, k),
@@ -258,7 +264,12 @@ export function renderPlotSvg(project: Project, assignment: Assignment, k: numbe
         'g',
         { transform: `translate(${n(P(g.pos.x))} ${n(P(g.pos.y))})` },
         (amp
-          ? el('rect', { x: -halfW, y: -halfH, width: 2 * halfW, height: 2 * halfH, rx: AMP_SHAPE.rx * k, ...body })
+          ? el(
+              'g',
+              { transform: `rotate(${g.rotation ?? 0})` },
+              el('rect', { x: -halfW, y: -halfH, width: 2 * halfW, height: 2 * halfH, rx: AMP_SHAPE.rx * k, ...body }) +
+                el('polygon', { points: frontArrowPoints(AMP_SHAPE, k)!, fill: String(body.stroke) }),
+            )
           : el('circle', { r, ...body })) +
           text(0, 0, (amp ? 10 : 12) * k, amp ? AMP_SHAPE.abbr : TYPE_ABBR[g.type], { fill: C.text, 'font-weight': 'bold' }) +
           el('circle', { cx: badge.x, cy: badge.y, r: 8 * k, fill: problem ? C.danger : C.text }) +

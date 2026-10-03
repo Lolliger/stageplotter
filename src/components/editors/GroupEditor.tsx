@@ -4,7 +4,9 @@ import type { InstrumentGroup, InstrumentType } from '../../model/types'
 import { useProject } from '../../state/useProject'
 import { ConfirmButton } from '../ui/ConfirmButton'
 import { TextField } from '../ui/TextField'
+import { AMP_SHAPE } from '../../model/shapes'
 import { BoxPicker } from './BoxPicker'
+import { RotationControl } from './RotationControl'
 import { ChannelEditor } from './ChannelEditor'
 
 interface Props {
@@ -25,6 +27,14 @@ export function GroupEditor({ group, onDone, onConfigureDrums }: Props) {
         value={group.name}
         onChange={(name) => dispatch({ type: 'updateGroup', id: group.id, patch: { name } })}
       />
+
+      {group.form === 'amp' && (
+        <RotationControl
+          front={AMP_SHAPE.front!}
+          rotation={group.rotation ?? 0}
+          onChange={(rotation) => dispatch({ type: 'updateGroup', id: group.id, patch: { rotation } })}
+        />
+      )}
 
       <BoxPicker
         boxes={project.boxes}

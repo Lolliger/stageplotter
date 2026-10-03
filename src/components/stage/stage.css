@@ -135,6 +135,10 @@
   stroke: var(--text-muted);
 }
 
+.node .front {
+  fill: var(--text-muted);
+}
+
 .output-node .abbr {
   fill: var(--text);
   font-weight: 700;
