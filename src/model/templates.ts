@@ -124,3 +124,25 @@ export function createGroupFromTemplate(
     channels: channelsFromTemplate(template.channels),
   }
 }
+
+/** Vorschläge für das Abnahme-Feld (Freitext bleibt möglich). */
+export const PICKUP_SUGGESTIONS = [
+  'DI',
+  'SM57',
+  'SM58',
+  'Beta 52A',
+  'Beta 57A',
+  'Beta 58A',
+  'Beta 91A',
+  'D112',
+  'e604',
+  'e606',
+  'e906',
+  'e935',
+  'MD 421',
+  'KM 184',
+  'C414',
+  'RE20',
+  'KSM9',
+  'Funk',
+]

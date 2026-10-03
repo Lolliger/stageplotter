@@ -576,3 +576,80 @@ select:focus-visible {
   opacity: 0.5;
   cursor: default;
 }
+
+/* Editierbare Kanalliste */
+.channel-list.editable li {
+  display: block;
+  padding: 0;
+  min-height: 0;
+}
+
+.channel-list.editable li::before {
+  content: none;
+}
+
+.channel-row {
+  width: 100%;
+  min-height: var(--tap);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.channel-list.editable li.open {
+  background: var(--surface-2);
+}
+
+.channel-index {
+  width: 1.5em;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.channel-note {
+  display: block;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--text-muted);
+}
+
+.chevron {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.channel-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 12px 12px;
+}
+
+.channel-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.channel-actions .spacer {
+  flex: 1;
+}
+
+.add-channel {
+  align-self: flex-start;
+  margin-top: 4px;
+}
+
+.select {
+  min-height: var(--tap);
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-size: 16px;
+}

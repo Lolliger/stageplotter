@@ -1,9 +1,10 @@
 import { euclidean, roundMeters } from '../../lib/geometry'
-import { TYPE_LABELS } from '../../model/defaults'
-import type { InstrumentGroup } from '../../model/types'
+import { TYPE_LABELS, TYPE_ORDER } from '../../model/defaults'
+import type { InstrumentGroup, InstrumentType } from '../../model/types'
 import { useProject } from '../../state/useProject'
 import { ConfirmButton } from '../ui/ConfirmButton'
 import { TextField } from '../ui/TextField'
+import { ChannelEditor } from './ChannelEditor'
 
 interface Props {
   group: InstrumentGroup
@@ -45,19 +46,29 @@ export function GroupEditor({ group, onDone, onConfigureDrums }: Props) {
         {a && a.unpatched > 0 && <p className="hint hint-error">{a.unpatched} Kanäle ohne Input.</p>}
       </div>
 
-      <div className="field">
-        <span className="field-label">
-          {TYPE_LABELS[group.type]} · {group.channels.length} {group.channels.length === 1 ? 'Kanal' : 'Kanäle'}
-        </span>
-        <ol className="channel-list">
-          {group.channels.map((c) => (
-            <li key={c.id}>
-              <span className="channel-name">{c.name}</span>
-              <span className="channel-pickup">{c.pickup}</span>
-            </li>
+      <label className="field">
+        <span className="field-label">Typ (bestimmt die Reihenfolge in der Inputliste)</span>
+        <select
+          className="select"
+          value={group.type}
+          onChange={(e) => dispatch({ type: 'updateGroup', id: group.id, patch: { type: e.target.value as InstrumentType } })}
+        >
+          {TYPE_ORDER.map((t) => (
+            <option key={t} value={t}>
+              {TYPE_LABELS[t]}
+            </option>
           ))}
-        </ol>
-      </div>
+        </select>
+      </label>
+
+      <span className="field-label">
+        {group.channels.length} {group.channels.length === 1 ? 'Kanal' : 'Kanäle'}
+      </span>
+      <ChannelEditor
+        channels={group.channels}
+        groupName={group.name}
+        onChange={(channels) => dispatch({ type: 'updateGroup', id: group.id, patch: { channels } })}
+      />
 
       <div className="editor-actions">
         {group.type === 'drums' && (
