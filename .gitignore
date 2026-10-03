@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Build
+dist/
+dist-ssr/
+*.local
+.vercel/
+
+# Tests
+coverage/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+*.swp
+
+# Env
+.env
+.env.*
+!.env.example
