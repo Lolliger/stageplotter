@@ -62,3 +62,8 @@ Mobile-/Desktop-Frontend.
 
 ## D12 – Sprache
 UI-Texte auf Deutsch, Code, Bezeichner und Commit-Messages auf Englisch.
+
+## D13 – Bühnengröße in Phase 1, Verkleinern schiebt Elemente an den Rand
+Breite und Tiefe sind in den Projekteinstellungen frei einstellbar (0,5-m-Schritte, 2–40 m).
+Wird die Bühne verkleinert, werden Elemente, die außerhalb liegen, an den Bühnenrand geschoben
+statt gelöscht. Stageboxen dürfen bis 1 m außerhalb der Bühne stehen (z. B. Box im Seitenbereich).

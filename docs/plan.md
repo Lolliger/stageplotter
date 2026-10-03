@@ -172,30 +172,32 @@ Nach jedem Schritt: `npm run lint && npm test && npm run build`, dann Commit.
    Kapazitätsanzeige
 6. Instrumente aus einfachen Vorlagen hinzufügen, verschieben, umbenennen, löschen;
    Verbindungslinien in Boxfarbe
-7. Inputliste je Box (Port, Quelle, Abnahme, Abstand) + Warnungen; localStorage; responsives
+7. Bühnengröße einstellbar (Breite × Tiefe in Metern, Projekteinstellungen); Elemente außerhalb
+   werden beim Verkleinern an den Bühnenrand geschoben
+8. Inputliste je Box (Port, Quelle, Abnahme, Abstand) + Warnungen; localStorage; responsives
    Layout Handy/Desktop
 
 → **Stopp und Zusammenfassung.**
 
 ### Phase 2 – Konfigurator, Outputs, Pinning
-8. Drum-Konfigurator: Kick (In/Out/beides), Snare (Top/Bottom), Hi-Hat, Toms 0–4,
+9. Drum-Konfigurator: Kick (In/Out/beides), Snare (Top/Bottom), Hi-Hat, Toms 0–4,
    OH 0–2, Room 0–2, Percussion; Vorlagen Minimal/Standard/Voll; Live-Anzeige „X Kanäle“ und
    freie Kapazität je Box (Vorschau über `assign` mit dem Entwurf)
-9. Gruppen-Editor: Kanäle umbenennen, Abnahme/Notiz ändern, hinzufügen/entfernen; Vorlagen für
+10. Gruppen-Editor: Kanäle umbenennen, Abnahme/Notiz ändern, hinzufügen/entfernen; Vorlagen für
    Keys (mono/stereo), Gitarre (1/2 Mikros), Bass (DI + Mikro), Lead/Backing Vox
-10. Output-Elemente (Wedge, IEM, Sidefill): platzieren, Zuordnung, Output-Liste
-11. Pinning für Gruppen und Outputs: Box fest zuweisen/lösen, Pin-Symbol im Plan, bleibt beim
+11. Output-Elemente (Wedge, IEM, Sidefill): platzieren, Zuordnung, Output-Liste
+12. Pinning für Gruppen und Outputs: Box fest zuweisen/lösen, Pin-Symbol im Plan, bleibt beim
     Verschieben erhalten
 
 ### Phase 3 – Export und Feinschliff
-12. JSON-Export/-Import (Datei-Download bzw. Share-Sheet, Validierung, Fehlermeldung bei
+13. JSON-Export/-Import (Datei-Download bzw. Share-Sheet, Validierung, Fehlermeldung bei
     ungültiger Datei, Schema-Version)
-13. PDF-Export: Seite 1 Bühnenplan (Vektor), danach Inputliste und Output-Liste als Tabellen,
+14. PDF-Export: Seite 1 Bühnenplan (Vektor), danach Inputliste und Output-Liste als Tabellen,
     immer helles Farbschema
-14. Feinschliff: Undo/Redo, Raster-Snapping, Zoom/Pan der Bühne auf kleinen Displays, leere
+15. Feinschliff: Undo/Redo, Raster-Snapping, Zoom/Pan der Bühne auf kleinen Displays, leere
     Zustände, Bestätigung beim Löschen, neues Projekt/Zurücksetzen, Barrierefreiheit (Labels,
     Fokus), optional PWA für Offline-Nutzung in Venues ohne Netz
-15. README finalisieren, Vercel-Deployment prüfen
+16. README finalisieren, Vercel-Deployment prüfen
 
 ## 6. Risiken
 
