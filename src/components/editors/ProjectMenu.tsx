@@ -7,10 +7,26 @@ import { useProject } from '../../state/useProject'
 import { ConfirmButton } from '../ui/ConfirmButton'
 
 export function ProjectMenu({ onDone }: { onDone: () => void }) {
-  const { project, dispatch } = useProject()
+  const { project, dispatch, assignment } = useProject()
   const fileInput = useRef<HTMLInputElement>(null)
   const [pending, setPending] = useState<Project | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [pdfBusy, setPdfBusy] = useState(false)
+
+  const exportPdf = async () => {
+    setError(null)
+    setPdfBusy(true)
+    try {
+      // PDF-Bibliotheken erst bei Bedarf laden (eigener Chunk).
+      const { buildPdf } = await import('../../lib/export/pdf')
+      const blob = await buildPdf(project, assignment)
+      await saveFile(blob, exportFileName(project.name, 'pdf'))
+    } catch (e) {
+      setError(`PDF konnte nicht erstellt werden: ${e instanceof Error ? e.message : String(e)}`)
+    } finally {
+      setPdfBusy(false)
+    }
+  }
 
   const exportJson = () => {
     const blob = new Blob([serializeProject(project)], { type: 'application/json' })
@@ -31,12 +47,22 @@ export function ProjectMenu({ onDone }: { onDone: () => void }) {
       <section className="menu-section">
         <h3>Exportieren</h3>
         <div className="menu-grid">
+          <button type="button" className="template-btn" onClick={() => void exportPdf()} disabled={pdfBusy}>
+            <span className="template-label">{pdfBusy ? 'PDF wird erstellt …' : 'PDF'}</span>
+            <span className="template-meta">Bühnenplan, Inputliste und Outputliste zum Drucken oder Mailen</span>
+          </button>
           <button type="button" className="template-btn" onClick={exportJson}>
             <span className="template-label">Projektdatei (JSON)</span>
             <span className="template-meta">Zum Sichern, Weitergeben oder auf anderem Gerät öffnen</span>
           </button>
         </div>
       </section>
+
+      {error && (
+        <p className="hint hint-error" role="alert">
+          {error}
+        </p>
+      )}
 
       <section className="menu-section">
         <h3>Importieren</h3>
@@ -53,11 +79,6 @@ export function ProjectMenu({ onDone }: { onDone: () => void }) {
         <button type="button" className="btn" onClick={() => fileInput.current?.click()}>
           Projektdatei öffnen …
         </button>
-        {error && (
-          <p className="hint hint-error" role="alert">
-            {error}
-          </p>
-        )}
         {pending && (
           <div className="confirm-box" role="alert">
             <p>

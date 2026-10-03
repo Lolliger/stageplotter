@@ -111,3 +111,12 @@ erscheint das Teilen-Menü („In Dateien sichern“, AirDrop, Mail). Auf Gerät
 Teilen nicht verfügbar ist, wird normal heruntergeladen. Exportierte JSON-Dateien tragen
 `"app": "stageplot"` und ein Exportdatum; der Import prüft beides nicht streng, lehnt aber
 Dateien mit fremder `app`-Kennung ab und fragt vor dem Ersetzen des aktuellen Projekts nach.
+
+## D20 – Eigenes Druck-SVG für das PDF
+Der Bühnenplan im PDF wird nicht aus dem Bildschirm-SVG kopiert, sondern von
+`lib/export/plotSvg.ts` als eigenständiger SVG-Text erzeugt: feste helle Farben statt
+CSS-Variablen (svg2pdf löst diese nicht auf), Text manuell vertikal zentriert (svg2pdf kennt kein
+`dominant-baseline`), enger Ausschnitt aus Bühne plus überstehenden Elementen und Knotengröße
+passend zum Papier (Radius ca. 4,5 mm). Seite 1 ist A4 quer (Plan + Legende), die Listen folgen
+auf A4 hoch; gepinnte Elemente sind mit „(fest)“ markiert, weil die Standardschrift keine Emojis
+kann. Der PDF-Code (jsPDF, svg2pdf, autotable) ist ein eigener, nachgeladener Chunk.
