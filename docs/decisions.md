@@ -158,3 +158,10 @@ Service Worker `index.html` statt der Ordner-URL (umgeleitete Antworten taugen n
 Offline-Seite). Die AK-App setzt für diesen Pfad eine eigene CSP (`script-src 'self'`, kein
 Nonce) und erlaubt Einbetten nur von der eigenen Domain. Konfiguriert wird dort über die
 Umgebungsvariable `STAGEPLOT_ORIGIN`.
+
+## D25 – Farben der AK-Technik-App
+Die Farbvariablen in `src/styles/theme.css` übernehmen die Palette der AK-App
+(`app/globals.css` in Lolliger/aktapp): Petrol als Akzent (hell `#0e7c86`, dunkel `#33d9c8`),
+deren Grau- und Flächentöne sowie die Status-Farben für Fehler, Warnung und OK. Das PDF nutzt
+dieselben Töne. Die Boxfarben bleiben bunt, weil sie Boxen unterscheiden und nicht zur
+Oberfläche gehören. Schriften sind unverändert (Systemschrift), damit nichts extern geladen wird.

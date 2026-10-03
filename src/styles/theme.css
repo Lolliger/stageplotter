@@ -1,54 +1,57 @@
-/* Farben und Grundwerte. Alle Komponenten nutzen nur diese Variablen. */
+/* Farben und Grundwerte. Alle Komponenten nutzen nur diese Variablen.
+ * Palette der AK-Technik-App (Repo Lolliger/aktapp, app/globals.css), damit der Editor im
+ * AK-Reiter wie ein Teil der Seite wirkt: Petrol als Akzent, kühle Grautöne, Status-Farben
+ * wie dort (brk = Fehler, loan = Warnung, ok). */
 :root {
   color-scheme: light dark;
 
-  --bg: #f4f5f7;
+  --bg: #eef0f3;
   --surface: #ffffff;
-  --surface-2: #eceef2;
-  --border: #d5d9e0;
-  --text: #16181d;
-  --text-muted: #5b6270;
-  --accent: #2563eb;
+  --surface-2: #e4e7eb;
+  --border: #d7dbe1;
+  --text: #1b1f24;
+  --text-muted: #5b6472;
+  --accent: #0e7c86;
   --accent-text: #ffffff;
-  --danger: #dc2626;
-  --danger-bg: #fdecec;
-  --warning: #b45309;
-  --warning-bg: #fdf3e2;
-  --ok: #15803d;
+  --danger: #a3352a;
+  --danger-bg: #fbe7e5;
+  --warning: #8a5b12;
+  --warning-bg: #fbf1de;
+  --ok: #1c6b41;
 
   --stage-floor: #ffffff;
-  --stage-edge: #9aa2af;
-  --stage-grid: #e7e9ee;
-  --stage-grid-major: #d3d7de;
-  --stage-label: #8a919d;
+  --stage-edge: #9aa2ae;
+  --stage-grid: #e8ebee;
+  --stage-grid-major: #d7dbe1;
+  --stage-label: #7a8290;
 
   --radius: 10px;
   --tap: 44px;
-  --shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 4px 16px rgb(0 0 0 / 0.08);
+  --shadow: 0 1px 2px rgb(27 31 36 / 0.06), 0 4px 16px rgb(27 31 36 / 0.08);
   --font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #14161a;
-    --surface: #1d2026;
-    --surface-2: #262a32;
-    --border: #353a44;
-    --text: #e8eaee;
-    --text-muted: #9aa1ad;
-    --accent: #4f8cff;
-    --accent-text: #0b1020;
-    --danger: #f26b6b;
-    --danger-bg: #3a1d1f;
-    --warning: #f0b45a;
-    --warning-bg: #3a2c16;
-    --ok: #4ade80;
+    --bg: #14171c;
+    --surface: #1c2027;
+    --surface-2: #242932;
+    --border: #2f353f;
+    --text: #e7eaee;
+    --text-muted: #8b93a1;
+    --accent: #33d9c8;
+    --accent-text: #08201e;
+    --danger: #f2897a;
+    --danger-bg: #3a1613;
+    --warning: #f2c064;
+    --warning-bg: #3a2c10;
+    --ok: #6fe3a0;
 
-    --stage-floor: #1a1d23;
+    --stage-floor: #181b21;
     --stage-edge: #5d6572;
-    --stage-grid: #23272e;
-    --stage-grid-major: #2e333c;
-    --stage-label: #6b7280;
+    --stage-grid: #222730;
+    --stage-grid-major: #2f353f;
+    --stage-label: #6b7380;
 
     --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 16px rgb(0 0 0 / 0.4);
   }

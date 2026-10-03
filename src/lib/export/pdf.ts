@@ -12,11 +12,11 @@ import { inputTables, outputTables } from './tables'
  */
 
 const M = 12 // Rand in mm
-const DARK: [number, number, number] = [17, 24, 39]
-const MUTED: [number, number, number] = [107, 114, 128]
-const RED: [number, number, number] = [220, 38, 38]
-const AMBER: [number, number, number] = [180, 83, 9]
-const HEAD: [number, number, number] = [243, 244, 246]
+const DARK: [number, number, number] = [27, 31, 36] // AK foreground
+const MUTED: [number, number, number] = [91, 100, 114] // AK muted
+const RED: [number, number, number] = [163, 53, 42] // AK brk-fg
+const AMBER: [number, number, number] = [138, 91, 18] // AK loan-fg
+const HEAD: [number, number, number] = [238, 240, 243] // AK background
 
 function rgb(hex: string): [number, number, number] {
   const h = hex.replace('#', '')
