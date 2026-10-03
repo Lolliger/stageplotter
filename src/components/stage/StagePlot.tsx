@@ -2,7 +2,7 @@ import { useRef } from 'react'
 import { PX_PER_M } from '../../model/defaults'
 import type { ElementRef } from '../../model/types'
 import { useProject } from '../../state/useProject'
-import { BoxNode, GroupNode } from './nodes'
+import { BoxNode, GroupNode, OutputNode } from './nodes'
 import { useDrag } from './useDrag'
 import { useUnitsPerPx } from './useUnitsPerPx'
 import './stage.css'
@@ -89,7 +89,7 @@ export function StagePlot({ selected, onSelect }: Props) {
         PUBLIKUM · {fmt(stage.width)} × {fmt(stage.depth)} m
       </text>
 
-      {/* Verbindungen Gruppe → Box */}
+      {/* Verbindungen Gruppe/Output → Box */}
       <g className="links">
         {project.groups.flatMap((g) => {
           const a = assignment.groups[g.id]
@@ -110,16 +110,44 @@ export function StagePlot({ selected, onSelect }: Props) {
             )
           })
         })}
+        {project.outputs.map((o) => {
+          const boxId = assignment.outputElements[o.id]?.boxId
+          const box = boxId ? boxById.get(boxId) : undefined
+          if (!box) return null
+          return (
+            <line
+              key={`${o.id}-${box.id}`}
+              x1={o.pos.x * PX_PER_M}
+              y1={o.pos.y * PX_PER_M}
+              x2={box.pos.x * PX_PER_M}
+              y2={box.pos.y * PX_PER_M}
+              stroke={box.color}
+              strokeWidth={1.5 * k}
+              strokeDasharray={`${2 * k} ${3 * k}`}
+            />
+          )
+        })}
       </g>
 
       {/* Reihenfolge: Instrumente, darüber Boxen (Kapazität bleibt lesbar), ausgewähltes Element ganz oben. */}
       {[
+        ...project.outputs.map((o) => ({ kind: 'output' as const, el: o })),
         ...project.groups.map((g) => ({ kind: 'group' as const, el: g })),
         ...project.boxes.map((b) => ({ kind: 'box' as const, el: b })),
       ]
         .sort((a, b) => Number(isSelected(a.kind, a.el.id)) - Number(isSelected(b.kind, b.el.id)))
         .map((item) =>
-          item.kind === 'box' ? (
+          item.kind === 'output' ? (
+            <OutputNode
+              key={item.el.id}
+              output={item.el}
+              assignment={assignment.outputElements[item.el.id]}
+              boxById={boxById}
+              k={k}
+              selected={isSelected('output', item.el.id)}
+              bind={bind({ kind: 'output', id: item.el.id }, item.el.pos)}
+            />
+          ) : item.kind === 'box' ? (
             <BoxNode
               key={item.el.id}
               box={item.el}

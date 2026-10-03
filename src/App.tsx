@@ -1,11 +1,14 @@
 import { useCallback, useState } from 'react'
 import { AddInstrument } from './components/editors/AddInstrument'
+import { AddOutput } from './components/editors/AddOutput'
 import { DrumConfigurator } from './components/editors/DrumConfigurator'
 import { GroupEditor } from './components/editors/GroupEditor'
+import { OutputEditor } from './components/editors/OutputEditor'
 import { ProjectSettings } from './components/editors/ProjectSettings'
 import { Sheet } from './components/editors/Sheet'
 import { StageboxEditor } from './components/editors/StageboxEditor'
 import { InputList } from './components/lists/InputList'
+import { OutputList } from './components/lists/OutputList'
 import { Warnings } from './components/lists/Warnings'
 import { StagePlot } from './components/stage/StagePlot'
 import { Toolbar } from './components/toolbar/Toolbar'
@@ -20,6 +23,7 @@ import './styles/ui.css'
 type Panel =
   | { kind: 'edit'; target: ElementRef }
   | { kind: 'addInstrument' }
+  | { kind: 'addOutput' }
   | { kind: 'drums'; groupId?: string }
   | { kind: 'settings' }
   | null
@@ -43,6 +47,12 @@ function Workspace() {
     sheet = (
       <Sheet title="Instrument hinzufügen" onClose={close}>
         <AddInstrument onAdded={close} onConfigureDrums={() => setPanel({ kind: 'drums' })} />
+      </Sheet>
+    )
+  } else if (panel?.kind === 'addOutput') {
+    sheet = (
+      <Sheet title="Output hinzufügen" onClose={close}>
+        <AddOutput onAdded={close} />
       </Sheet>
     )
   } else if (panel?.kind === 'drums') {
@@ -70,6 +80,14 @@ function Workspace() {
           <GroupEditor group={group} onDone={close} onConfigureDrums={() => setPanel({ kind: 'drums', groupId: group.id })} />
         </Sheet>
       )
+  } else if (selected?.kind === 'output') {
+    const output = project.outputs.find((o) => o.id === selected.id)
+    if (output)
+      sheet = (
+        <Sheet title={output.name} onClose={close}>
+          <OutputEditor output={output} onDone={close} />
+        </Sheet>
+      )
   } else if (selected?.kind === 'box') {
     const box = project.boxes.find((b) => b.id === selected.id)
     if (box)
@@ -88,6 +106,7 @@ function Workspace() {
         </h1>
         <Toolbar
           onAddInstrument={() => setPanel({ kind: 'addInstrument' })}
+          onAddOutput={() => setPanel({ kind: 'addOutput' })}
           onAddBox={addBox}
           onSettings={() => setPanel({ kind: 'settings' })}
         />
@@ -100,6 +119,8 @@ function Workspace() {
           <Warnings onSelect={select} />
           <h2 className="panel-title">Inputliste</h2>
           <InputList onSelect={select} />
+          <h2 className="panel-title">Outputliste</h2>
+          <OutputList onSelect={select} />
         </aside>
       </main>
       {sheet}

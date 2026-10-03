@@ -75,9 +75,29 @@
   pointer-events: none;
 }
 
-.group-node .body {
+.group-node .body,
+.output-node .body {
   fill: var(--surface);
   stroke: var(--text-muted);
+}
+
+.output-node .abbr {
+  fill: var(--text);
+  font-weight: 700;
+}
+
+.output-node .label {
+  fill: var(--text-muted);
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: var(--stage-floor);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+
+.output-node.problem .body {
+  stroke: var(--danger) !important;
+  stroke-dasharray: 4 3;
 }
 
 .group-node .abbr {

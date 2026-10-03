@@ -1,7 +1,7 @@
 import type { PointerEventHandler } from 'react'
-import type { BoxUsage, GroupAssignment } from '../../lib/assign'
+import type { BoxUsage, GroupAssignment, OutputAssignment } from '../../lib/assign'
 import { PX_PER_M } from '../../model/defaults'
-import type { InstrumentGroup, InstrumentType, Stagebox } from '../../model/types'
+import type { InstrumentGroup, InstrumentType, OutputElement, Stagebox } from '../../model/types'
 
 interface DragBindings {
   onPointerDown: PointerEventHandler<SVGGElement>
@@ -117,6 +117,70 @@ export function BoxNode({ box, usage, k, selected, bind }: BoxNodeProps) {
           </tspan>
         </text>
       </g>
+    </g>
+  )
+}
+
+interface OutputNodeProps {
+  output: OutputElement
+  assignment: OutputAssignment | undefined
+  boxById: Map<string, Stagebox>
+  k: number
+  selected: boolean
+  bind: DragBindings
+}
+
+/** Wedge als Trapez (Abstrahlrichtung nach hinten zum Musiker), IEM als Pille, Sidefill als Stack. */
+export function OutputNode({ output, assignment, boxById, k, selected, bind }: OutputNodeProps) {
+  const x = output.pos.x * PX_PER_M
+  const y = output.pos.y * PX_PER_M
+  const box = assignment?.boxId ? boxById.get(assignment.boxId) : undefined
+  const problem = !assignment?.boxId
+  const stroke = box ? { stroke: box.color } : undefined
+  const sw = 2.5 * k
+
+  let shape
+  let h: number
+  if (output.kind === 'wedge') {
+    const w = 30 * k
+    h = 15 * k
+    shape = (
+      <path
+        className="body"
+        d={`M ${-w / 2} ${h / 2} L ${w / 2} ${h / 2} L ${w / 3} ${-h / 2} L ${-w / 3} ${-h / 2} Z`}
+        strokeWidth={sw}
+        strokeLinejoin="round"
+        style={stroke}
+      />
+    )
+  } else if (output.kind === 'sidefill') {
+    const w = 18 * k
+    h = 28 * k
+    shape = <rect className="body" x={-w / 2} y={-h / 2} width={w} height={h} rx={3 * k} strokeWidth={sw} style={stroke} />
+  } else {
+    const w = 30 * k
+    h = 16 * k
+    shape = <rect className="body" x={-w / 2} y={-h / 2} width={w} height={h} rx={h / 2} strokeWidth={sw} style={stroke} />
+  }
+  const abbr = output.kind === 'iem' ? 'IEM' : output.kind === 'sidefill' ? 'SF' : 'W'
+
+  return (
+    <g
+      className={`node output-node${selected ? ' selected' : ''}${problem ? ' problem' : ''}`}
+      transform={`translate(${x} ${y})`}
+      {...bind}
+      role="button"
+      aria-label={`${output.name}${assignment?.label ? `, ${assignment.label}` : ''}`}
+    >
+      <circle className="hit" r={Math.max(HIT_RADIUS * k, h / 2 + 6 * k)} />
+      {selected && <circle className="selection" r={h / 2 + 12 * k} strokeWidth={2 * k} />}
+      {shape}
+      <text className="abbr" style={{ fontSize: 9 * k }} dominantBaseline="central" textAnchor="middle">
+        {abbr}
+      </text>
+      <text className="label" y={h / 2 + 11 * k} style={{ fontSize: 10 * k }} textAnchor="middle">
+        {output.name}
+      </text>
     </g>
   )
 }

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { createDefaultProject, createStagebox, spawnPosition } from '../model/defaults'
+import { createDefaultProject, createOutput, createStagebox, spawnPosition } from '../model/defaults'
 import { createGroupFromTemplate, getTemplate } from '../model/templates'
 import type { Project } from '../model/types'
 import { projectReducer } from './reducer'
@@ -41,6 +41,19 @@ test('new elements spawn at stage center, then at the nearest free spot', () => 
   const second = spawnPosition(p)
   expect(Math.hypot(second.x - 5, second.y - 3)).toBeCloseTo(1.5)
   for (const b of p.boxes) expect(Math.hypot(b.pos.x - second.x, b.pos.y - second.y)).toBeGreaterThanOrEqual(1.2)
+})
+
+test('outputs get numbered names and sensible spots', () => {
+  let p = createDefaultProject()
+  const w1 = createOutput(p, 'wedge')
+  expect(w1.name).toBe('Wedge 1')
+  expect(w1.pos.y).toBeGreaterThan(4) // vorne
+  p = projectReducer(p, { type: 'addOutput', output: w1 })
+  const w2 = createOutput(p, 'wedge')
+  expect(w2.name).toBe('Wedge 2')
+  expect(w2.pos).not.toEqual(w1.pos)
+  const sf = createOutput(p, 'sidefill')
+  expect(sf.pos.x).toBeLessThan(2) // erster Sidefill links
 })
 
 describe('projectReducer', () => {

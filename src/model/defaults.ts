@@ -1,5 +1,5 @@
 import { newId } from '../lib/id'
-import type { InstrumentType, Project, Stagebox, StageSize, Vec2 } from './types'
+import type { InstrumentType, OutputElement, OutputKind, Project, Stagebox, StageSize, Vec2 } from './types'
 
 /** Maßstab: 1 m entspricht 30 SVG-Einheiten. */
 export const PX_PER_M = 30
@@ -35,6 +35,12 @@ export const TYPE_ORDER: InstrumentType[] = [
   'vocals',
   'other',
 ]
+
+export const OUTPUT_LABELS: Record<OutputKind, string> = {
+  wedge: 'Wedge',
+  iem: 'IEM',
+  sidefill: 'Sidefill',
+}
 
 export const TYPE_LABELS: Record<InstrumentType, string> = {
   drums: 'Drums',
@@ -106,17 +112,46 @@ export function uniqueName(base: string, existing: string[]): string {
  * Position für neue Elemente: Rasterpunkte (1,5 m) nach Abstand zur Bühnenmitte, der erste,
  * der mindestens 1,2 m von allen vorhandenen Elementen entfernt ist.
  */
-export function spawnPosition(project: Pick<Project, 'stage' | 'boxes' | 'groups' | 'outputs'>): Vec2 {
+export function spawnPosition(
+  project: Pick<Project, 'stage' | 'boxes' | 'groups' | 'outputs'>,
+  /** Bevorzugter Ort, Standard: Bühnenmitte. */
+  prefer?: Vec2,
+): Vec2 {
   const { width, depth } = project.stage
   const center = { x: width / 2, y: depth / 2 }
+  const target = prefer ?? center
   const step = 1.5
+  // Raster um den bevorzugten Ort, damit dieser selbst ein Kandidat ist.
   const cells: Vec2[] = []
-  for (let y = center.y - Math.floor(center.y / step) * step; y <= depth; y += step)
-    for (let x = center.x - Math.floor(center.x / step) * step; x <= width; x += step)
+  for (let y = target.y - Math.floor(target.y / step) * step; y <= depth + 1e-9; y += step)
+    for (let x = target.x - Math.floor(target.x / step) * step; x <= width + 1e-9; x += step)
       cells.push({ x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100 })
-  cells.sort((a, b) => Math.hypot(a.x - center.x, a.y - center.y) - Math.hypot(b.x - center.x, b.y - center.y))
+  cells.sort((a, b) => Math.hypot(a.x - target.x, a.y - target.y) - Math.hypot(b.x - target.x, b.y - target.y))
   const taken = [...project.boxes, ...project.groups, ...project.outputs].map((e) => e.pos)
-  return cells.find((c) => taken.every((t) => Math.hypot(t.x - c.x, t.y - c.y) >= 1.2)) ?? center
+  return cells.find((c) => taken.every((t) => Math.hypot(t.x - c.x, t.y - c.y) >= 1.2)) ?? target
+}
+
+/** "Wedge 1", "Wedge 2", … – nächste freie Nummer. */
+export function nextNumberedName(base: string, existing: string[]): string {
+  const used = new Set(existing)
+  for (let i = 1; ; i++) if (!used.has(`${base} ${i}`)) return `${base} ${i}`
+}
+
+/** Wedges vorne an der Bühnenkante, Sidefills abwechselnd links/rechts, IEMs in der Mitte. */
+export function createOutput(project: Pick<Project, 'stage' | 'boxes' | 'groups' | 'outputs'>, kind: OutputKind): OutputElement {
+  const { width, depth } = project.stage
+  const sidefills = project.outputs.filter((o) => o.kind === 'sidefill').length
+  const prefer: Record<OutputKind, Vec2> = {
+    wedge: { x: width / 2, y: Math.max(0, depth - 0.75) },
+    iem: { x: width / 2, y: depth / 2 },
+    sidefill: { x: sidefills % 2 === 0 ? 0.5 : Math.max(0, width - 0.5), y: Math.max(0, depth - 1.5) },
+  }
+  return {
+    id: newId(),
+    kind,
+    name: nextNumberedName(OUTPUT_LABELS[kind], project.outputs.map((o) => o.name)),
+    pos: spawnPosition(project, prefer[kind]),
+  }
 }
 
 export function createDefaultProject(): Project {
