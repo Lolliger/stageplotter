@@ -213,3 +213,15 @@ Frequenzweiche und Endstufe in der Output-Rubrik „PA-Technik“.
   „PA-Signalweg“ (Seitenleiste und PDF) zeigt je Gerät Eingänge, Filter bzw. Leistung und
   Abnehmer. Im PDF werden „←/→/Ω“ als „<-/->/Ohm“ geschrieben, weil die Standardschrift sie nicht
   kennt.
+
+## D29 – JSON-Export mit Patch und Export im iframe
+Die Projektdatei enthält neben dem Projekt (alles, was zum Wiederherstellen nötig ist: Positionen,
+Kanäle mit Mikro und Notiz, Pins, Drehung, Geräte, Signalquellen) einen Abschnitt `patch` mit den
+abgeleiteten Daten zum Nachlesen: Inputs je Port mit Mikro, Notiz und Abstand, Outputs je Port,
+PA-Signalweg und Hinweise. Er wird beim Import ignoriert und neu berechnet – so bleibt `Project`
+der einzige Zustand, und eine von Hand geänderte Port-Zeile kann nichts verfälschen. Da die
+Zuordnung deterministisch ist, ergibt der Import dieselben Ports.
+Im Reiter der AK-Seite läuft der Editor im iframe; Safari ignoriert dort Downloads. Darum: der
+Download-Link öffnet im iframe notfalls einen neuen Tab statt den Editor wegzunavigieren, und das
+Projekt-Menü bietet „JSON in Zwischenablage kopieren“ sowie (nur eingebettet) „Im eigenen Tab
+öffnen“. Der eigene Tab läuft auf derselben Domain und sieht deshalb dasselbe gespeicherte Projekt.

@@ -14,6 +14,17 @@ describe('JSON export/import', () => {
     expect(parseProjectFile(text)).toEqual({ ok: true, project: p })
   })
 
+  test('includes the derived patch for reading, ignored on import', () => {
+    const p = createDefaultProject()
+    p.groups.push(createDrumGroup(DRUM_PRESETS.standard.config, { x: 3, y: 2 }))
+    p.outputs.push({ id: 'w', kind: 'wedge', name: 'Wedge 1', pos: { x: 5, y: 5 } })
+    const data = JSON.parse(serializeProject(p))
+    expect(data.patch.inputs[0]).toMatchObject({ port: expect.stringMatching(/^[AB]1$/), channel: 'Kick In', instrument: 'Drums', pickup: expect.any(String) })
+    expect(data.patch.inputs).toHaveLength(p.groups[0].channels.length)
+    expect(data.patch.outputs).toEqual([expect.objectContaining({ target: 'Wedge 1', kind: 'Wedge' })])
+    expect(parseProjectFile(JSON.stringify(data))).toEqual({ ok: true, project: p })
+  })
+
   test('reports broken or foreign files', () => {
     expect(parseProjectFile('{nope')).toEqual({ ok: false, error: 'Die Datei ist kein gültiges JSON.' })
     expect(parseProjectFile('{"app":"other"}')).toEqual({ ok: false, error: 'Die Datei stammt nicht aus stageplot.' })

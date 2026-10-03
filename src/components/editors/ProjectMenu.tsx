@@ -12,6 +12,9 @@ export function ProjectMenu({ onDone }: { onDone: () => void }) {
   const [pending, setPending] = useState<Project | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [pdfBusy, setPdfBusy] = useState(false)
+  const [copied, setCopied] = useState(false)
+  // Im iframe (Reiter der AK-Seite) blockieren manche Browser (Safari) Downloads.
+  const embedded = typeof window !== 'undefined' && window.self !== window.top
 
   const exportPdf = async () => {
     setError(null)
@@ -29,8 +32,18 @@ export function ProjectMenu({ onDone }: { onDone: () => void }) {
   }
 
   const exportJson = () => {
-    const blob = new Blob([serializeProject(project)], { type: 'application/json' })
+    const blob = new Blob([serializeProject(project, new Date(), assignment)], { type: 'application/json' })
     void saveFile(blob, exportFileName(project.name, 'json'))
+  }
+
+  const copyJson = async () => {
+    setError(null)
+    try {
+      await navigator.clipboard.writeText(serializeProject(project, new Date(), assignment))
+      setCopied(true)
+    } catch {
+      setError('Kopieren nicht möglich. Öffne den Editor im eigenen Tab und exportiere dort.')
+    }
   }
 
   const onFile = async (file: File | undefined) => {
@@ -49,13 +62,29 @@ export function ProjectMenu({ onDone }: { onDone: () => void }) {
         <div className="menu-grid">
           <button type="button" className="template-btn" onClick={() => void exportPdf()} disabled={pdfBusy}>
             <span className="template-label">{pdfBusy ? 'PDF wird erstellt …' : 'PDF'}</span>
-            <span className="template-meta">Bühnenplan, Inputliste und Outputliste zum Drucken oder Mailen</span>
+            <span className="template-meta">Bühnenplan, Input-, Outputliste und PA-Signalweg zum Drucken oder Mailen</span>
           </button>
           <button type="button" className="template-btn" onClick={exportJson}>
             <span className="template-label">Projektdatei (JSON)</span>
-            <span className="template-meta">Zum Sichern, Weitergeben oder auf anderem Gerät öffnen</span>
+            <span className="template-meta">Zum Sichern, Weitergeben oder auf anderem Gerät öffnen – mit Patch, Mikros und Signalweg</span>
           </button>
         </div>
+        <div className="menu-row">
+          <button type="button" className="btn" onClick={() => void copyJson()}>
+            {copied ? 'JSON kopiert ✓' : 'JSON in Zwischenablage kopieren'}
+          </button>
+          {embedded && (
+            <a className="btn" href={window.location.href} target="_blank" rel="noopener">
+              Im eigenen Tab öffnen ↗
+            </a>
+          )}
+        </div>
+        {embedded && (
+          <p className="hint">
+            Startet kein Download (z. B. in Safari), öffne den Editor im eigenen Tab: Dort ist dasselbe Projekt, und der
+            Export klappt.
+          </p>
+        )}
       </section>
 
       {error && (

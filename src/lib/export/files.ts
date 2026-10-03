@@ -35,6 +35,9 @@ export async function saveFile(blob: Blob, name: string): Promise<void> {
   const a = document.createElement('a')
   a.href = url
   a.download = name
+  // Im iframe: falls der Browser den Download ignoriert, öffnet sich die Datei in einem neuen Tab,
+  // statt den Editor wegzunavigieren.
+  if (window.self !== window.top) a.target = '_blank'
   document.body.appendChild(a)
   a.click()
   a.remove()
