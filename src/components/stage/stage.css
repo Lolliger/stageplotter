@@ -1,0 +1,142 @@
+.stage-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 68dvh;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.stage-floor {
+  fill: var(--stage-floor);
+}
+
+.stage-grid line {
+  stroke: var(--stage-grid);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.stage-grid line.major {
+  stroke: var(--stage-grid-major);
+}
+
+.stage-outline {
+  fill: none;
+  stroke: var(--stage-edge);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.stage-front {
+  stroke: var(--stage-edge);
+  stroke-width: 5;
+  vector-effect: non-scaling-stroke;
+}
+
+.stage-scale text {
+  fill: var(--stage-label);
+}
+
+.stage-audience {
+  fill: var(--stage-label);
+  text-anchor: middle;
+  dominant-baseline: middle;
+  letter-spacing: 0.08em;
+}
+
+.links line {
+  stroke-linecap: round;
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+/* Knoten */
+.node {
+  cursor: grab;
+  touch-action: none;
+}
+
+.node:active {
+  cursor: grabbing;
+}
+
+.node .hit {
+  fill: transparent;
+}
+
+.node .selection {
+  fill: none;
+  stroke: var(--accent);
+}
+
+.node text {
+  pointer-events: none;
+}
+
+.group-node .body {
+  fill: var(--surface);
+  stroke: var(--text-muted);
+}
+
+.group-node .abbr {
+  fill: var(--text);
+  font-weight: 700;
+}
+
+.group-node .badge {
+  fill: var(--text);
+}
+
+.group-node .badge-text {
+  fill: var(--bg);
+  font-weight: 700;
+}
+
+.group-node.problem .body {
+  stroke: var(--danger) !important;
+  stroke-dasharray: 4 3;
+}
+
+.group-node.problem .badge {
+  fill: var(--danger);
+}
+
+.group-node .label {
+  fill: var(--text);
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: var(--stage-floor);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+
+.box-node .box-body {
+  stroke: rgb(0 0 0 / 0.25);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.box-node .box-name {
+  fill: #0b0d12;
+  font-weight: 800;
+}
+
+.box-node .cap-bg {
+  fill: var(--surface);
+  stroke: var(--border);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.box-node .cap {
+  fill: var(--text);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.box-node .cap .over {
+  fill: var(--danger);
+  font-weight: 800;
+}
