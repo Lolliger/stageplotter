@@ -8,3 +8,12 @@ createRoot(document.getElementById('root')!).render(
     <App />
   </StrictMode>,
 )
+
+// Offline-Fähigkeit nur im Produktionsbuild (im Dev-Server würde der Cache stören).
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register(`/sw.js?build=${__BUILD_ID__}`).catch(() => {
+      // Ohne Service Worker funktioniert die App weiter, nur nicht offline.
+    })
+  })
+}

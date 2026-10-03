@@ -128,3 +128,14 @@ man auf dem Handy über den Plan hinweg zur Liste scrollen kann; erst gezoomt ge
 dem Plan (ein Finger auf freier Fläche verschiebt). Auf schmalen Layouts zoomt das Mausrad nur mit
 Strg/Cmd. Knoten behalten beim Zoomen ihre Bildschirmgröße – Zoomen schafft Platz zwischen ihnen.
 Der Ausschnitt ist reine Ansicht und wird nicht gespeichert.
+
+## D22 – Offline-Fähigkeit mit eigenem, kleinem Service Worker
+Statt einer PWA-Bibliothek gibt es `public/sw.js` (ca. 50 Zeilen). Ein kleines Vite-Plugin
+schreibt beim Build `precache-manifest.json` mit allen erzeugten Dateien, auch den nachgeladenen
+(PDF-Export) – der Worker legt beim Installieren alles in den Cache, die App inklusive PDF-Export
+funktioniert danach ohne Netz. Seitenaufrufe gehen zuerst ans Netz (aktuelle Version), offline
+wird die gecachte App geliefert. Die Build-Kennung steckt in der Registrierungs-URL
+(`/sw.js?build=…`), damit jeder Deploy einen neuen Worker installiert und alte Caches löscht.
+Registriert wird nur im Produktionsbuild. Mit Manifest und Icons lässt sich die App auf iPhone/iPad
+„Zum Home-Bildschirm“ hinzufügen. `vercel.json` setzt `no-cache` für Worker und Manifest-Liste
+und lange Cache-Zeiten für die gehashten Dateien unter `/assets`.
