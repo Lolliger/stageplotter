@@ -236,7 +236,7 @@ export function renderPlotSvg(project: Project, assignment: Assignment, k: numbe
     const w = DEVICE_SHAPE.w * k
     const h = DEVICE_SHAPE.h * k
     const color = deviceColor(project, assignment, d.id) ?? C.muted
-    const io = d.kind === 'amp' ? `${d.inputs.length} Kan.` : `${d.inputs.length}→${d.outputs.length}`
+    const io = d.kind === 'amp' ? `×${d.inputs.length}` : `${d.inputs.length}>${d.outputs.length}` // WinAnsi-Schrift kennt keinen Pfeil
     parts.push(
       el(
         'g',

@@ -168,9 +168,9 @@ Oberfläche gehören. Schriften sind unverändert (Systemschrift), damit nichts 
 
 ## D26 – Verstärker und PA
 „Verstärker“ sind die Amps auf der Bühne (Gitarre, Bass, Keyboard): Instrumentengruppen mit
-`form: 'amp'`, eigene Rubrik „Verstärker“ im Menü und Kasten-Symbol („AMP“) statt Kreis. Ihr
+`form: 'amp'`, eigene Rubrik „Backline (Instrumenten-Amps)“ im Menü und Kasten-Symbol („AMP“) statt Kreis. Ihr
 Typ (Gitarre/Bass/Keys) bleibt, damit ihre Kanäle in der Inputliste an der üblichen Stelle stehen.
-Endstufen für die PA werden nicht modelliert. „PA“ sind Output-Elemente: „PA (L + R)“ legt ein
+PA-Endstufen siehe D28. „PA“ sind Output-Elemente: „PA (L + R)“ legt ein
 Paar links und rechts neben der Bühnenkante an, „Sub“ einen Subwoofer vor der Bühne; jedes belegt
 einen Output. PA und Subs dürfen wie Stageboxen bis 1 m neben/vor der Bühne stehen, die übrigen
 Outputs bleiben auf der Bühne. Formen und Maße stehen gemeinsam in `src/model/shapes.ts` für
@@ -185,3 +185,31 @@ Pfeil vor der Front zeigt die aktuelle Richtung, die Beschriftung bleibt waagere
 im Editor über Richtungsknöpfe („strahlt zum Publikum/nach links/…“) und Feinschritte ±15°/±45°
 statt über eine Geste im Plan – auf dem Handy treffsicherer und ohne Konflikt mit Drag und Pinch.
 Neue Sidefills zeigen automatisch zur Bühnenmitte. IEMs haben keine Richtung.
+
+## D28 – Frequenzweiche, Endstufe und PA-Signalweg
+Auf Rückmeldung hin sind mit „Verstärker“ PA-Endstufen gemeint. Die Backline-Amps aus D26 bleiben
+(Rubrik „Backline (Instrumenten-Amps)“); dazu kommen Geräte (`project.devices`) vom Typ
+Frequenzweiche und Endstufe in der Output-Rubrik „PA-Technik“.
+- **Erlaubte Kette:** Stagebox → Weiche → Endstufe → Lautsprecher. Ein Lautsprecher (jede
+  Output-Art) hängt an einem Endstufen-Kanal oder einem Weichen-Ausgang (aktive Box), ein
+  Endstufen-Kanal an einem Weichen-Ausgang, sonst an der Stagebox. Weichen-Eingänge kommen immer
+  von der Stagebox. So entstehen keine Schleifen; ungültige Quellen werden beim Laden und nach
+  Löschen entfernt (`cleanSources`).
+- **Output-Belegung:** Nur was an der Stagebox hängt, belegt einen Box-Output. Endstufen-Kanäle,
+  an denen nichts hängt, belegen keinen („frei“). Elemente bekommen ihre Ports vor den
+  Geräte-Eingängen, damit Wedges ihre gewohnten Ports behalten.
+- **Weiche:** 1–4 Eingänge, 1–8 Ausgänge, Anschluss je Ein-/Ausgang (XLR, AES, Dante).
+  Jeder Ausgang summiert gewählte Eingänge (z. B. Sub = L + R) und hat optional Hochpass und
+  Tiefpass (20 Hz–20 kHz), Flankensteilheit 12/18/24/48 dB/Okt und Charakteristik
+  Linkwitz-Riley/Butterworth/Bessel; Steilheit und Charakteristik gelten für beide Filter eines
+  Ausgangs. Vorlagen: Stereo + Mono-Sub (Standard, 100 Hz), Stereo 2-Wege, Stereo 3-Wege, Mono
+  2-Wege. Hinweise bei HP ≥ LP oder Ausgängen ohne Eingang.
+- **Endstufe:** 1–8 Kanäle, eine Leistungsangabe für alle (W @ Ω), Eingangs- und
+  Ausgangsanschluss (XLR/Klinke/AES/Dante bzw. Speakon NL4/NL8/Klemmen). Vorlagen 2/4/8 Kanäle.
+- **Plan:** Geräte erscheinen als Rack-Symbol neben der Bühne (rechts, dann links), sind frei
+  verschiebbar und nicht drehbar. Kabel vom Gerät zu seinen Abnehmern sind gestrichelt und in der
+  Farbe der speisenden Box.
+- **Listen:** Die Outputliste zeigt Weichen-/Endstufen-Eingänge als Ziele der Box; der
+  „PA-Signalweg“ (Seitenleiste und PDF) zeigt je Gerät Eingänge, Filter bzw. Leistung und
+  Abnehmer. Im PDF werden „←/→/Ω“ als „<-/->/Ohm“ geschrieben, weil die Standardschrift sie nicht
+  kennt.

@@ -2,7 +2,8 @@ import { describe, expect, test } from 'vitest'
 import { createDefaultProject } from '../../model/defaults'
 import { createGroupFromTemplate, getTemplate } from '../../model/templates'
 import { assign } from '../assign'
-import { inputTables, outputTables } from './tables'
+import { createAmp, createCrossover } from '../../model/devices'
+import { inputTables, outputTables, signalTables } from './tables'
 
 function sample() {
   const p = createDefaultProject() // A hinten links, B hinten rechts
@@ -38,5 +39,31 @@ describe('export tables', () => {
     const t = outputTables(p, assign(p))
     expect(t.boxes).toHaveLength(1)
     expect(t.boxes[0]).toMatchObject({ usage: '1/8 Out', rows: [{ port: 'B-Out 1', name: 'Wedge 1', kind: 'Wedge', distance: '4,0 m' }] })
+  })
+})
+
+describe('signal tables', () => {
+  test('crossover and amp rows show source, filter and targets', () => {
+    const p = sample()
+    const xo = createCrossover(p)
+    p.devices.push(xo)
+    const amp = createAmp(p)
+    amp.inputs[0].source = { deviceId: xo.id, output: 2 } // Kanal A ← Sub
+    p.devices.push(amp)
+    p.outputs.push({ id: 'sub', kind: 'sub', name: 'Sub 1', pos: { x: 5, y: 6.6 }, source: { deviceId: amp.id, output: 0 } })
+    const [xoTable, ampTable] = signalTables(p, assign(p))
+    expect(xoTable.title).toBe('Frequenzweiche: Weiche')
+    expect(xoTable.summary).toBe('2 Eingänge (XLR (analog)) · 3 Ausgänge')
+    expect(xoTable.feeds[0]).toMatch(/^In A \(L\) ← Stagebox B-Out \d$/)
+    expect(xoTable.rows[2]).toEqual({
+      port: 'Out 3',
+      name: 'Sub',
+      from: 'L + R',
+      detail: 'LP 100 Hz · 24 dB/Okt LR · XLR (analog)',
+      to: 'Endstufe · Kanal A',
+    })
+    expect(ampTable.summary).toBe('2 × 1000 W @ 4 Ω · XLR (analog) → Speakon NL4')
+    expect(ampTable.rows[0]).toMatchObject({ port: 'Kanal A', from: 'Weiche · Out 3 Sub', to: 'Sub 1' })
+    expect(ampTable.rows[1]).toMatchObject({ from: 'frei', to: '—' })
   })
 })

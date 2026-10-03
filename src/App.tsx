@@ -11,6 +11,7 @@ import { Sheet } from './components/editors/Sheet'
 import { StageboxEditor } from './components/editors/StageboxEditor'
 import { InputList } from './components/lists/InputList'
 import { OutputList } from './components/lists/OutputList'
+import { SignalChain } from './components/lists/SignalChain'
 import { Warnings } from './components/lists/Warnings'
 import { StagePlot } from './components/stage/StagePlot'
 import { Toolbar } from './components/toolbar/Toolbar'
@@ -185,6 +186,12 @@ function Workspace() {
           <InputList onSelect={select} />
           <h2 className="panel-title">Outputliste</h2>
           <OutputList onSelect={select} />
+          {project.devices.length > 0 && (
+            <>
+              <h2 className="panel-title">PA-Signalweg</h2>
+              <SignalChain onSelect={select} />
+            </>
+          )}
         </aside>
       </main>
       {sheet}

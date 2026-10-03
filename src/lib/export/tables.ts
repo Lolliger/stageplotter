@@ -1,5 +1,14 @@
-import { targetKindLabel, unpatchedTargetName } from '../../model/devices'
-import type { Project, Stagebox } from '../../model/types'
+import {
+  CONNECTOR_LABELS,
+  DEVICE_LABELS,
+  consumersOf,
+  describeFilter,
+  inputLabel,
+  outputLabel,
+  targetKindLabel,
+  unpatchedTargetName,
+} from '../../model/devices'
+import type { Device, Project, Stagebox } from '../../model/types'
 import type { Assignment } from '../assign'
 import { roundMeters } from '../geometry'
 
@@ -80,4 +89,82 @@ export function outputTables(project: Project, assignment: Assignment): { boxes:
     return target ? [{ port: '–', name: target.name, kind: target.kind, distance: '' }] : []
   })
   return { boxes, unpatched }
+}
+
+// ---------- PA-Signalweg ----------
+
+export interface SignalRow {
+  /** „Out 1“ bzw. „Kanal A“ */
+  port: string
+  /** Name des Ausgangs (Weiche) */
+  name: string
+  /** Woher das Signal kommt */
+  from: string
+  /** Filter (Weiche) bzw. Leistung (Endstufe) und Anschluss */
+  detail: string
+  /** Was daran hängt */
+  to: string
+}
+
+export interface DeviceTable {
+  device: Device
+  title: string
+  /** z. B. „2 Eingänge (XLR) · 3 Ausgänge“ */
+  summary: string
+  /** Speisung der Weichen-Eingänge, z. B. „In A (L) ← B-Out 1“ */
+  feeds: string[]
+  rows: SignalRow[]
+}
+
+/** Woher kommt ein Geräte-Eingang? Für Listen und PDF. */
+export function inputFeedLabel(project: Project, assignment: Assignment, device: Device, index: number): string {
+  const a = assignment.deviceInputs[device.id]?.[index]
+  if (a?.source) {
+    const from = project.devices.find((d) => d.id === a.source!.deviceId)
+    if (!from) return '—'
+    const out = from.outputs[a.source.output]
+    return `${from.name} · ${outputLabel(from, a.source.output)}${from.kind === 'crossover' && out ? ` ${out.name}` : ''}`
+  }
+  if (a?.unused) return 'frei'
+  return a?.label ? `Stagebox ${a.label}` : 'kein freier Output'
+}
+
+export function signalTables(project: Project, assignment: Assignment): DeviceTable[] {
+  return project.devices.map((device) => {
+    const to = (i: number) => consumersOf(project, device.id, i).map((c) => c.label).join(', ') || '—'
+    if (device.kind === 'crossover') {
+      const connectors = [...new Set(device.inputs.map((i) => CONNECTOR_LABELS[i.connector]))].join('/')
+      return {
+        device,
+        title: `${DEVICE_LABELS.crossover}: ${device.name}`,
+        summary: `${device.inputs.length} ${device.inputs.length === 1 ? 'Eingang' : 'Eingänge'} (${connectors}) · ${device.outputs.length} ${device.outputs.length === 1 ? 'Ausgang' : 'Ausgänge'}`,
+        feeds: device.inputs.map(
+          (input, i) => `${inputLabel(device, i)} (${input.name}) ← ${inputFeedLabel(project, assignment, device, i)}`,
+        ),
+        rows: device.outputs.map((o, i) => ({
+          port: outputLabel(device, i),
+          name: o.name,
+          from: (o.from ?? []).map((f) => device.inputs[f]?.name ?? '?').join(' + ') || '—',
+          detail: `${describeFilter(o)} · ${CONNECTOR_LABELS[o.connector]}`,
+          to: to(i),
+        })),
+      }
+    }
+    const power = device.power ?? { watts: 1000, ohms: 4 }
+    const inConn = CONNECTOR_LABELS[device.inputs[0]?.connector ?? 'xlr']
+    const outConn = CONNECTOR_LABELS[device.outputs[0]?.connector ?? 'speakon-nl4']
+    return {
+      device,
+      title: `${DEVICE_LABELS.amp}: ${device.name}`,
+      summary: `${device.inputs.length} × ${power.watts} W @ ${power.ohms} Ω · ${inConn} → ${outConn}`,
+      feeds: [],
+      rows: device.outputs.map((_, i) => ({
+        port: outputLabel(device, i),
+        name: '',
+        from: inputFeedLabel(project, assignment, device, i),
+        detail: `${power.watts} W @ ${power.ohms} Ω`,
+        to: to(i),
+      })),
+    }
+  })
 }

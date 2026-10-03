@@ -253,7 +253,7 @@ export function DeviceNode({ device, color, k, selected, bind }: DeviceNodeProps
   const y = device.pos.y * PX_PER_M
   const w = DEVICE_SHAPE.w * k
   const h = DEVICE_SHAPE.h * k
-  const io = device.kind === 'amp' ? `${device.inputs.length} Kan.` : `${device.inputs.length}→${device.outputs.length}`
+  const io = device.kind === 'amp' ? `×${device.inputs.length}` : `${device.inputs.length}→${device.outputs.length}`
 
   return (
     <g

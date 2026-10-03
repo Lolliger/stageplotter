@@ -190,3 +190,16 @@ button.warning-text {
 .empty p {
   margin: 0 0 6px;
 }
+
+.list-summary {
+  margin: 0;
+  padding: 0 12px 6px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.list-feeds {
+  margin: 0;
+  padding: 0 12px 8px 28px;
+  font-size: 0.85rem;
+}

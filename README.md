@@ -16,14 +16,17 @@ erzeugt daraus Inputliste, Outputliste und Patchplan. Läuft komplett im Browser
 - **Drum-Konfigurator** (Kick In/Out, Snare Top/Bottom, Hi-Hat, Toms, OH, Room, Percussion;
   Vorlagen Minimal/Standard/Voll) mit Live-Anzeige der Kanäle und freien Inputs
 - **Vorlagen** für Bass, Gitarre, Akustik, Keys (mono/stereo), Lead/Backing Vox, Percussion
-  und **Verstärker** (Gitarren-, Bass-, Keyboard-Amp); Kanäle frei bearbeitbar (Name, Mikro,
+  und **Backline-Amps** (Gitarre, Bass, Keyboard); Kanäle frei bearbeitbar (Name, Mikro,
   Notiz, Reihenfolge)
 - **Outputs**: Wedges, IEMs, Sidefills, **PA (L + R)** und **Subs** – jedes belegt einen Output
-  seiner Box; PA und Subs stehen neben bzw. vor der Bühne
+  seiner Box; PA und Subs stehen neben bzw. vor der Bühne; alles mit Abstrahlrichtung drehbar
+- **PA-Technik**: Frequenzweiche (Ein-/Ausgänge, Anschlusstyp, Hoch-/Tiefpass, Steilheit,
+  Charakteristik, Vorlagen) und Endstufe (Kanäle, Leistung, Anschlüsse); Signalweg
+  Stagebox → Weiche → Endstufe → Lautsprecher frei verknüpfbar
 - **Gebündelte Kabelwege**: rechtwinklige Strippen je Box, ohne Umweg zusammengelegt, Dicke und
   Anzahl je Bündel (alternativ Luftlinie)
 - **Listen** je Box: Port, Quelle, Abnahme, Abstand; rote Warnungen mit konkretem Hinweis, was fehlt
-- **Export**: PDF (Bühnenplan als Vektorgrafik + Input- und Outputliste), JSON-Projektdatei;
+- **Export**: PDF (Bühnenplan als Vektorgrafik + Input-, Outputliste und PA-Signalweg), JSON-Projektdatei;
   Import mit Prüfung
 - **Rückgängig/Wiederholen**, automatische Speicherung im Browser
 - **Offline-fähig** und als App auf dem Home-Bildschirm installierbar

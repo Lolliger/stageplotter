@@ -4,11 +4,11 @@ import { svg2pdf } from 'svg2pdf.js'
 import type { Project } from '../../model/types'
 import type { Assignment } from '../assign'
 import { plotViewBox, renderPlotSvg } from './plotSvg'
-import { inputTables, outputTables } from './tables'
+import { inputTables, outputTables, signalTables } from './tables'
 
 /**
  * PDF: Seite 1 (A4 quer) Bühnenplan als Vektorgrafik, danach (A4 hoch) Inputliste,
- * Outputliste und Hinweise. Wird nur beim Export per dynamischem Import geladen.
+ * Outputliste, PA-Signalweg und Hinweise. Wird nur beim Export per dynamischem Import geladen.
  */
 
 const M = 12 // Rand in mm
@@ -22,6 +22,11 @@ function rgb(hex: string): [number, number, number] {
   const h = hex.replace('#', '')
   const full = h.length === 3 ? h.split('').map((c) => c + c).join('') : h.slice(0, 6)
   return [0, 2, 4].map((i) => parseInt(full.slice(i, i + 2), 16)) as [number, number, number]
+}
+
+/** Die PDF-Standardschrift (WinAnsi) kennt keine Pfeile und kein Ω. */
+function pdfText(text: string): string {
+  return text.replace(/←/g, '<-').replace(/→/g, '->').replace(/Ω/g, 'Ohm')
 }
 
 function finalY(doc: jsPDF): number {
@@ -180,6 +185,27 @@ export async function buildPdf(project: Project, assignment: Assignment, date = 
     }
   }
 
+  const signal = signalTables(project, assignment)
+  if (signal.length) {
+    y = heading(doc, 'PA-Signalweg', y + 2)
+    for (const t of signal) {
+      const crossover = t.device.kind === 'crossover'
+      const info = pdfText([t.summary, ...t.feeds].join('\n'))
+      autoTable(doc, {
+        ...tableBase,
+        startY: y,
+        head: [
+          [{ content: t.title, colSpan: 4, styles: { fillColor: DARK, textColor: [255, 255, 255], fontSize: 10 } }],
+          [{ content: info, colSpan: 4, styles: { fillColor: HEAD, fontStyle: 'normal', fontSize: 8.5 } }],
+          crossover ? ['Ausgang', 'Von', 'Filter · Anschluss', 'An'] : ['Kanal', 'Eingang', 'Leistung', 'An'],
+        ],
+        body: t.rows.map((r) => [crossover ? `${r.port} ${r.name}` : r.port, r.from, r.detail, r.to].map(pdfText)),
+        columnStyles: { 0: { fontStyle: 'bold', cellWidth: crossover ? 30 : 18 } },
+      })
+      y = finalY(doc) + 6
+    }
+  }
+
   if (assignment.warnings.length) {
     y = heading(doc, 'Hinweise', y + 2)
     autoTable(doc, {
@@ -188,7 +214,7 @@ export async function buildPdf(project: Project, assignment: Assignment, date = 
       startY: y,
       body: assignment.warnings.map((w): CellInput[] => [
         { content: w.level === 'error' ? 'Fehler' : 'Hinweis', styles: { fontStyle: 'bold', textColor: w.level === 'error' ? RED : AMBER } },
-        w.message,
+        pdfText(w.message),
       ]),
       columnStyles: { 0: { cellWidth: 18 } },
     })
