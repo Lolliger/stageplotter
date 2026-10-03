@@ -4,6 +4,8 @@ import { GroupEditor } from './components/editors/GroupEditor'
 import { ProjectSettings } from './components/editors/ProjectSettings'
 import { Sheet } from './components/editors/Sheet'
 import { StageboxEditor } from './components/editors/StageboxEditor'
+import { InputList } from './components/lists/InputList'
+import { Warnings } from './components/lists/Warnings'
 import { StagePlot } from './components/stage/StagePlot'
 import { Toolbar } from './components/toolbar/Toolbar'
 import { createStagebox } from './model/defaults'
@@ -11,6 +13,7 @@ import type { ElementRef } from './model/types'
 import { ProjectProvider } from './state/ProjectProvider'
 import { useProject } from './state/useProject'
 import './styles/layout.css'
+import './styles/lists.css'
 import './styles/ui.css'
 
 type Panel = { kind: 'edit'; target: ElementRef } | { kind: 'addInstrument' } | { kind: 'settings' } | null
@@ -72,7 +75,11 @@ function Workspace() {
         <section className="stage-panel" aria-label="Bühnenplan">
           <StagePlot selected={selected} onSelect={select} />
         </section>
-        <aside className="side-panel" aria-label="Listen" />
+        <aside className="side-panel" aria-label="Listen">
+          <Warnings onSelect={select} />
+          <h2 className="panel-title">Inputliste</h2>
+          <InputList onSelect={select} />
+        </aside>
       </main>
       {sheet}
     </div>

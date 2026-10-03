@@ -67,3 +67,15 @@ UI-Texte auf Deutsch, Code, Bezeichner und Commit-Messages auf Englisch.
 Breite und Tiefe sind in den Projekteinstellungen frei einstellbar (0,5-m-Schritte, 2–40 m).
 Wird die Bühne verkleinert, werden Elemente, die außerhalb liegen, an den Bühnenrand geschoben
 statt gelöscht. Stageboxen dürfen bis 1 m außerhalb der Bühne stehen (z. B. Box im Seitenbereich).
+
+## D14 – Speichern in localStorage, Import-Validierung von Anfang an
+Das Projekt wird 300 ms nach jeder Änderung gespeichert und zusätzlich sofort bei `pagehide`
+bzw. wenn der Tab in den Hintergrund geht (iOS beendet Tabs ohne Vorwarnung). Gelesen wird über
+dieselbe Validierung (`parseProject`), die später auch der JSON-Import nutzt: fehlende optionale
+Felder werden ergänzt, Pins auf nicht vorhandene Boxen verworfen, unlesbare Daten führen zum
+Standardprojekt statt zu einem Absturz.
+
+## D15 – Zeichenreihenfolge im Plan
+Instrumente unten, Stageboxen darüber (die Kapazitätsanzeige muss lesbar bleiben), das gerade
+ausgewählte Element ganz oben. Knoten, Schrift und Trefferflächen haben auf dem Bildschirm eine
+feste Größe (über SVG-Einheiten pro CSS-Pixel), unabhängig von Bühnengröße und Display.

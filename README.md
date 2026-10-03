@@ -4,7 +4,8 @@ Mobilfreundlicher Stageplot-Editor für Veranstaltungstechnik. Instrumente auf e
 platzieren – das Tool ordnet jedes Instrument automatisch der nächstgelegenen Stagebox zu und
 erzeugt daraus Inputliste und Patchplan.
 
-> Status: in Planung. Siehe [docs/plan.md](docs/plan.md).
+> Status: Phase 1 (MVP) fertig – Bühne, Stageboxen, Instrumente, Auto-Zuordnung, Inputliste.
+> Nächste Schritte siehe [docs/plan.md](docs/plan.md).
 
 ## Features (geplant)
 

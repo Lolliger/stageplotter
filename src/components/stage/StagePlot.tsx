@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import { PX_PER_M } from '../../model/defaults'
-import type { ElementRef, InstrumentGroup, Stagebox } from '../../model/types'
+import type { ElementRef } from '../../model/types'
 import { useProject } from '../../state/useProject'
 import { BoxNode, GroupNode } from './nodes'
 import { useDrag } from './useDrag'
@@ -37,10 +37,6 @@ export function StagePlot({ selected, onSelect }: Props) {
 
   const boxById = new Map(project.boxes.map((b) => [b.id, b]))
   const isSelected = (kind: ElementRef['kind'], id: string) => selected?.kind === kind && selected.id === id
-
-  // Ausgewähltes Element zuletzt zeichnen, damit es oben liegt.
-  const lastFirst = <T extends { id: string }>(items: T[], kind: ElementRef['kind']) =>
-    [...items].sort((a, b) => Number(isSelected(kind, a.id)) - Number(isSelected(kind, b.id)))
 
   const W = stage.width * PX_PER_M
   const D = stage.depth * PX_PER_M
@@ -116,28 +112,34 @@ export function StagePlot({ selected, onSelect }: Props) {
         })}
       </g>
 
-      {lastFirst(project.boxes, 'box').map((box: Stagebox) => (
-        <BoxNode
-          key={box.id}
-          box={box}
-          usage={assignment.usage[box.id]}
-          k={k}
-          selected={isSelected('box', box.id)}
-          bind={bind({ kind: 'box', id: box.id }, box.pos)}
-        />
-      ))}
-
-      {lastFirst(project.groups, 'group').map((group: InstrumentGroup) => (
-        <GroupNode
-          key={group.id}
-          group={group}
-          assignment={assignment.groups[group.id]}
-          boxById={boxById}
-          k={k}
-          selected={isSelected('group', group.id)}
-          bind={bind({ kind: 'group', id: group.id }, group.pos)}
-        />
-      ))}
+      {/* Reihenfolge: Instrumente, darüber Boxen (Kapazität bleibt lesbar), ausgewähltes Element ganz oben. */}
+      {[
+        ...project.groups.map((g) => ({ kind: 'group' as const, el: g })),
+        ...project.boxes.map((b) => ({ kind: 'box' as const, el: b })),
+      ]
+        .sort((a, b) => Number(isSelected(a.kind, a.el.id)) - Number(isSelected(b.kind, b.el.id)))
+        .map((item) =>
+          item.kind === 'box' ? (
+            <BoxNode
+              key={item.el.id}
+              box={item.el}
+              usage={assignment.usage[item.el.id]}
+              k={k}
+              selected={isSelected('box', item.el.id)}
+              bind={bind({ kind: 'box', id: item.el.id }, item.el.pos)}
+            />
+          ) : (
+            <GroupNode
+              key={item.el.id}
+              group={item.el}
+              assignment={assignment.groups[item.el.id]}
+              boxById={boxById}
+              k={k}
+              selected={isSelected('group', item.el.id)}
+              bind={bind({ kind: 'group', id: item.el.id }, item.el.pos)}
+            />
+          ),
+        )}
     </svg>
   )
 }

@@ -102,10 +102,17 @@ export function uniqueName(base: string, existing: string[]): string {
   }
 }
 
-/** Position für neue Elemente: Bühnenmitte, leicht versetzt, damit nichts übereinander liegt. */
+/** Position für neue Elemente: Raster um die Bühnenmitte (1,5 m Abstand), damit nichts übereinander liegt. */
 export function spawnPosition(stage: StageSize, index: number): Vec2 {
-  const offset = (index % 5) * 0.5 - 1
-  return { x: stage.width / 2 + offset, y: stage.depth / 2 + offset / 2 }
+  const cols = Math.max(1, Math.min(5, Math.floor(stage.width / 1.5) - 1))
+  const rows = Math.max(1, Math.min(3, Math.floor(stage.depth / 1.5) - 1))
+  const i = index % (cols * rows)
+  const col = i % cols
+  const row = Math.floor(i / cols)
+  return {
+    x: stage.width / 2 + (col - (cols - 1) / 2) * 1.5,
+    y: stage.depth / 2 + (row - (rows - 1) / 2) * 1.5,
+  }
 }
 
 export function createDefaultProject(): Project {
