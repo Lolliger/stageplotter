@@ -24,8 +24,10 @@ export function StagePlot({ selected, onSelect }: Props) {
   const vy = -PAD * PX_PER_M
   const vw = (stage.width + 2 * PAD) * PX_PER_M
   const vh = (stage.depth + 2 * PAD) * PX_PER_M
-  const unitsPerPx = useUnitsPerPx(svgRef, vw, vh)
-  const k = Math.min(4, Math.max(0.35, unitsPerPx))
+  const { unitsPerPx, widthPx } = useUnitsPerPx(svgRef, vw, vh)
+  // Auf großen Flächen Knoten etwas größer zeichnen, auf dem Handy Basisgröße.
+  const boost = Math.min(1.4, Math.max(1, widthPx / 520))
+  const k = Math.min(4, Math.max(0.35, unitsPerPx * boost))
 
   const bind = useDrag(
     svgRef,

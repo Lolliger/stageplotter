@@ -64,11 +64,28 @@ export function nextBoxColor(existing: Stagebox[]): string {
   return BOX_COLORS.find((c) => !used.has(c)) ?? BOX_COLORS[existing.length % BOX_COLORS.length]
 }
 
+/** Freier Platz für eine neue Box: hinten Mitte, Seiten, vorne – mind. 2 m Abstand zu anderen Boxen. */
+export function freeBoxPosition(project: Pick<Project, 'boxes' | 'stage'>): Vec2 {
+  const { width: w, depth: d } = project.stage
+  const candidates: Vec2[] = [
+    { x: w / 2, y: 0.75 },
+    { x: 0.75, y: d / 2 },
+    { x: w - 0.75, y: d / 2 },
+    { x: w / 2, y: d - 0.75 },
+    { x: 1.5, y: d - 0.75 },
+    { x: w - 1.5, y: d - 0.75 },
+    { x: w / 4, y: 0.75 },
+    { x: (3 * w) / 4, y: 0.75 },
+  ]
+  const free = candidates.find((c) => project.boxes.every((b) => Math.hypot(b.pos.x - c.x, b.pos.y - c.y) >= 2))
+  return free ?? candidates[0]
+}
+
 export function createStagebox(project: Pick<Project, 'boxes' | 'stage'>, pos?: Vec2): Stagebox {
   return {
     id: newId(),
     name: nextBoxName(project.boxes),
-    pos: pos ?? { x: project.stage.width / 2, y: 0.75 },
+    pos: pos ?? freeBoxPosition(project),
     inputs: DEFAULT_BOX_INPUTS,
     outputs: DEFAULT_BOX_OUTPUTS,
     color: nextBoxColor(project.boxes),

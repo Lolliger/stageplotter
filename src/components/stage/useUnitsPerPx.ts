@@ -8,8 +8,8 @@ export function useUnitsPerPx(
   svgRef: RefObject<SVGSVGElement | null>,
   viewWidth: number,
   viewHeight: number,
-): number {
-  const [value, setValue] = useState(1)
+): { unitsPerPx: number; widthPx: number } {
+  const [value, setValue] = useState({ unitsPerPx: 1, widthPx: 375 })
 
   useLayoutEffect(() => {
     const svg = svgRef.current
@@ -18,7 +18,7 @@ export function useUnitsPerPx(
       const { width, height } = svg.getBoundingClientRect()
       if (width === 0 || height === 0) return
       // preserveAspectRatio="meet": die engere Achse bestimmt den Maßstab.
-      setValue(Math.max(viewWidth / width, viewHeight / height))
+      setValue({ unitsPerPx: Math.max(viewWidth / width, viewHeight / height), widthPx: width })
     }
     update()
     const observer = new ResizeObserver(update)

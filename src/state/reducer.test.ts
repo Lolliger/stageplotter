@@ -25,6 +25,12 @@ describe('default project', () => {
     const withoutA = { ...p, boxes: p.boxes.slice(1) }
     expect(createStagebox(withoutA).name).toBe('A')
   })
+
+  test('new boxes are placed away from existing ones', () => {
+    const p = createDefaultProject()
+    const c = createStagebox(p)
+    for (const b of p.boxes) expect(Math.hypot(b.pos.x - c.pos.x, b.pos.y - c.pos.y)).toBeGreaterThanOrEqual(2)
+  })
 })
 
 describe('projectReducer', () => {
