@@ -77,10 +77,14 @@ export interface StageSize {
   depth: number
 }
 
+export type CableView = 'bundled' | 'direct'
+
 export interface Project {
   version: 1
   name: string
   stage: StageSize
+  /** Darstellung der Kabel im Plan; Standard gebündelt. */
+  cableView?: CableView
   boxes: Stagebox[]
   /** Reihenfolge im Array = Erstellungsreihenfolge. */
   groups: InstrumentGroup[]

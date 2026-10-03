@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import type { InstrumentGroup, InstrumentType, OutputElement, Project, Stagebox } from '../model/types'
 import { assign } from './assign'
-import type { DistanceFn } from './geometry'
+import { manhattan, type DistanceFn } from './geometry'
 
 function box(name: string, x: number, y: number, inputs = 16, outputs = 8): Stagebox {
   return { id: `box-${name}`, name, pos: { x, y }, inputs, outputs, color: '#000' }
@@ -144,6 +144,15 @@ describe('assign – inputs', () => {
     expect(r.groups.g.boxIds).toEqual(['box-B'])
     expect(r.inputs['box-B'][0].distance).toBe(1)
   })
+})
+
+test('manhattan distance can replace the default', () => {
+  // Luftlinie: A (5 m) näher als B (6 m); rechtwinklig: B (6 m) näher als A (7 m)
+  const a = box('A', 0, 0)
+  const b = box('B', 10, 3)
+  const g = group('g', 4, 3, 1)
+  expect(assign(project([a, b], [g])).groups.g.boxIds).toEqual(['box-A'])
+  expect(assign(project([a, b], [g]), manhattan).groups.g.boxIds).toEqual(['box-B'])
 })
 
 describe('assign – pins', () => {

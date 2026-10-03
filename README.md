@@ -4,18 +4,22 @@ Mobilfreundlicher Stageplot-Editor für Veranstaltungstechnik. Instrumente auf e
 platzieren – das Tool ordnet jedes Instrument automatisch der nächstgelegenen Stagebox zu und
 erzeugt daraus Inputliste und Patchplan.
 
-> Status: Phase 1 (MVP) fertig – Bühne, Stageboxen, Instrumente, Auto-Zuordnung, Inputliste.
-> Nächste Schritte siehe [docs/plan.md](docs/plan.md).
+> Status: Phase 2 fertig. Als Nächstes: PDF- und JSON-Export, Feinschliff (siehe
+> [docs/plan.md](docs/plan.md)).
 
-## Features (geplant)
+## Features
 
-- Bühnenplan in Draufsicht, Elemente per Touch oder Maus verschiebbar
+- Bühnenplan in Draufsicht mit einstellbarer Bühnengröße, Elemente per Touch oder Maus verschiebbar
 - Stageboxen mit einstellbarer Input-/Output-Kapazität
 - Automatische Zuordnung zur nächstgelegenen Box, Gruppen bleiben zusammen, Pins zum Festlegen
-- Drum-Konfigurator und Vorlagen für Keys, Gitarre, Bass, Vox
+- Drum-Konfigurator mit Live-Anzeige der Kanäle und freien Inputs; Vorlagen für Keys, Gitarre,
+  Bass, Vox, Percussion; Kanäle frei bearbeitbar
+- Wedges, IEMs und Sidefills mit Output-Liste
+- Gebündelte, rechtwinklige Kabelwege je Stagebox (alternativ Luftlinie)
 - Inputliste und Output-Liste je Stagebox, Warnungen bei Kapazitätsüberschreitung
-- PDF-Export, JSON-Export/-Import, automatische Speicherung im Browser
+- Automatische Speicherung im Browser
 - Für Handy, iPad und Desktop, Dark/Light Mode automatisch
+- Geplant: PDF-Export, JSON-Export/-Import
 
 ## Entwicklung
 

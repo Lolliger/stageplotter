@@ -91,3 +91,16 @@ steht die Anzahl. Die letzte Strecke zur Box läuft an der Wand entlang, an der 
 Outputs (Wedges usw.) laufen im selben Bündel. Die Zuordnung nutzt weiterhin die Luftlinie
 (Vorgabe); `manhattan` steht als austauschbare `DistanceFn` bereit. Direkte Linien bleiben als
 Ansicht wählbar.
+
+## D17 – Drum-Kanäle haben feste Slots
+Kanäle aus dem Konfigurator tragen einen Slot (`kick-in`, `tom-2`, …). Beim erneuten
+Konfigurieren werden vorhandene Kanäle über den Slot wiederverwendet, eigene Namen, Mikros und
+Notizen bleiben also erhalten; manuell hinzugefügte Kanäle (ohne Slot) bleiben am Ende stehen.
+Ein von Hand gelöschter Slot-Kanal kommt beim nächsten Konfigurieren zurück, solange er in der
+Konfiguration aktiv ist – der Konfigurator ist die Quelle für die Drum-Grundbelegung.
+
+## D18 – Platzierung neuer Elemente
+Neue Elemente landen auf dem nächsten freien Punkt eines 1,5-m-Rasters um einen bevorzugten Ort
+(mind. 1,2 m Abstand zu allem anderen): Instrumente um die Bühnenmitte, Wedges in einer Reihe vor
+der Bühnenkante, Sidefills abwechselnd links/rechts vorne, IEMs mittig. Neue Stageboxen suchen
+einen Platz mit mind. 2 m Abstand zu anderen Boxen.

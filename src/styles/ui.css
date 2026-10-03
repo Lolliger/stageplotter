@@ -260,6 +260,10 @@ select:focus-visible {
   cursor: pointer;
 }
 
+.tool .plus {
+  display: none;
+}
+
 .tool:active,
 .tool:hover {
   background: var(--surface-2);
@@ -272,6 +276,10 @@ select:focus-visible {
     padding: 0;
     border: none;
     background: transparent;
+  }
+
+  .tool .plus {
+    display: inline;
   }
 
   .tool {

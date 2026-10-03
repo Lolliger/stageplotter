@@ -1,7 +1,9 @@
-import { useRef } from 'react'
+import { useMemo, useRef } from 'react'
+import { routeProject } from '../../lib/cables'
 import { PX_PER_M } from '../../model/defaults'
 import type { ElementRef } from '../../model/types'
 import { useProject } from '../../state/useProject'
+import { CableLabels, CableLines } from './Cables'
 import { BoxNode, GroupNode, OutputNode } from './nodes'
 import { useDrag } from './useDrag'
 import { useUnitsPerPx } from './useUnitsPerPx'
@@ -36,6 +38,8 @@ export function StagePlot({ selected, onSelect }: Props) {
   )
 
   const boxById = new Map(project.boxes.map((b) => [b.id, b]))
+  const bundled = (project.cableView ?? 'bundled') === 'bundled'
+  const routes = useMemo(() => (bundled ? routeProject(project, assignment) : null), [bundled, project, assignment])
   const isSelected = (kind: ElementRef['kind'], id: string) => selected?.kind === kind && selected.id === id
 
   const W = stage.width * PX_PER_M
@@ -89,7 +93,10 @@ export function StagePlot({ selected, onSelect }: Props) {
         PUBLIKUM · {fmt(stage.width)} × {fmt(stage.depth)} m
       </text>
 
-      {/* Verbindungen Gruppe/Output → Box */}
+      {/* Verbindungen Gruppe/Output → Box: gebündelt oder als Luftlinie */}
+      {routes ? (
+        <CableLines boxes={project.boxes} routes={routes} k={k} />
+      ) : (
       <g className="links">
         {project.groups.flatMap((g) => {
           const a = assignment.groups[g.id]
@@ -128,6 +135,7 @@ export function StagePlot({ selected, onSelect }: Props) {
           )
         })}
       </g>
+      )}
 
       {/* Reihenfolge: Instrumente, darüber Boxen (Kapazität bleibt lesbar), ausgewähltes Element ganz oben. */}
       {[
@@ -168,6 +176,8 @@ export function StagePlot({ selected, onSelect }: Props) {
             />
           ),
         )}
+
+      {routes && <CableLabels boxes={project.boxes} routes={routes} k={k} />}
     </svg>
   )
 }

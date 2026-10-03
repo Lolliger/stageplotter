@@ -46,6 +46,22 @@
   letter-spacing: 0.08em;
 }
 
+.cables line {
+  stroke-linecap: round;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.cable-count {
+  pointer-events: none;
+}
+
+.cable-count text {
+  fill: #0b0d12;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
 .links line {
   stroke-linecap: round;
   opacity: 0.75;

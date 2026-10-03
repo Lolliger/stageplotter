@@ -23,17 +23,26 @@ const ICONS = {
 export function Toolbar({ onAddInstrument, onAddOutput, onAddBox, onSettings }: Props) {
   return (
     <nav className="toolbar" aria-label="Werkzeuge">
-      <button type="button" className="tool" onClick={onAddInstrument}>
+      <button type="button" className="tool" onClick={onAddInstrument} aria-label="Instrument hinzufügen">
         <Icon d={ICONS.instrument} />
-        <span>+ Instrument</span>
+        <span>
+          <span className="plus">+ </span>
+          Instrument
+        </span>
       </button>
-      <button type="button" className="tool" onClick={onAddOutput}>
+      <button type="button" className="tool" onClick={onAddOutput} aria-label="Output hinzufügen">
         <Icon d={ICONS.output} />
-        <span>+ Output</span>
+        <span>
+          <span className="plus">+ </span>
+          Output
+        </span>
       </button>
-      <button type="button" className="tool" onClick={onAddBox}>
+      <button type="button" className="tool" onClick={onAddBox} aria-label="Stagebox hinzufügen">
         <Icon d={ICONS.box} />
-        <span>+ Stagebox</span>
+        <span>
+          <span className="plus">+ </span>
+          Stagebox
+        </span>
       </button>
       <button type="button" className="tool" onClick={onSettings}>
         <Icon d={ICONS.stage} />

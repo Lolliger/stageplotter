@@ -2,6 +2,7 @@ import { STAGE_LIMITS } from '../../model/defaults'
 import { useProject } from '../../state/useProject'
 import { Stepper } from '../ui/Stepper'
 import { TextField } from '../ui/TextField'
+import { Segmented } from '../ui/Toggle'
 
 const PRESETS = [
   { label: 'Club', width: 6, depth: 4 },
@@ -59,6 +60,15 @@ export function ProjectSettings() {
           ))}
         </div>
       </div>
+      <Segmented
+        label="Kabel im Plan"
+        value={project.cableView ?? 'bundled'}
+        options={[
+          { value: 'bundled', label: 'Gebündelt' },
+          { value: 'direct', label: 'Luftlinie' },
+        ]}
+        onChange={(cableView) => dispatch({ type: 'setCableView', cableView })}
+      />
       <p className="hint">
         Breite = von links nach rechts (Sicht Publikum), Tiefe = von der Rückwand bis zur Bühnenkante. Beim
         Verkleinern werden Elemente an den Rand geschoben.

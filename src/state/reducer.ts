@@ -1,6 +1,7 @@
 import { clampToStage } from '../lib/geometry'
 import { BOX_STAGE_MARGIN, STAGE_LIMITS } from '../model/defaults'
 import type {
+  CableView,
   ElementRef,
   InstrumentGroup,
   OutputElement,
@@ -13,6 +14,7 @@ import type {
 export type Action =
   | { type: 'setName'; name: string }
   | { type: 'setStage'; stage: StageSize }
+  | { type: 'setCableView'; cableView: CableView }
   | { type: 'move'; target: ElementRef; pos: Vec2 }
   | { type: 'addBox'; box: Stagebox }
   | { type: 'updateBox'; id: string; patch: Partial<Omit<Stagebox, 'id'>> }
@@ -73,6 +75,9 @@ export function projectReducer(state: Project, action: Action): Project {
   switch (action.type) {
     case 'setName':
       return { ...state, name: action.name }
+
+    case 'setCableView':
+      return { ...state, cableView: action.cableView }
 
     case 'setStage': {
       const stage = clampStageSize(action.stage)

@@ -146,7 +146,15 @@ export function parseProject(data: unknown): ParseResult {
 
     return {
       ok: true,
-      project: { version: SCHEMA_VERSION, name: str(o.name, 'Projekt'), stage, boxes, groups, outputs },
+      project: {
+        version: SCHEMA_VERSION,
+        name: str(o.name, 'Projekt'),
+        stage,
+        ...(o.cableView === 'direct' || o.cableView === 'bundled' ? { cableView: o.cableView } : {}),
+        boxes,
+        groups,
+        outputs,
+      },
     }
   } catch (e) {
     if (e instanceof SchemaError) return { ok: false, error: e.message }

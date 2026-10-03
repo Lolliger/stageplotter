@@ -6,6 +6,9 @@ export type DistanceFn = (a: Vec2, b: Vec2) => number
 /** Luftlinie. */
 export const euclidean: DistanceFn = (a, b) => Math.hypot(a.x - b.x, a.y - b.y)
 
+/** Rechtwinkliger Kabelweg (entspricht der Länge der gebündelten Strippen im Plan). */
+export const manhattan: DistanceFn = (a, b) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y)
+
 export function clamp(value: number, min: number, max: number): number {
   const result = Math.min(max, Math.max(min, value))
   return result === 0 ? 0 : result // -0 vermeiden
