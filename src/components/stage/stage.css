@@ -13,18 +13,27 @@
   width: 100%;
 }
 
+/* Handy: Leiste unter dem Plan, damit nichts am Bühnenrand verdeckt wird. */
 .zoom-controls {
-  position: absolute;
-  right: 6px;
-  bottom: 6px;
   display: flex;
-  flex-direction: column;
+  justify-content: flex-end;
   gap: 4px;
-  padding: 3px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--surface) 88%, transparent);
-  box-shadow: var(--shadow);
+  padding-top: 2px;
+}
+
+/* Breite Layouts: schwebend in der Ecke, dort ist Platz. */
+@media (min-width: 900px) {
+  .zoom-controls {
+    position: absolute;
+    right: 6px;
+    bottom: 6px;
+    flex-direction: column;
+    padding: 3px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
+    box-shadow: var(--shadow);
+  }
 }
 
 .zoom-controls .icon-btn {

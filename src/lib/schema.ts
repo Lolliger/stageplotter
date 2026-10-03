@@ -19,7 +19,7 @@ export const SCHEMA_VERSION = 1
 export type ParseResult = { ok: true; project: Project } | { ok: false; error: string }
 
 const INSTRUMENT_TYPES: InstrumentType[] = ['drums', 'percussion', 'bass', 'guitar', 'keys', 'vocals', 'other']
-const OUTPUT_KINDS: OutputKind[] = ['wedge', 'iem', 'sidefill']
+const OUTPUT_KINDS: OutputKind[] = ['wedge', 'iem', 'sidefill', 'pa', 'sub']
 
 class SchemaError extends Error {}
 
@@ -130,6 +130,7 @@ export function parseProject(data: unknown): ParseResult {
         channels: arr(g.channels, `groups[${i}].channels`).map((c, j) => channel(c, `groups[${i}].channels[${j}]`)),
         ...pin(g.pinnedBoxId),
         ...drumConfig(g.drumConfig),
+        ...(g.form === 'amp' ? { form: 'amp' as const } : {}),
       }
     })
 

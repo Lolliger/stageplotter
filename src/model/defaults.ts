@@ -43,6 +43,8 @@ export const OUTPUT_LABELS: Record<OutputKind, string> = {
   wedge: 'Wedge',
   iem: 'IEM',
   sidefill: 'Sidefill',
+  pa: 'PA',
+  sub: 'Sub',
 }
 
 export const TYPE_LABELS: Record<InstrumentType, string> = {
@@ -140,21 +142,46 @@ export function nextNumberedName(base: string, existing: string[]): string {
   for (let i = 1; ; i++) if (!used.has(`${base} ${i}`)) return `${base} ${i}`
 }
 
-/** Wedges vorne an der Bühnenkante, Sidefills abwechselnd links/rechts, IEMs in der Mitte. */
-export function createOutput(project: Pick<Project, 'stage' | 'boxes' | 'groups' | 'outputs'>, kind: OutputKind): OutputElement {
+/** Erster Platz aus `candidates`, der mind. 1,2 m von allen Elementen entfernt ist. */
+function firstFree(project: Pick<Project, 'boxes' | 'groups' | 'outputs'>, candidates: Vec2[]): Vec2 {
+  const taken = [...project.boxes, ...project.groups, ...project.outputs].map((e) => e.pos)
+  return candidates.find((c) => taken.every((t) => Math.hypot(t.x - c.x, t.y - c.y) >= 1.2)) ?? candidates[0]
+}
+
+type SpawnProject = Pick<Project, 'stage' | 'boxes' | 'groups' | 'outputs'>
+
+/**
+ * Wedges vorne an der Bühnenkante, Sidefills abwechselnd links/rechts, IEMs in der Mitte.
+ * Subs vor der Bühnenkante (außerhalb), PA-Lautsprecher siehe createPaPair.
+ */
+export function createOutput(project: SpawnProject, kind: Exclude<OutputKind, 'pa'>): OutputElement {
   const { width, depth } = project.stage
+  const name = nextNumberedName(OUTPUT_LABELS[kind], project.outputs.map((o) => o.name))
+  if (kind === 'sub') {
+    const front = depth + 0.6
+    const xs = [width / 2, width / 2 - 1.5, width / 2 + 1.5, width / 2 - 3, width / 2 + 3]
+    return { id: newId(), kind, name, pos: firstFree(project, xs.map((x) => ({ x, y: front }))) }
+  }
   const sidefills = project.outputs.filter((o) => o.kind === 'sidefill').length
-  const prefer: Record<OutputKind, Vec2> = {
+  const prefer: Record<'wedge' | 'iem' | 'sidefill', Vec2> = {
     wedge: { x: width / 2, y: Math.max(0, depth - 0.75) },
     iem: { x: width / 2, y: depth / 2 },
     sidefill: { x: sidefills % 2 === 0 ? 0.5 : Math.max(0, width - 0.5), y: Math.max(0, depth - 1.5) },
   }
-  return {
-    id: newId(),
-    kind,
-    name: nextNumberedName(OUTPUT_LABELS[kind], project.outputs.map((o) => o.name)),
-    pos: spawnPosition(project, prefer[kind]),
-  }
+  return { id: newId(), kind, name, pos: spawnPosition(project, prefer[kind]) }
+}
+
+/** PA links und rechts neben der Bühnenkante (aus Sicht des Publikums), je ein Output. */
+export function createPaPair(project: SpawnProject): [OutputElement, OutputElement] {
+  const { width, depth } = project.stage
+  const names = project.outputs.map((o) => o.name)
+  const ys = [depth - 0.5, depth - 2, depth - 3.5].map((y) => Math.max(0, y))
+  const left = firstFree(project, ys.map((y) => ({ x: -0.6, y })))
+  const right = firstFree(project, ys.map((y) => ({ x: width + 0.6, y })))
+  return [
+    { id: newId(), kind: 'pa', name: uniqueName('PA L', names), pos: left },
+    { id: newId(), kind: 'pa', name: uniqueName('PA R', names), pos: right },
+  ]
 }
 
 export function createDefaultProject(): Project {

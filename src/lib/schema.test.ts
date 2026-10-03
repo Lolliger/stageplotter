@@ -11,6 +11,9 @@ describe('parseProject', () => {
     p.groups.push(createGroupFromTemplate(getTemplate('keys-stereo')!, { x: 4, y: 2 }))
     p.groups[0].channels[0].note = '48V'
     p.outputs.push({ id: 'o1', kind: 'iem', name: 'IEM Vox', pos: { x: 5, y: 5 } })
+    p.outputs.push({ id: 'o2', kind: 'pa', name: 'PA L', pos: { x: -0.6, y: 5.5 } })
+    p.outputs.push({ id: 'o3', kind: 'sub', name: 'Sub 1', pos: { x: 5, y: 6.6 } })
+    p.groups.push(createGroupFromTemplate(getTemplate('bass-amp')!, { x: 7, y: 2 }))
     const r = parseProject(JSON.parse(JSON.stringify(p)))
     expect(r).toEqual({ ok: true, project: p })
   })

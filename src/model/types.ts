@@ -42,7 +42,11 @@ export interface InstrumentGroup {
   pinnedBoxId?: string
   /** Nur Drums: Zustand des Konfigurators. */
   drumConfig?: DrumConfig
+  /** Darstellung im Plan: 'amp' = Verstärker (Kasten statt Kreis). Typ bleibt für die Reihenfolge. */
+  form?: GroupForm
 }
+
+export type GroupForm = 'amp'
 
 export type KickMode = 'in' | 'out' | 'both'
 
@@ -60,7 +64,7 @@ export interface DrumConfig {
   percussion: boolean
 }
 
-export type OutputKind = 'wedge' | 'iem' | 'sidefill'
+export type OutputKind = 'wedge' | 'iem' | 'sidefill' | 'pa' | 'sub'
 
 export interface OutputElement {
   id: string

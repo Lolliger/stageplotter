@@ -13,6 +13,8 @@ import './stage.css'
 
 /** Rand um die Bühne in Metern (Platz für Boxen außerhalb und Beschriftung). */
 const PAD = 1.6
+/** Unten mehr Rand: Platz für PA/Subs vor der Bühne (bis 1 m) und darunter die Publikumszeile. */
+const PAD_BOTTOM = 2.2
 
 interface Props {
   selected: ElementRef | null
@@ -27,7 +29,7 @@ export function StagePlot({ selected, onSelect }: Props) {
   const vx = -PAD * PX_PER_M
   const vy = -PAD * PX_PER_M
   const vw = (stage.width + 2 * PAD) * PX_PER_M
-  const vh = (stage.depth + 2 * PAD) * PX_PER_M
+  const vh = (stage.depth + PAD + PAD_BOTTOM) * PX_PER_M
   const zp = useZoomPan(svgRef, { x: vx, y: vy, w: vw, h: vh }, () => onSelect(null))
   const vb = zp.viewBox
   // Gezoomt werden Knoten nicht größer, sondern es entsteht mehr Platz zwischen ihnen.
@@ -94,7 +96,7 @@ export function StagePlot({ selected, onSelect }: Props) {
             m
           </text>
         </g>
-        <text className="stage-audience" x={W / 2} y={D + 14 * k} style={{ fontSize: 11 * k }}>
+        <text className="stage-audience" x={W / 2} y={D + PAD_BOTTOM * PX_PER_M - 10 * k} style={{ fontSize: 11 * k }}>
           PUBLIKUM · {fmt(stage.width)} × {fmt(stage.depth)} m
         </text>
 

@@ -486,8 +486,8 @@ select:focus-visible {
 
 .segmented {
   display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: 1fr;
+  /* bricht auf schmalen Bildschirmen in mehrere Zeilen um */
+  grid-template-columns: repeat(auto-fit, minmax(68px, 1fr));
   padding: 3px;
   gap: 3px;
   border: 1px solid var(--border);

@@ -1,6 +1,7 @@
 import type { PointerEventHandler } from 'react'
 import type { BoxUsage, GroupAssignment, OutputAssignment } from '../../lib/assign'
 import { PX_PER_M } from '../../model/defaults'
+import { AMP_SHAPE, OUTPUT_SHAPES } from '../../model/shapes'
 import type { InstrumentGroup, InstrumentType, OutputElement, Stagebox } from '../../model/types'
 
 interface DragBindings {
@@ -46,10 +47,15 @@ interface GroupNodeProps {
 export function GroupNode({ group, assignment, boxById, k, selected, bind }: GroupNodeProps) {
   const x = group.pos.x * PX_PER_M
   const y = group.pos.y * PX_PER_M
+  const amp = group.form === 'amp'
   const r = 17 * k
+  // Halbe Höhe/Breite des Körpers: Kreis bzw. Verstärker-Kasten
+  const halfW = amp ? (AMP_SHAPE.w / 2) * k : r
+  const halfH = amp ? (AMP_SHAPE.h / 2) * k : r
   const primary = assignment?.boxIds[0] ? boxById.get(assignment.boxIds[0]) : undefined
   const problem = (assignment?.unpatched ?? 0) > 0
   const count = group.channels.length
+  const bodyStyle = primary ? { stroke: primary.color } : undefined
 
   return (
     <g
@@ -59,20 +65,46 @@ export function GroupNode({ group, assignment, boxById, k, selected, bind }: Gro
       role="button"
       aria-label={`${group.name}, ${count} Kanäle`}
     >
-      <circle className="hit" r={Math.max(HIT_RADIUS * k, r + 4 * k)} />
-      {selected && <circle className="selection" r={r + 5 * k} strokeWidth={2 * k} />}
-      <circle className="body" r={r} strokeWidth={3 * k} style={primary ? { stroke: primary.color } : undefined} />
-      <text className="abbr" style={{ fontSize: 12 * k }} dominantBaseline="central" textAnchor="middle">
-        {TYPE_ABBR[group.type]}
+      <circle className="hit" r={Math.max(HIT_RADIUS * k, halfW + 4 * k)} />
+      {selected &&
+        (amp ? (
+          <rect
+            className="selection"
+            x={-halfW - 5 * k}
+            y={-halfH - 5 * k}
+            width={2 * halfW + 10 * k}
+            height={2 * halfH + 10 * k}
+            rx={8 * k}
+            strokeWidth={2 * k}
+          />
+        ) : (
+          <circle className="selection" r={r + 5 * k} strokeWidth={2 * k} />
+        ))}
+      {amp ? (
+        <rect
+          className="body"
+          x={-halfW}
+          y={-halfH}
+          width={2 * halfW}
+          height={2 * halfH}
+          rx={AMP_SHAPE.rx * k}
+          strokeWidth={3 * k}
+          style={bodyStyle}
+        />
+      ) : (
+        <circle className="body" r={r} strokeWidth={3 * k} style={bodyStyle} />
+      )}
+      <text className="abbr" style={{ fontSize: (amp ? 10 : 12) * k }} dominantBaseline="central" textAnchor="middle">
+        {amp ? AMP_SHAPE.abbr : TYPE_ABBR[group.type]}
       </text>
-      <g transform={`translate(${r * 0.75} ${-r * 0.75})`}>
+      <g transform={`translate(${halfW * (amp ? 1 : 0.75)} ${-halfH * (amp ? 1 : 0.75)})`}>
         <circle className="badge" r={8 * k} />
         <text className="badge-text" style={{ fontSize: 9.5 * k }} dominantBaseline="central" textAnchor="middle">
           {problem ? '!' : count}
         </text>
       </g>
-      {assignment?.pinned && <PinMark x={-r * 0.75} y={-r * 0.75} k={k} />}
-      <text className="label" y={r + 13 * k} style={{ fontSize: 11 * k }} textAnchor="middle">
+      {assignment?.pinned && <PinMark x={-halfW * (amp ? 1 : 0.75)} y={-halfH * (amp ? 1 : 0.75)} k={k} />}
+      <text className="label" y={halfH + 13 * k} style={{ fontSize: 11 * k }} textAnchor="middle">
         {group.name}
       </text>
     </g>
@@ -141,7 +173,7 @@ interface OutputNodeProps {
   bind: DragBindings
 }
 
-/** Wedge als Trapez (Abstrahlrichtung nach hinten zum Musiker), IEM als Pille, Sidefill als Stack. */
+/** Output-Element, Form je Art aus model/shapes.ts (Wedge-Trapez, IEM-Pille, Sidefill, PA, Sub). */
 export function OutputNode({ output, assignment, boxById, k, selected, bind }: OutputNodeProps) {
   const x = output.pos.x * PX_PER_M
   const y = output.pos.y * PX_PER_M
@@ -150,12 +182,11 @@ export function OutputNode({ output, assignment, boxById, k, selected, bind }: O
   const stroke = box ? { stroke: box.color } : undefined
   const sw = 2.5 * k
 
-  let shape
-  let h: number
-  if (output.kind === 'wedge') {
-    const w = 30 * k
-    h = 15 * k
-    shape = (
+  const spec = OUTPUT_SHAPES[output.kind]
+  const w = spec.w * k
+  const h = spec.h * k
+  const shape =
+    spec.shape === 'trapezoid' ? (
       <path
         className="body"
         d={`M ${-w / 2} ${h / 2} L ${w / 2} ${h / 2} L ${w / 3} ${-h / 2} L ${-w / 3} ${-h / 2} Z`}
@@ -163,17 +194,10 @@ export function OutputNode({ output, assignment, boxById, k, selected, bind }: O
         strokeLinejoin="round"
         style={stroke}
       />
+    ) : (
+      <rect className="body" x={-w / 2} y={-h / 2} width={w} height={h} rx={spec.rx * k} strokeWidth={sw} style={stroke} />
     )
-  } else if (output.kind === 'sidefill') {
-    const w = 18 * k
-    h = 28 * k
-    shape = <rect className="body" x={-w / 2} y={-h / 2} width={w} height={h} rx={3 * k} strokeWidth={sw} style={stroke} />
-  } else {
-    const w = 30 * k
-    h = 16 * k
-    shape = <rect className="body" x={-w / 2} y={-h / 2} width={w} height={h} rx={h / 2} strokeWidth={sw} style={stroke} />
-  }
-  const abbr = output.kind === 'iem' ? 'IEM' : output.kind === 'sidefill' ? 'SF' : 'W'
+  const abbr = spec.abbr
 
   return (
     <g
@@ -183,13 +207,13 @@ export function OutputNode({ output, assignment, boxById, k, selected, bind }: O
       role="button"
       aria-label={`${output.name}${assignment?.label ? `, ${assignment.label}` : ''}`}
     >
-      <circle className="hit" r={Math.max(HIT_RADIUS * k, h / 2 + 6 * k)} />
-      {selected && <circle className="selection" r={h / 2 + 12 * k} strokeWidth={2 * k} />}
+      <circle className="hit" r={Math.max(HIT_RADIUS * k, Math.max(w, h) / 2 + 6 * k)} />
+      {selected && <circle className="selection" r={Math.max(w, h) / 2 + 6 * k} strokeWidth={2 * k} />}
       {shape}
       <text className="abbr" style={{ fontSize: 9 * k }} dominantBaseline="central" textAnchor="middle">
         {abbr}
       </text>
-      {assignment?.pinned && <PinMark x={-15 * k} y={-h / 2 - 2 * k} k={k} />}
+      {assignment?.pinned && <PinMark x={-w / 2} y={-h / 2 - 2 * k} k={k} />}
       <text className="label" y={h / 2 + 11 * k} style={{ fontSize: 10 * k }} textAnchor="middle">
         {output.name}
       </text>

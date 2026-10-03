@@ -1,5 +1,5 @@
 import { newId } from '../lib/id'
-import type { Channel, InstrumentGroup, InstrumentType, Vec2 } from './types'
+import type { Channel, GroupForm, InstrumentGroup, InstrumentType, Vec2 } from './types'
 
 export interface ChannelTemplate {
   name: string
@@ -15,6 +15,8 @@ export interface InstrumentTemplate {
   /** Name der neuen Gruppe. */
   name: string
   channels: ChannelTemplate[]
+  /** 'amp': Verstärker, eigene Rubrik im Menü und Kasten-Symbol im Plan. */
+  form?: GroupForm
 }
 
 /** Einfache Vorlagen. Drums haben einen eigenen Konfigurator (siehe drums.ts). */
@@ -103,8 +105,50 @@ export const INSTRUMENT_TEMPLATES: InstrumentTemplate[] = [
   },
 ]
 
+/** Verstärker auf der Bühne. Der Typ bestimmt, wo ihre Kanäle in der Inputliste stehen. */
+export const AMP_TEMPLATES: InstrumentTemplate[] = [
+  {
+    id: 'guitar-amp',
+    type: 'guitar',
+    form: 'amp',
+    label: 'Gitarrenverstärker',
+    name: 'Gitarren-Amp',
+    channels: [{ name: 'Gitarren-Amp', pickup: 'SM57' }],
+  },
+  {
+    id: 'guitar-amp-2',
+    type: 'guitar',
+    form: 'amp',
+    label: 'Gitarrenverstärker (2 Mikros)',
+    name: 'Gitarren-Amp',
+    channels: [
+      { name: 'Gitarren-Amp 1', pickup: 'SM57' },
+      { name: 'Gitarren-Amp 2', pickup: 'e906' },
+    ],
+  },
+  {
+    id: 'bass-amp',
+    type: 'bass',
+    form: 'amp',
+    label: 'Bassverstärker (DI + Mikro)',
+    name: 'Bass-Amp',
+    channels: [
+      { name: 'Bass DI', pickup: 'DI' },
+      { name: 'Bass-Amp', pickup: 'RE20' },
+    ],
+  },
+  {
+    id: 'keys-amp',
+    type: 'keys',
+    form: 'amp',
+    label: 'Keyboardverstärker',
+    name: 'Keys-Amp',
+    channels: [{ name: 'Keys-Amp', pickup: 'SM57' }],
+  },
+]
+
 export function getTemplate(id: string): InstrumentTemplate | undefined {
-  return INSTRUMENT_TEMPLATES.find((t) => t.id === id)
+  return [...INSTRUMENT_TEMPLATES, ...AMP_TEMPLATES].find((t) => t.id === id)
 }
 
 export function channelsFromTemplate(channels: ChannelTemplate[]): Channel[] {
@@ -122,6 +166,7 @@ export function createGroupFromTemplate(
     name,
     pos,
     channels: channelsFromTemplate(template.channels),
+    ...(template.form ? { form: template.form } : {}),
   }
 }
 

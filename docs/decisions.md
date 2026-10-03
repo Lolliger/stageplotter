@@ -165,3 +165,14 @@ Die Farbvariablen in `src/styles/theme.css` übernehmen die Palette der AK-App
 deren Grau- und Flächentöne sowie die Status-Farben für Fehler, Warnung und OK. Das PDF nutzt
 dieselben Töne. Die Boxfarben bleiben bunt, weil sie Boxen unterscheiden und nicht zur
 Oberfläche gehören. Schriften sind unverändert (Systemschrift), damit nichts extern geladen wird.
+
+## D26 – Verstärker und PA
+„Verstärker“ sind die Amps auf der Bühne (Gitarre, Bass, Keyboard): Instrumentengruppen mit
+`form: 'amp'`, eigene Rubrik „Verstärker“ im Menü und Kasten-Symbol („AMP“) statt Kreis. Ihr
+Typ (Gitarre/Bass/Keys) bleibt, damit ihre Kanäle in der Inputliste an der üblichen Stelle stehen.
+Endstufen für die PA werden nicht modelliert. „PA“ sind Output-Elemente: „PA (L + R)“ legt ein
+Paar links und rechts neben der Bühnenkante an, „Sub“ einen Subwoofer vor der Bühne; jedes belegt
+einen Output. PA und Subs dürfen wie Stageboxen bis 1 m neben/vor der Bühne stehen, die übrigen
+Outputs bleiben auf der Bühne. Formen und Maße stehen gemeinsam in `src/model/shapes.ts` für
+Bildschirm und PDF. Die Publikumszeile steht unter allem, was vor der Bühne steht; die
+Zoom-Buttons liegen auf dem Handy unter dem Plan, damit sie nichts am Bühnenrand verdecken.

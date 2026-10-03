@@ -12,6 +12,18 @@ function sample() {
   return p
 }
 
+test('draws amps as cabinets and PA/sub with their labels', () => {
+  const p = sample()
+  p.groups.push(createGroupFromTemplate(getTemplate('guitar-amp')!, { x: 7, y: 2 }))
+  p.outputs.push({ id: 'pa', kind: 'pa', name: 'PA L', pos: { x: -0.6, y: 5.5 } })
+  p.outputs.push({ id: 'sub', kind: 'sub', name: 'Sub 1', pos: { x: 5, y: 6.6 } })
+  const svg = renderPlotSvg(p, assign(p), 1)
+  expect(svg).toContain('>AMP</text>')
+  expect(svg).toContain('>Gitarren-Amp</text>')
+  expect(svg).toContain('>PA</text>')
+  expect(svg).toContain('>SUB</text>')
+})
+
 describe('renderPlotSvg', () => {
   test('contains stage, boxes, instruments and outputs with escaped names', () => {
     const p = sample()

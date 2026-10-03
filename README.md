@@ -15,9 +15,11 @@ erzeugt daraus Inputliste, Outputliste und Patchplan. Läuft komplett im Browser
   bleiben zusammen, werden nur notfalls mit Warnung aufgeteilt; feste Zuordnung per Pin
 - **Drum-Konfigurator** (Kick In/Out, Snare Top/Bottom, Hi-Hat, Toms, OH, Room, Percussion;
   Vorlagen Minimal/Standard/Voll) mit Live-Anzeige der Kanäle und freien Inputs
-- **Vorlagen** für Bass, Gitarre, Akustik, Keys (mono/stereo), Lead/Backing Vox, Percussion;
-  Kanäle frei bearbeitbar (Name, Mikro, Notiz, Reihenfolge)
-- **Outputs**: Wedges, IEMs, Sidefills – jedes belegt einen Output seiner Box
+- **Vorlagen** für Bass, Gitarre, Akustik, Keys (mono/stereo), Lead/Backing Vox, Percussion
+  und **Verstärker** (Gitarren-, Bass-, Keyboard-Amp); Kanäle frei bearbeitbar (Name, Mikro,
+  Notiz, Reihenfolge)
+- **Outputs**: Wedges, IEMs, Sidefills, **PA (L + R)** und **Subs** – jedes belegt einen Output
+  seiner Box; PA und Subs stehen neben bzw. vor der Bühne
 - **Gebündelte Kabelwege**: rechtwinklige Strippen je Box, ohne Umweg zusammengelegt, Dicke und
   Anzahl je Bündel (alternativ Luftlinie)
 - **Listen** je Box: Port, Quelle, Abnahme, Abstand; rote Warnungen mit konkretem Hinweis, was fehlt

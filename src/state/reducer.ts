@@ -1,5 +1,6 @@
 import { clampToStage, snap } from '../lib/geometry'
 import { BOX_STAGE_MARGIN, SNAP_STEP, STAGE_LIMITS } from '../model/defaults'
+import { OFFSTAGE_OUTPUTS } from '../model/shapes'
 import type {
   CableView,
   ElementRef,
@@ -43,6 +44,11 @@ function placeBox(pos: Vec2, stage: StageSize): Vec2 {
 
 function placeElement(pos: Vec2, stage: StageSize): Vec2 {
   return clampToStage(pos, stage)
+}
+
+/** PA und Subs dürfen wie Stageboxen neben bzw. vor der Bühne stehen. */
+function placeOutput(output: OutputElement, pos: Vec2, stage: StageSize): Vec2 {
+  return OFFSTAGE_OUTPUTS.includes(output.kind) ? placeBox(pos, stage) : placeElement(pos, stage)
 }
 
 function sanitizeBox(box: Stagebox, stage: StageSize): Stagebox {
@@ -91,7 +97,7 @@ export function projectReducer(state: Project, action: Action): Project {
         stage,
         boxes: state.boxes.map((b) => ({ ...b, pos: placeBox(b.pos, stage) })),
         groups: state.groups.map((g) => ({ ...g, pos: placeElement(g.pos, stage) })),
-        outputs: state.outputs.map((o) => ({ ...o, pos: placeElement(o.pos, stage) })),
+        outputs: state.outputs.map((o) => ({ ...o, pos: placeOutput(o, o.pos, stage) })),
       }
     }
 
@@ -117,7 +123,7 @@ export function projectReducer(state: Project, action: Action): Project {
             ...state,
             outputs: updateById(state.outputs, target.id, (o) => ({
               ...o,
-              pos: placeElement(pos, state.stage),
+              pos: placeOutput(o, pos, state.stage),
             })),
           }
       }
@@ -151,7 +157,7 @@ export function projectReducer(state: Project, action: Action): Project {
     case 'addOutput':
       return {
         ...state,
-        outputs: [...state.outputs, { ...action.output, pos: placeElement(action.output.pos, state.stage) }],
+        outputs: [...state.outputs, { ...action.output, pos: placeOutput(action.output, action.output.pos, state.stage) }],
       }
 
     case 'updateOutput':
@@ -159,7 +165,7 @@ export function projectReducer(state: Project, action: Action): Project {
         ...state,
         outputs: updateById(state.outputs, action.id, (o) => {
           const next = dropEmptyPin({ ...o, ...action.patch })
-          return { ...next, pos: placeElement(next.pos, state.stage) }
+          return { ...next, pos: placeOutput(next, next.pos, state.stage) }
         }),
       }
 

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { createDefaultProject, createOutput, createStagebox, spawnPosition } from '../model/defaults'
+import { createDefaultProject, createOutput, createPaPair, createStagebox, spawnPosition } from '../model/defaults'
 import { createGroupFromTemplate, getTemplate } from '../model/templates'
 import type { Project } from '../model/types'
 import { projectReducer } from './reducer'
@@ -54,6 +54,34 @@ test('outputs get numbered names and sensible spots', () => {
   expect(w2.pos).not.toEqual(w1.pos)
   const sf = createOutput(p, 'sidefill')
   expect(sf.pos.x).toBeLessThan(2) // erster Sidefill links
+})
+
+test('PA pair stands left and right beside the stage, subs in front of it', () => {
+  let p = createDefaultProject()
+  const [l, r] = createPaPair(p)
+  expect([l.name, r.name]).toEqual(['PA L', 'PA R'])
+  expect(l.pos.x).toBeLessThan(0)
+  expect(r.pos.x).toBeGreaterThan(p.stage.width)
+  p = projectReducer(projectReducer(p, { type: 'addOutput', output: l }), { type: 'addOutput', output: r })
+  expect(p.outputs.map((o) => o.pos)).toEqual([l.pos, r.pos]) // nicht auf die Bühne geschoben
+  const [l2] = createPaPair(p)
+  expect(l2.name).toBe('PA L 2')
+  expect(l2.pos).not.toEqual(l.pos)
+  const sub = createOutput(p, 'sub')
+  expect(sub.name).toBe('Sub 1')
+  expect(sub.pos.y).toBeGreaterThan(p.stage.depth)
+})
+
+test('only PA and subs may stand off stage (up to 1 m)', () => {
+  let p = createDefaultProject()
+  const [pa] = createPaPair(p)
+  const wedge = createOutput(p, 'wedge')
+  p = projectReducer(projectReducer(p, { type: 'addOutput', output: pa }), { type: 'addOutput', output: wedge })
+  const far = { x: -5, y: 20 }
+  p = projectReducer(p, { type: 'move', target: { kind: 'output', id: pa.id }, pos: far })
+  p = projectReducer(p, { type: 'move', target: { kind: 'output', id: wedge.id }, pos: far })
+  expect(p.outputs[0].pos).toEqual({ x: -1, y: 7 })
+  expect(p.outputs[1].pos).toEqual({ x: 0, y: 6 })
 })
 
 describe('projectReducer', () => {
@@ -141,4 +169,11 @@ describe('projectReducer', () => {
     projectReducer(p, { type: 'setStage', stage: { width: 3, depth: 3 } })
     expect(p).toEqual(snapshot)
   })
+})
+
+test('amp templates create groups drawn as amps, sorted by their instrument type', () => {
+  const amp = createGroupFromTemplate(getTemplate('bass-amp')!, { x: 1, y: 1 })
+  expect(amp).toMatchObject({ type: 'bass', form: 'amp', name: 'Bass-Amp' })
+  expect(amp.channels.map((c) => c.pickup)).toEqual(['DI', 'RE20'])
+  expect('form' in createGroupFromTemplate(getTemplate('bass-di')!, { x: 1, y: 1 })).toBe(false)
 })

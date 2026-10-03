@@ -1,4 +1,5 @@
 import { PX_PER_M } from '../../model/defaults'
+import { AMP_SHAPE, OUTPUT_SHAPES } from '../../model/shapes'
 import type { InstrumentType, Project } from '../../model/types'
 import type { Assignment } from '../assign'
 import { routeProject, trunkLabels } from '../cables'
@@ -44,7 +45,8 @@ export function plotViewBox(project: Pick<Project, 'stage' | 'boxes' | 'groups' 
   const minX = Math.min(-0.6, ...elements.map((p) => p.x - 1))
   const maxX = Math.max(width + 0.4, ...elements.map((p) => p.x + 1))
   const minY = Math.min(-0.6, ...elements.map((p) => p.y - 0.9))
-  const maxY = Math.max(depth + 0.9, ...elements.map((p) => p.y + 1.6))
+  // Platz unter dem untersten Element (inkl. Beschriftung) für die Publikumszeile
+  const maxY = Math.max(depth + 0.3, ...elements.map((p) => p.y + 0.95)) + 0.45
   return {
     x: minX * PX_PER_M,
     y: minY * PX_PER_M,
@@ -129,7 +131,8 @@ export function renderPlotSvg(project: Project, assignment: Assignment, k: numbe
   parts.push(el('rect', { x: 0, y: 0, width: W, height: D, fill: 'none', stroke: C.edge, 'stroke-width': 1.2 * k }))
   parts.push(el('line', { x1: 0, y1: D, x2: W, y2: D, stroke: C.edge, 'stroke-width': 4 * k }))
   const size = `${stage.width.toLocaleString('de-DE')} × ${stage.depth.toLocaleString('de-DE')} m`
-  parts.push(text(W / 2, D + 14 * k, 10 * k, `PUBLIKUM · ${size}`, { fill: C.label, 'letter-spacing': 1 * k }))
+  // Publikumszeile ganz unten, unter PA und Subs vor der Bühne
+  parts.push(text(W / 2, vb.y + vb.h - 9 * k, 10 * k, `PUBLIKUM · ${size}`, { fill: C.label, 'letter-spacing': 1 * k }))
 
   // Kabel (Kabelanzahlen werden zuletzt gezeichnet, damit sie über den Knoten liegen)
   const cableLabels: string[] = []
@@ -213,29 +216,21 @@ export function renderPlotSvg(project: Project, assignment: Assignment, k: numbe
       'stroke-width': 2.5 * k,
       'stroke-dasharray': box ? undefined : `${n(4 * k)} ${n(3 * k)}`,
     }
-    let shape: string
-    let h: number
-    if (o.kind === 'wedge') {
-      const w = 30 * k
-      h = 15 * k
-      shape = el('path', { d: `M ${n(-w / 2)} ${n(h / 2)} L ${n(w / 2)} ${n(h / 2)} L ${n(w / 3)} ${n(-h / 2)} L ${n(-w / 3)} ${n(-h / 2)} Z`, ...common })
-    } else if (o.kind === 'sidefill') {
-      const w = 18 * k
-      h = 28 * k
-      shape = el('rect', { x: -w / 2, y: -h / 2, width: w, height: h, rx: 3 * k, ...common })
-    } else {
-      const w = 30 * k
-      h = 16 * k
-      shape = el('rect', { x: -w / 2, y: -h / 2, width: w, height: h, rx: h / 2, ...common })
-    }
-    const abbr = o.kind === 'iem' ? 'IEM' : o.kind === 'sidefill' ? 'SF' : 'W'
+    const spec = OUTPUT_SHAPES[o.kind]
+    const w = spec.w * k
+    const h = spec.h * k
+    const shape =
+      spec.shape === 'trapezoid'
+        ? el('path', { d: `M ${n(-w / 2)} ${n(h / 2)} L ${n(w / 2)} ${n(h / 2)} L ${n(w / 3)} ${n(-h / 2)} L ${n(-w / 3)} ${n(-h / 2)} Z`, ...common })
+        : el('rect', { x: -w / 2, y: -h / 2, width: w, height: h, rx: spec.rx * k, ...common })
+    const abbr = spec.abbr
     parts.push(
       el(
         'g',
         { transform: `translate(${n(P(o.pos.x))} ${n(P(o.pos.y))})` },
         shape +
           text(0, 0, 9 * k, abbr, { fill: C.text, 'font-weight': 'bold' }) +
-          (a?.pinned ? pinMark(-15 * k, -h / 2 - 2 * k, k) : '') +
+          (a?.pinned ? pinMark(-w / 2, -h / 2 - 2 * k, k) : '') +
           haloText(0, h / 2 + 9 * k, 9.5 * k, o.name, C.muted, k),
       ),
     )
@@ -246,24 +241,30 @@ export function renderPlotSvg(project: Project, assignment: Assignment, k: numbe
     const a = assignment.groups[g.id]
     const primary = a?.boxIds[0] ? boxById.get(a.boxIds[0]) : undefined
     const problem = (a?.unpatched ?? 0) > 0
+    const amp = g.form === 'amp'
     const r = 17 * k
-    const badge = { x: r * 0.75, y: -r * 0.75 }
+    const halfW = amp ? (AMP_SHAPE.w / 2) * k : r
+    const halfH = amp ? (AMP_SHAPE.h / 2) * k : r
+    const corner = amp ? 1 : 0.75
+    const badge = { x: halfW * corner, y: -halfH * corner }
+    const body: Attrs = {
+      fill: '#ffffff',
+      stroke: problem ? C.danger : (primary?.color ?? C.muted),
+      'stroke-width': 3 * k,
+      'stroke-dasharray': problem ? `${n(4 * k)} ${n(3 * k)}` : undefined,
+    }
     parts.push(
       el(
         'g',
         { transform: `translate(${n(P(g.pos.x))} ${n(P(g.pos.y))})` },
-        el('circle', {
-          r,
-          fill: '#ffffff',
-          stroke: problem ? C.danger : (primary?.color ?? C.muted),
-          'stroke-width': 3 * k,
-          'stroke-dasharray': problem ? `${n(4 * k)} ${n(3 * k)}` : undefined,
-        }) +
-          text(0, 0, 12 * k, TYPE_ABBR[g.type], { fill: C.text, 'font-weight': 'bold' }) +
+        (amp
+          ? el('rect', { x: -halfW, y: -halfH, width: 2 * halfW, height: 2 * halfH, rx: AMP_SHAPE.rx * k, ...body })
+          : el('circle', { r, ...body })) +
+          text(0, 0, (amp ? 10 : 12) * k, amp ? AMP_SHAPE.abbr : TYPE_ABBR[g.type], { fill: C.text, 'font-weight': 'bold' }) +
           el('circle', { cx: badge.x, cy: badge.y, r: 8 * k, fill: problem ? C.danger : C.text }) +
           text(badge.x, badge.y, 9.5 * k, problem ? '!' : String(g.channels.length), { fill: '#ffffff', 'font-weight': 'bold' }) +
-          (a?.pinned ? pinMark(-r * 0.75, -r * 0.75, k) : '') +
-          haloText(0, r + 11 * k, 11 * k, g.name, C.text, k),
+          (a?.pinned ? pinMark(-halfW * corner, -halfH * corner, k) : '') +
+          haloText(0, halfH + 11 * k, 11 * k, g.name, C.text, k),
       ),
     )
   }

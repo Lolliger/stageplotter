@@ -1,5 +1,5 @@
 import { TYPE_LABELS, TYPE_ORDER, spawnPosition, uniqueName } from '../../model/defaults'
-import { INSTRUMENT_TEMPLATES, createGroupFromTemplate, type InstrumentTemplate } from '../../model/templates'
+import { AMP_TEMPLATES, INSTRUMENT_TEMPLATES, createGroupFromTemplate, type InstrumentTemplate } from '../../model/templates'
 import { useProject } from '../../state/useProject'
 
 interface Props {
@@ -32,11 +32,12 @@ export function AddInstrument({ onAdded, onConfigureDrums }: Props) {
           </button>
         </div>
       </section>
-      {types.map((type) => (
-        <section key={type} className="template-group">
-          <h3>{TYPE_LABELS[type]}</h3>
+      {[...types.map((type) => ({ title: TYPE_LABELS[type], templates: INSTRUMENT_TEMPLATES.filter((t) => t.type === type) })),
+        { title: 'Verstärker', templates: AMP_TEMPLATES }].map(({ title, templates }) => (
+        <section key={title} className="template-group">
+          <h3>{title}</h3>
           <div className="template-grid">
-            {INSTRUMENT_TEMPLATES.filter((t) => t.type === type).map((t) => (
+            {templates.map((t) => (
               <button
                 key={t.id}
                 type="button"
