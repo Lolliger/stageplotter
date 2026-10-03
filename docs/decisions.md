@@ -139,3 +139,12 @@ wird die gecachte App geliefert. Die Build-Kennung steckt in der Registrierungs-
 Registriert wird nur im Produktionsbuild. Mit Manifest und Icons lässt sich die App auf iPhone/iPad
 „Zum Home-Bildschirm“ hinzufügen. `vercel.json` setzt `no-cache` für Worker und Manifest-Liste
 und lange Cache-Zeiten für die gehashten Dateien unter `/assets`.
+
+## D23 – Relative Pfade, Einbindung per Vercel-Rewrite
+Der Build nutzt `base: './'`; Service Worker, Precache-Liste und Web-Manifest arbeiten mit Pfaden
+relativ zum Worker. Dieselbe Version läuft dadurch unter eigener Domain und unter einem Unterpfad
+einer anderen Seite. Vorgesehene Einbindung in die (ebenfalls auf Vercel laufende) AK-Seite: ein
+Rewrite `/stageplot/:path*` → stageplot-Deployment plus Redirect `/stageplot` → `/stageplot/`
+(ohne Schrägstrich am Ende würden relative Pfade ins Leere zeigen). Beide Projekte werden
+getrennt deployt; die AK-Seite bekommt Updates automatisch. Gespeicherte Projekte hängen am
+Origin: unter der AK-Domain sind es andere Daten als unter `*.vercel.app` (Umzug per JSON-Export).

@@ -10,10 +10,9 @@ function precacheManifest(): Plugin {
     name: 'stageplot-precache-manifest',
     apply: 'build',
     generateBundle(_options, bundle) {
-      const files = Object.keys(bundle)
-        .filter((f) => !f.endsWith('.map'))
-        .map((f) => `/${f}`)
-      const extra = ['/manifest.webmanifest', '/favicon.svg', '/icon.svg', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png']
+      // Relativ zum Service Worker, damit die App auch unter einem Unterpfad läuft.
+      const files = Object.keys(bundle).filter((f) => !f.endsWith('.map'))
+      const extra = ['manifest.webmanifest', 'favicon.svg', 'icon.svg', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png']
       this.emitFile({
         type: 'asset',
         fileName: 'precache-manifest.json',
@@ -24,6 +23,9 @@ function precacheManifest(): Plugin {
 }
 
 export default defineConfig({
+  // Relative Pfade: dieselbe Version läuft unter eigener Domain und unter einem Unterpfad
+  // (z. B. ak-seite.de/stageplot/ per Vercel-Rewrite).
+  base: './',
   plugins: [react(), precacheManifest()],
   define: {
     __BUILD_ID__: JSON.stringify(BUILD_ID),

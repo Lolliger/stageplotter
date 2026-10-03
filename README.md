@@ -73,3 +73,20 @@ Details: [docs/plan.md](docs/plan.md), Entscheidungen: [docs/decisions.md](docs/
 Statische Seite auf Vercel: Repository importieren, Einstellungen kommen aus `vercel.json`
 (Framework Vite, Build `npm run build`, Output `dist/`, Cache-Header für Service Worker und
 Assets). Keine Umgebungsvariablen nötig.
+
+### In eine andere Vercel-Seite einbinden (z. B. `ak-seite.de/stageplot`)
+
+Alle Pfade sind relativ, die App läuft deshalb auch unter einem Unterpfad. In der
+**anderen** Seite (nicht in diesem Repo) in deren `vercel.json` ergänzen – Adresse des
+stageplot-Deployments anpassen:
+
+```json
+{
+  "redirects": [{ "source": "/stageplot", "destination": "/stageplot/", "permanent": true }],
+  "rewrites": [{ "source": "/stageplot/:path*", "destination": "https://stageplotter.vercel.app/:path*" }]
+}
+```
+
+Bei einer Next.js-Seite geht dasselbe in `next.config.js` über `redirects()` und `rewrites()`.
+Die Seite zeigt dann `/stageplot/`, ausgeliefert wird weiter vom stageplot-Projekt – Updates
+kommen automatisch. Der Schrägstrich am Ende ist wichtig, darum der Redirect.
