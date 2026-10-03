@@ -163,6 +163,8 @@ stageplotter/
 
 Nach jedem Schritt: `npm run lint && npm test && npm run build`, dann Commit.
 
+**Stand:** Phasen 1–3 umgesetzt (Schritte 1–17).
+
 ### Phase 1 – MVP
 1. Projekt-Setup: Vite/React/TS, Vitest, ESLint, Ordnerstruktur, Theme-Grundlage (Dark/Light)
 2. Datenmodell, Standardprojekt (2 Boxen à 16/8, Bühne 10 × 6 m), Reducer mit Tests

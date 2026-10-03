@@ -9,6 +9,7 @@ Stageplot-Editor (Vite + React + TypeScript), mobile-first, kein Backend. Detail
 - `npm test` – Vitest
 - `npm run lint` – ESLint
 - `npm run build` – Typecheck + Produktionsbuild
+- `npm run preview` – Produktionsbuild lokal (Service Worker ist nur hier aktiv)
 
 Vor jedem Commit: `npm run lint && npm test && npm run build` muss grün sein.
 
@@ -24,7 +25,14 @@ Vor jedem Commit: `npm run lint && npm test && npm run build` muss grün sein.
 - Reducer-Actions sind rein; Persistenz (localStorage) passiert außerhalb des Reducers.
 - Touch: Pointer Events, `touch-action: none` nur auf verschiebbaren Elementen, Tap-Ziele
   ≥ 44 px.
-- Farben nur über CSS-Variablen aus `src/styles/theme.css` (Dark/Light).
+- Farben nur über CSS-Variablen aus `src/styles/theme.css` (Dark/Light). Ausnahme: das Druck-SVG
+  in `src/lib/export/plotSvg.ts` nutzt feste helle Farben (svg2pdf kennt keine CSS-Variablen).
+- Bildschirm-Plan (`components/stage`) und Druck-SVG (`lib/export/plotSvg.ts`) zeichnen dieselben
+  Elemente – Änderungen an der Darstellung in beiden nachziehen.
+- Neue Projektfelder immer auch in `src/lib/schema.ts` (Import/localStorage) ergänzen.
+- PDF-Bibliotheken nur per dynamischem `import()` laden, nie statisch im Hauptbundle.
+- Projektänderungen laufen über `dispatch` und damit durch die Undo-History; Drag-Bewegungen
+  tragen einen `coalesce`-Schlüssel.
 
 ## Konventionen
 

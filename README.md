@@ -2,24 +2,42 @@
 
 Mobilfreundlicher Stageplot-Editor für Veranstaltungstechnik. Instrumente auf einem Bühnenplan
 platzieren – das Tool ordnet jedes Instrument automatisch der nächstgelegenen Stagebox zu und
-erzeugt daraus Inputliste und Patchplan.
-
-> Status: Phase 2 fertig. Als Nächstes: PDF- und JSON-Export, Feinschliff (siehe
-> [docs/plan.md](docs/plan.md)).
+erzeugt daraus Inputliste, Outputliste und Patchplan. Läuft komplett im Browser, auch offline.
 
 ## Features
 
-- Bühnenplan in Draufsicht mit einstellbarer Bühnengröße, Elemente per Touch oder Maus verschiebbar
-- Stageboxen mit einstellbarer Input-/Output-Kapazität
-- Automatische Zuordnung zur nächstgelegenen Box, Gruppen bleiben zusammen, Pins zum Festlegen
-- Drum-Konfigurator mit Live-Anzeige der Kanäle und freien Inputs; Vorlagen für Keys, Gitarre,
-  Bass, Vox, Percussion; Kanäle frei bearbeitbar
-- Wedges, IEMs und Sidefills mit Output-Liste
-- Gebündelte, rechtwinklige Kabelwege je Stagebox (alternativ Luftlinie)
-- Inputliste und Output-Liste je Stagebox, Warnungen bei Kapazitätsüberschreitung
-- Automatische Speicherung im Browser
+- **Bühnenplan** in Draufsicht, Bühnengröße frei einstellbar (mit Schnellauswahl), Elemente per
+  Finger oder Maus verschiebbar, optional mit 25-cm-Raster, Zoom und Verschieben (Pinch, Mausrad,
+  Buttons)
+- **Stageboxen** mit einstellbaren Inputs/Outputs und Farbe, Auslastung direkt im Plan
+  (z. B. `11/16 In · 3/8 Out`)
+- **Auto-Zuordnung** zur nächstgelegenen Box mit genug freien Inputs; Gruppen (z. B. ein Drumset)
+  bleiben zusammen, werden nur notfalls mit Warnung aufgeteilt; feste Zuordnung per Pin
+- **Drum-Konfigurator** (Kick In/Out, Snare Top/Bottom, Hi-Hat, Toms, OH, Room, Percussion;
+  Vorlagen Minimal/Standard/Voll) mit Live-Anzeige der Kanäle und freien Inputs
+- **Vorlagen** für Bass, Gitarre, Akustik, Keys (mono/stereo), Lead/Backing Vox, Percussion;
+  Kanäle frei bearbeitbar (Name, Mikro, Notiz, Reihenfolge)
+- **Outputs**: Wedges, IEMs, Sidefills – jedes belegt einen Output seiner Box
+- **Gebündelte Kabelwege**: rechtwinklige Strippen je Box, ohne Umweg zusammengelegt, Dicke und
+  Anzahl je Bündel (alternativ Luftlinie)
+- **Listen** je Box: Port, Quelle, Abnahme, Abstand; rote Warnungen mit konkretem Hinweis, was fehlt
+- **Export**: PDF (Bühnenplan als Vektorgrafik + Input- und Outputliste), JSON-Projektdatei;
+  Import mit Prüfung
+- **Rückgängig/Wiederholen**, automatische Speicherung im Browser
+- **Offline-fähig** und als App auf dem Home-Bildschirm installierbar
 - Für Handy, iPad und Desktop, Dark/Light Mode automatisch
-- Geplant: PDF-Export, JSON-Export/-Import
+
+## Bedienung in Kürze
+
+| Aktion | So geht's |
+|---|---|
+| Element hinzufügen | Toolbar: Instrument, Output, Stagebox |
+| Verschieben | Element ziehen |
+| Bearbeiten, Pin, Löschen | Element antippen |
+| Bühnengröße, Kabelansicht, Raster | Toolbar: Bühne |
+| PDF / JSON / Neues Projekt | Teilen-Symbol oben rechts |
+| Zoomen | `+` / `−` am Plan, Pinch, Mausrad (Handy: Strg/Cmd + Mausrad) |
+| Rückgängig | Pfeile oben rechts, Strg/Cmd+Z |
 
 ## Entwicklung
 
@@ -28,14 +46,30 @@ npm install
 npm run dev      # Entwicklungsserver
 npm test         # Unit-Tests (Vitest)
 npm run lint
-npm run build    # statischer Build nach dist/
+npm run build    # Typecheck + statischer Build nach dist/
+npm run preview  # Build lokal ansehen (inkl. Service Worker)
 ```
+
+Stack: Vite, React, TypeScript (strict), Vitest; PDF mit jsPDF, svg2pdf.js und jspdf-autotable
+(nur beim Export nachgeladen). Kein Backend.
+
+### Struktur
+
+```
+src/
+  model/       Datenmodell, Standardwerte, Vorlagen, Drum-Konfiguration
+  lib/         reine Logik: assign (Zuordnung), cables (Kabelbündel), geometry, viewport,
+               schema (Import/Validierung), storage, export/ (JSON, PDF, Druck-SVG, Tabellen)
+  state/       Reducer, Undo/Redo-History, Provider
+  components/  stage/ (SVG-Plan), lists/, editors/, toolbar/, ui/
+  styles/      Theme (Dark/Light), Layout
+```
+
+Die Zuordnung ist nie gespeichert, sondern wird aus dem Projekt abgeleitet (`assign(project)`).
+Details: [docs/plan.md](docs/plan.md), Entscheidungen: [docs/decisions.md](docs/decisions.md).
 
 ## Deployment
 
-Statische Seite, deploybar auf Vercel (Framework-Preset „Vite“, Output `dist/`). Kein Backend.
-
-## Dokumentation
-
-- [docs/plan.md](docs/plan.md) – Architektur, Ordnerstruktur, Reihenfolge
-- [docs/decisions.md](docs/decisions.md) – getroffene Entscheidungen und Annahmen
+Statische Seite auf Vercel: Repository importieren, Einstellungen kommen aus `vercel.json`
+(Framework Vite, Build `npm run build`, Output `dist/`, Cache-Header für Service Worker und
+Assets). Keine Umgebungsvariablen nötig.
