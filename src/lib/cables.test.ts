@@ -217,9 +217,47 @@ describe('routeProject', () => {
       outputs: [{ id: 'w', kind: 'wedge', name: 'w', pos: { x: 4, y: 5 } }],
       devices: [],
     }
-    const routes = routeProject(project, assign(project))
-    expect(routes.A.total).toBe(3)
-    const trunk = routes.A.segments.find((s) => touchesRoot(s, project.boxes[0].pos))!
+    const trees = routeProject(project, assign(project))
+    const a = trees.find((t) => t.rootId === 'A')!.route
+    expect(a.total).toBe(3)
+    const trunk = a.segments.find((s) => touchesRoot(s, project.boxes[0].pos))!
     expect(trunk.count).toBe(3)
   })
+})
+
+test('devices get their own cable trees in the color of the feeding box', () => {
+  const project: Project = {
+    version: 1,
+    name: 't',
+    stage: { width: 10, depth: 6 },
+    boxes: [{ id: 'B', name: 'B', pos: { x: 9, y: 0.5 }, inputs: 16, outputs: 8, color: '#f59e0b' }],
+    groups: [],
+    outputs: [
+      { id: 'paL', kind: 'pa', name: 'PA L', pos: { x: -0.6, y: 5.5 }, source: { deviceId: 'amp', output: 0 } },
+      { id: 'paR', kind: 'pa', name: 'PA R', pos: { x: 10.6, y: 5.5 }, source: { deviceId: 'amp', output: 1 } },
+    ],
+    devices: [
+      {
+        id: 'amp',
+        kind: 'amp',
+        name: 'Endstufe',
+        pos: { x: 10.6, y: 3 },
+        inputs: [
+          { name: 'Kanal A', connector: 'xlr' },
+          { name: 'Kanal B', connector: 'xlr' },
+        ],
+        outputs: [
+          { name: 'Kanal A', connector: 'speakon-nl4' },
+          { name: 'Kanal B', connector: 'speakon-nl4' },
+        ],
+        power: { watts: 1000, ohms: 4 },
+      },
+    ],
+  }
+  const trees = routeProject(project, assign(project))
+  const box = trees.find((t) => t.rootId === 'B')!
+  const amp = trees.find((t) => t.rootId === 'amp')!
+  expect(box.route.total).toBe(2) // zwei Eingänge der Endstufe
+  expect(amp).toMatchObject({ kind: 'device', color: '#f59e0b' })
+  expect(amp.route.total).toBe(2) // zwei Lautsprecher
 })

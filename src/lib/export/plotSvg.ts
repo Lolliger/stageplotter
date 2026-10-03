@@ -1,8 +1,9 @@
 import { PX_PER_M } from '../../model/defaults'
-import { AMP_SHAPE, OUTPUT_SHAPES, frontArrowPoints } from '../../model/shapes'
-import type { InstrumentType, Project } from '../../model/types'
+import { AMP_SHAPE, DEVICE_SHAPE, OUTPUT_SHAPES, frontArrowPoints } from '../../model/shapes'
+import type { InstrumentType, Project, Vec2 } from '../../model/types'
 import type { Assignment } from '../assign'
-import { routeProject, trunkLabels } from '../cables'
+import { deviceColor, routeProject, trunkLabels } from '../cables'
+import { DEVICE_ABBR } from '../../model/devices'
 
 /**
  * Bühnenplan als eigenständiges SVG für den Druck (PDF). Alle Farben stehen direkt in den
@@ -39,9 +40,9 @@ const TYPE_ABBR: Record<InstrumentType, string> = {
  * Enger Ausschnitt für den Druck: Bühne plus Platz für Maßstab und Publikumszeile, erweitert um
  * Elemente, die über den Rand ragen (z. B. Stageboxen neben der Bühne). In Metern berechnet.
  */
-export function plotViewBox(project: Pick<Project, 'stage' | 'boxes' | 'groups' | 'outputs'>) {
+export function plotViewBox(project: Pick<Project, 'stage' | 'boxes' | 'groups' | 'outputs' | 'devices'>) {
   const { width, depth } = project.stage
-  const elements = [...project.boxes, ...project.groups, ...project.outputs].map((e) => e.pos)
+  const elements = [...project.boxes, ...project.groups, ...project.outputs, ...project.devices].map((e) => e.pos)
   const minX = Math.min(-0.6, ...elements.map((p) => p.x - 1))
   const maxX = Math.max(width + 0.4, ...elements.map((p) => p.x + 1))
   const minY = Math.min(-0.6, ...elements.map((p) => p.y - 0.9))
@@ -137,12 +138,16 @@ export function renderPlotSvg(project: Project, assignment: Assignment, k: numbe
   // Kabel (Kabelanzahlen werden zuletzt gezeichnet, damit sie über den Knoten liegen)
   const cableLabels: string[] = []
   if ((project.cableView ?? 'bundled') === 'bundled') {
-    const routes = routeProject(project, assignment)
-    for (const box of project.boxes) {
-      const route = routes[box.id]
-      if (!route || route.total === 0) continue
+    for (const tree of routeProject(project, assignment)) {
+      const { route } = tree
+      if (route.total === 0) continue
+      const color = tree.color ?? C.muted
+      // Kabel ab Geräten (PA-Kette) gestrichelt
+      const dash = tree.kind === 'device' ? `${n(5 * k)} ${n(3 * k)}` : undefined
       for (const s of route.stubs)
-        parts.push(el('line', { x1: P(s.from.x), y1: P(s.from.y), x2: P(s.to.x), y2: P(s.to.y), stroke: box.color, 'stroke-width': 1.5 * k }))
+        parts.push(
+          el('line', { x1: P(s.from.x), y1: P(s.from.y), x2: P(s.to.x), y2: P(s.to.y), stroke: color, 'stroke-width': 1.5 * k, 'stroke-dasharray': dash }),
+        )
       for (const s of [...route.segments].sort((a, b) => a.count - b.count))
         parts.push(
           el('line', {
@@ -150,21 +155,23 @@ export function renderPlotSvg(project: Project, assignment: Assignment, k: numbe
             y1: P(s.a.y),
             x2: P(s.b.x),
             y2: P(s.b.y),
-            stroke: box.color,
+            stroke: color,
             'stroke-width': (1.2 + Math.sqrt(s.count)) * k,
             'stroke-linecap': 'round',
+            'stroke-dasharray': dash,
           }),
         )
       const m = (cssPx: number) => (cssPx * k) / PX_PER_M
-      for (const { pos, count } of trunkLabels(route, box.pos, {
-        clear: { left: m(17), right: m(17), top: m(17), bottom: m(17) },
-        offset: m(9),
-      })) {
+      const clear =
+        tree.kind === 'box'
+          ? { left: m(17), right: m(17), top: m(17), bottom: m(17) }
+          : { left: m(25), right: m(25), top: m(14), bottom: m(14) }
+      for (const { pos, count } of trunkLabels(route, tree.root, { clear, offset: m(9) })) {
         const t = String(count)
         const w = (t.length * 6.5 + 8) * k
         const h = 14 * k
         cableLabels.push(
-          el('rect', { x: P(pos.x) - w / 2, y: P(pos.y) - h / 2, width: w, height: h, rx: h / 2, fill: box.color }) +
+          el('rect', { x: P(pos.x) - w / 2, y: P(pos.y) - h / 2, width: w, height: h, rx: h / 2, fill: color }) +
             text(P(pos.x), P(pos.y), 10 * k, t, { fill: C.boxText, 'font-weight': 'bold' }),
         )
       }
@@ -203,18 +210,56 @@ export function renderPlotSvg(project: Project, assignment: Assignment, k: numbe
           }),
         )
     }
+    // PA-Kette: Geräte an der Box, Lautsprecher/Endstufen an Geräten
+    const deviceById = new Map(project.devices.map((d) => [d.id, d]))
+    const line = (a: Vec2, b: Vec2, stroke: string, dash: string) =>
+      el('line', { x1: P(a.x), y1: P(a.y), x2: P(b.x), y2: P(b.y), stroke, 'stroke-width': 1.5 * k, 'stroke-dasharray': dash })
+    for (const d of project.devices) {
+      const inputs = assignment.deviceInputs[d.id] ?? []
+      for (const boxId of new Set(inputs.map((a) => a.boxId).filter((b): b is string => !!b))) {
+        const box = boxById.get(boxId)!
+        parts.push(line(d.pos, box.pos, box.color, `${n(2 * k)} ${n(3 * k)}`))
+      }
+    }
+    const fed = [
+      ...project.outputs.map((o) => ({ pos: o.pos, source: assignment.outputElements[o.id]?.source })),
+      ...project.devices.flatMap((d) => (assignment.deviceInputs[d.id] ?? []).map((a) => ({ pos: d.pos, source: a.source }))),
+    ]
+    for (const { pos, source } of fed) {
+      const from = source ? deviceById.get(source.deviceId) : undefined
+      if (from) parts.push(line(pos, from.pos, deviceColor(project, assignment, from.id) ?? C.muted, `${n(5 * k)} ${n(3 * k)}`))
+    }
+  }
+
+  // Geräte (Weiche, Endstufe)
+  for (const d of project.devices) {
+    const w = DEVICE_SHAPE.w * k
+    const h = DEVICE_SHAPE.h * k
+    const color = deviceColor(project, assignment, d.id) ?? C.muted
+    const io = d.kind === 'amp' ? `${d.inputs.length} Kan.` : `${d.inputs.length}→${d.outputs.length}`
+    parts.push(
+      el(
+        'g',
+        { transform: `translate(${n(P(d.pos.x))} ${n(P(d.pos.y))})` },
+        el('rect', { x: -w / 2, y: -h / 2, width: w, height: h, rx: DEVICE_SHAPE.rx * k, fill: '#eef0f3', stroke: color, 'stroke-width': 2.5 * k }) +
+          text(0, 0, 9.5 * k, `${DEVICE_ABBR[d.kind]} ${io}`, { fill: C.text, 'font-weight': 'bold' }) +
+          haloText(0, h / 2 + 9 * k, 9.5 * k, d.name, C.muted, k),
+      ),
+    )
   }
 
   // Outputs
   for (const o of project.outputs) {
     const a = assignment.outputElements[o.id]
     const box = a?.boxId ? boxById.get(a.boxId) : undefined
-    const stroke = box?.color ?? C.danger
+    const chain = a?.source ? (deviceColor(project, assignment, a.source.deviceId) ?? C.muted) : null
+    const ok = !!box || !!chain
+    const stroke = box?.color ?? chain ?? C.danger
     const common: Attrs = {
       fill: '#ffffff',
       stroke,
       'stroke-width': 2.5 * k,
-      'stroke-dasharray': box ? undefined : `${n(4 * k)} ${n(3 * k)}`,
+      'stroke-dasharray': ok ? undefined : `${n(4 * k)} ${n(3 * k)}`,
     }
     const spec = OUTPUT_SHAPES[o.kind]
     const w = spec.w * k

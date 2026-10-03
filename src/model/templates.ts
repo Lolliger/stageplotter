@@ -105,13 +105,14 @@ export const INSTRUMENT_TEMPLATES: InstrumentTemplate[] = [
   },
 ]
 
-/** Verstärker auf der Bühne. Der Typ bestimmt, wo ihre Kanäle in der Inputliste stehen. */
+/** Backline-Verstärker (Instrumenten-Amps) auf der Bühne – nicht die PA-Endstufen (model/devices.ts).
+ * Der Typ bestimmt, wo ihre Kanäle in der Inputliste stehen. */
 export const AMP_TEMPLATES: InstrumentTemplate[] = [
   {
     id: 'guitar-amp',
     type: 'guitar',
     form: 'amp',
-    label: 'Gitarrenverstärker',
+    label: 'Gitarren-Amp',
     name: 'Gitarren-Amp',
     channels: [{ name: 'Gitarren-Amp', pickup: 'SM57' }],
   },
@@ -119,7 +120,7 @@ export const AMP_TEMPLATES: InstrumentTemplate[] = [
     id: 'guitar-amp-2',
     type: 'guitar',
     form: 'amp',
-    label: 'Gitarrenverstärker (2 Mikros)',
+    label: 'Gitarren-Amp (2 Mikros)',
     name: 'Gitarren-Amp',
     channels: [
       { name: 'Gitarren-Amp 1', pickup: 'SM57' },
@@ -130,7 +131,7 @@ export const AMP_TEMPLATES: InstrumentTemplate[] = [
     id: 'bass-amp',
     type: 'bass',
     form: 'amp',
-    label: 'Bassverstärker (DI + Mikro)',
+    label: 'Bass-Amp (DI + Mikro)',
     name: 'Bass-Amp',
     channels: [
       { name: 'Bass DI', pickup: 'DI' },
@@ -141,7 +142,7 @@ export const AMP_TEMPLATES: InstrumentTemplate[] = [
     id: 'keys-amp',
     type: 'keys',
     form: 'amp',
-    label: 'Keyboardverstärker',
+    label: 'Keyboard-Amp',
     name: 'Keys-Amp',
     channels: [{ name: 'Keys-Amp', pickup: 'SM57' }],
   },

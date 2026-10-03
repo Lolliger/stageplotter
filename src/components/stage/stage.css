@@ -130,9 +130,38 @@
 }
 
 .group-node .body,
-.output-node .body {
+.output-node .body,
+.device-node .body {
   fill: var(--surface);
   stroke: var(--text-muted);
+}
+
+.device-node .body {
+  fill: var(--surface-2);
+}
+
+.device-node .rack-ear {
+  stroke: var(--text-muted);
+  opacity: 0.6;
+}
+
+.device-node .abbr {
+  fill: var(--text);
+  font-weight: 800;
+}
+
+.device-node .abbr .io {
+  fill: var(--text-muted);
+  font-weight: 600;
+}
+
+.device-node .label {
+  fill: var(--text-muted);
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: var(--stage-floor);
+  stroke-width: 3px;
+  stroke-linejoin: round;
 }
 
 .node .front {

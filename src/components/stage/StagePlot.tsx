@@ -1,10 +1,10 @@
 import { useMemo, useRef } from 'react'
-import { routeProject } from '../../lib/cables'
+import { deviceColor, routeProject } from '../../lib/cables'
 import { PX_PER_M } from '../../model/defaults'
 import type { ElementRef } from '../../model/types'
 import { useProject } from '../../state/useProject'
 import { CableLabels, CableLines } from './Cables'
-import { BoxNode, GroupNode, OutputNode } from './nodes'
+import { BoxNode, DeviceNode, GroupNode, OutputNode } from './nodes'
 import { useDrag } from './useDrag'
 import { useUnitsPerPx } from './useUnitsPerPx'
 import { useZoomPan } from './useZoomPan'
@@ -46,7 +46,8 @@ export function StagePlot({ selected, onSelect }: Props) {
 
   const boxById = new Map(project.boxes.map((b) => [b.id, b]))
   const bundled = (project.cableView ?? 'bundled') === 'bundled'
-  const routes = useMemo(() => (bundled ? routeProject(project, assignment) : null), [bundled, project, assignment])
+  const trees = useMemo(() => (bundled ? routeProject(project, assignment) : null), [bundled, project, assignment])
+  const deviceById = new Map(project.devices.map((d) => [d.id, d]))
   const isSelected = (kind: ElementRef['kind'], id: string) => selected?.kind === kind && selected.id === id
 
   const W = stage.width * PX_PER_M
@@ -101,8 +102,8 @@ export function StagePlot({ selected, onSelect }: Props) {
         </text>
 
         {/* Verbindungen Gruppe/Output → Box: gebündelt oder als Luftlinie */}
-        {routes ? (
-          <CableLines boxes={project.boxes} routes={routes} k={k} />
+        {trees ? (
+          <CableLines trees={trees} k={k} />
         ) : (
         <g className="links">
           {project.groups.flatMap((g) => {
@@ -124,6 +125,47 @@ export function StagePlot({ selected, onSelect }: Props) {
               )
             })
           })}
+          {/* PA-Kette: Lautsprecher und Endstufen-Eingänge, die an einem Gerät hängen */}
+          {[
+            ...project.outputs.map((o) => ({ id: o.id, pos: o.pos, source: assignment.outputElements[o.id]?.source })),
+            ...project.devices.flatMap((d) =>
+              (assignment.deviceInputs[d.id] ?? []).map((a, i) => ({ id: `${d.id}:${i}`, pos: d.pos, source: a.source })),
+            ),
+          ].map(({ id, pos, source }) => {
+            const from = source ? deviceById.get(source.deviceId) : undefined
+            if (!from) return null
+            return (
+              <line
+                key={`${id}-src`}
+                x1={pos.x * PX_PER_M}
+                y1={pos.y * PX_PER_M}
+                x2={from.pos.x * PX_PER_M}
+                y2={from.pos.y * PX_PER_M}
+                style={{ stroke: deviceColor(project, assignment, from.id) ?? 'var(--text-muted)' }}
+                strokeWidth={1.5 * k}
+                strokeDasharray={`${5 * k} ${3 * k}`}
+              />
+            )
+          })}
+          {project.devices.flatMap((d) =>
+            [...new Set((assignment.deviceInputs[d.id] ?? []).map((a) => a.boxId).filter((b): b is string => !!b))].map(
+              (boxId) => {
+                const box = boxById.get(boxId)!
+                return (
+                  <line
+                    key={`${d.id}-${boxId}`}
+                    x1={d.pos.x * PX_PER_M}
+                    y1={d.pos.y * PX_PER_M}
+                    x2={box.pos.x * PX_PER_M}
+                    y2={box.pos.y * PX_PER_M}
+                    stroke={box.color}
+                    strokeWidth={1.5 * k}
+                    strokeDasharray={`${2 * k} ${3 * k}`}
+                  />
+                )
+              },
+            ),
+          )}
           {project.outputs.map((o) => {
             const boxId = assignment.outputElements[o.id]?.boxId
             const box = boxId ? boxById.get(boxId) : undefined
@@ -146,18 +188,33 @@ export function StagePlot({ selected, onSelect }: Props) {
 
         {/* Reihenfolge: Instrumente, darüber Boxen (Kapazität bleibt lesbar), ausgewähltes Element ganz oben. */}
         {[
+          ...project.devices.map((d) => ({ kind: 'device' as const, el: d })),
           ...project.outputs.map((o) => ({ kind: 'output' as const, el: o })),
           ...project.groups.map((g) => ({ kind: 'group' as const, el: g })),
           ...project.boxes.map((b) => ({ kind: 'box' as const, el: b })),
         ]
           .sort((a, b) => Number(isSelected(a.kind, a.el.id)) - Number(isSelected(b.kind, b.el.id)))
           .map((item) =>
-            item.kind === 'output' ? (
+            item.kind === 'device' ? (
+              <DeviceNode
+                key={item.el.id}
+                device={item.el}
+                color={deviceColor(project, assignment, item.el.id)}
+                k={k}
+                selected={isSelected('device', item.el.id)}
+                bind={bind({ kind: 'device', id: item.el.id }, item.el.pos)}
+              />
+            ) : item.kind === 'output' ? (
               <OutputNode
                 key={item.el.id}
                 output={item.el}
                 assignment={assignment.outputElements[item.el.id]}
                 boxById={boxById}
+                chainColor={
+                  assignment.outputElements[item.el.id]?.source
+                    ? deviceColor(project, assignment, assignment.outputElements[item.el.id].source!.deviceId)
+                    : null
+                }
                 k={k}
                 selected={isSelected('output', item.el.id)}
                 bind={bind({ kind: 'output', id: item.el.id }, item.el.pos)}
@@ -184,7 +241,7 @@ export function StagePlot({ selected, onSelect }: Props) {
             ),
           )}
 
-        {routes && <CableLabels boxes={project.boxes} routes={routes} k={k} />}
+        {trees && <CableLabels trees={trees} k={k} />}
       </svg>
       <div className="zoom-controls" role="group" aria-label="Zoom">
         <button type="button" className="icon-btn" aria-label="Vergrößern" onClick={zp.zoomIn} disabled={zp.zoom >= ZOOM_LIMITS.max}>

@@ -65,3 +65,6 @@ export function frontArrowPoints(spec: ShapeSpec, k: number): string | null {
 
 /** Output-Arten, die neben bzw. vor der Bühne stehen dürfen (wie Stageboxen bis 1 m). */
 export const OFFSTAGE_OUTPUTS: OutputKind[] = ['pa', 'sub']
+
+/** Gerät (Frequenzweiche, Endstufe): flacher Rack-Kasten ohne Richtung. */
+export const DEVICE_SHAPE = { w: 46, h: 22, rx: 3 }

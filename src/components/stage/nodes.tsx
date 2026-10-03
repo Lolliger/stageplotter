@@ -1,8 +1,9 @@
 import type { PointerEventHandler } from 'react'
 import type { BoxUsage, GroupAssignment, OutputAssignment } from '../../lib/assign'
 import { PX_PER_M } from '../../model/defaults'
-import { AMP_SHAPE, OUTPUT_SHAPES, frontArrowPoints } from '../../model/shapes'
-import type { InstrumentGroup, InstrumentType, OutputElement, Stagebox } from '../../model/types'
+import { AMP_SHAPE, DEVICE_SHAPE, OUTPUT_SHAPES, frontArrowPoints } from '../../model/shapes'
+import { DEVICE_ABBR, DEVICE_LABELS } from '../../model/devices'
+import type { Device, InstrumentGroup, InstrumentType, OutputElement, Stagebox } from '../../model/types'
 
 interface DragBindings {
   onPointerDown: PointerEventHandler<SVGGElement>
@@ -175,18 +176,22 @@ interface OutputNodeProps {
   output: OutputElement
   assignment: OutputAssignment | undefined
   boxById: Map<string, Stagebox>
+  /** Farbe der PA-Kette, wenn der Lautsprecher an einem Gerät hängt. */
+  chainColor?: string | null
   k: number
   selected: boolean
   bind: DragBindings
 }
 
 /** Output-Element, Form je Art aus model/shapes.ts (Wedge-Trapez, IEM-Pille, Sidefill, PA, Sub). */
-export function OutputNode({ output, assignment, boxById, k, selected, bind }: OutputNodeProps) {
+export function OutputNode({ output, assignment, boxById, chainColor, k, selected, bind }: OutputNodeProps) {
   const x = output.pos.x * PX_PER_M
   const y = output.pos.y * PX_PER_M
   const box = assignment?.boxId ? boxById.get(assignment.boxId) : undefined
-  const problem = !assignment?.boxId
-  const stroke = box ? { stroke: box.color } : undefined
+  const fedByDevice = !!assignment?.source
+  const problem = !assignment?.boxId && !fedByDevice
+  const color = box?.color ?? (fedByDevice ? chainColor : null)
+  const stroke = color ? { stroke: color } : undefined
   const sw = 2.5 * k
 
   const spec = OUTPUT_SHAPES[output.kind]
@@ -228,6 +233,66 @@ export function OutputNode({ output, assignment, boxById, k, selected, bind }: O
       {assignment?.pinned && <PinMark x={-w / 2} y={-h / 2 - 2 * k} k={k} />}
       <text className="label" y={h / 2 + 11 * k} style={{ fontSize: 10 * k }} textAnchor="middle">
         {output.name}
+      </text>
+    </g>
+  )
+}
+
+interface DeviceNodeProps {
+  device: Device
+  /** Farbe der speisenden Stagebox, null = noch nicht gespeist. */
+  color: string | null
+  k: number
+  selected: boolean
+  bind: DragBindings
+}
+
+/** Frequenzweiche oder Endstufe als Rack-Kasten mit Kürzel und Ein-/Ausgangszahl. */
+export function DeviceNode({ device, color, k, selected, bind }: DeviceNodeProps) {
+  const x = device.pos.x * PX_PER_M
+  const y = device.pos.y * PX_PER_M
+  const w = DEVICE_SHAPE.w * k
+  const h = DEVICE_SHAPE.h * k
+  const io = device.kind === 'amp' ? `${device.inputs.length} Kan.` : `${device.inputs.length}→${device.outputs.length}`
+
+  return (
+    <g
+      className={`node device-node${selected ? ' selected' : ''}`}
+      transform={`translate(${x} ${y})`}
+      {...bind}
+      role="button"
+      aria-label={`${DEVICE_LABELS[device.kind]} ${device.name}`}
+    >
+      <circle className="hit" r={Math.max(HIT_RADIUS * k, w / 2 + 4 * k)} />
+      {selected && (
+        <rect
+          className="selection"
+          x={-w / 2 - 5 * k}
+          y={-h / 2 - 5 * k}
+          width={w + 10 * k}
+          height={h + 10 * k}
+          rx={7 * k}
+          strokeWidth={2 * k}
+        />
+      )}
+      <rect
+        className="body"
+        x={-w / 2}
+        y={-h / 2}
+        width={w}
+        height={h}
+        rx={DEVICE_SHAPE.rx * k}
+        strokeWidth={2.5 * k}
+        style={color ? { stroke: color } : undefined}
+      />
+      {/* Rack-Ohren links und rechts */}
+      <line className="rack-ear" x1={-w / 2 + 4 * k} y1={-h / 2 + 3 * k} x2={-w / 2 + 4 * k} y2={h / 2 - 3 * k} strokeWidth={1.5 * k} />
+      <line className="rack-ear" x1={w / 2 - 4 * k} y1={-h / 2 + 3 * k} x2={w / 2 - 4 * k} y2={h / 2 - 3 * k} strokeWidth={1.5 * k} />
+      <text className="abbr" style={{ fontSize: 9.5 * k }} dominantBaseline="central" textAnchor="middle">
+        {DEVICE_ABBR[device.kind]} <tspan className="io">{io}</tspan>
+      </text>
+      <text className="label" y={h / 2 + 11 * k} style={{ fontSize: 10 * k }} textAnchor="middle">
+        {device.name}
       </text>
     </g>
   )

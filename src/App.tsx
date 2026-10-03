@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { AddInstrument } from './components/editors/AddInstrument'
 import { AddOutput } from './components/editors/AddOutput'
+import { DeviceEditor } from './components/editors/DeviceEditor'
 import { DrumConfigurator } from './components/editors/DrumConfigurator'
 import { GroupEditor } from './components/editors/GroupEditor'
 import { OutputEditor } from './components/editors/OutputEditor'
@@ -14,6 +15,7 @@ import { Warnings } from './components/lists/Warnings'
 import { StagePlot } from './components/stage/StagePlot'
 import { Toolbar } from './components/toolbar/Toolbar'
 import { createStagebox } from './model/defaults'
+import { DEVICE_LABELS } from './model/devices'
 import type { ElementRef } from './model/types'
 import { ProjectProvider } from './state/ProjectProvider'
 import { useProject } from './state/useProject'
@@ -70,7 +72,7 @@ function Workspace() {
   } else if (panel?.kind === 'addOutput') {
     sheet = (
       <Sheet title="Output hinzufügen" onClose={close}>
-        <AddOutput onAdded={close} />
+        <AddOutput onAdded={(target) => (target.kind === 'device' ? select(target) : close())} />
       </Sheet>
     )
   } else if (panel?.kind === 'drums') {
@@ -102,6 +104,14 @@ function Workspace() {
       sheet = (
         <Sheet title={group.name} onClose={close}>
           <GroupEditor group={group} onDone={close} onConfigureDrums={() => setPanel({ kind: 'drums', groupId: group.id })} />
+        </Sheet>
+      )
+  } else if (selected?.kind === 'device') {
+    const device = project.devices.find((d) => d.id === selected.id)
+    if (device)
+      sheet = (
+        <Sheet title={`${DEVICE_LABELS[device.kind]}: ${device.name}`} onClose={close}>
+          <DeviceEditor key={device.id} device={device} onDone={close} />
         </Sheet>
       )
   } else if (selected?.kind === 'output') {

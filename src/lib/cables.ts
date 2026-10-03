@@ -191,9 +191,32 @@ export function trunkAxisFor(pos: Vec2, stage: StageSize): TrunkAxis {
   return toBackOrFront <= toSide ? 'horizontal' : 'vertical'
 }
 
-/** Kabelwege für alle Boxen eines Projekts, passend zur aktuellen Zuordnung. */
-export function routeProject(project: Project, assignment: Assignment): Record<string, CableRoute> {
-  const result: Record<string, CableRoute> = {}
+/** Kabelbaum ab einer Wurzel: Stagebox oder Gerät (Weiche/Endstufe). */
+export interface CableTree {
+  kind: 'box' | 'device'
+  rootId: string
+  root: Vec2
+  /** Farbe der speisenden Stagebox; null = keine (z. B. Gerät ohne Speisung). */
+  color: string | null
+  route: CableRoute
+}
+
+/**
+ * Farbe eines Geräts = Farbe der Stagebox, die es (direkt oder über eine vorgeschaltete Weiche)
+ * speist. So sieht man im Plan, an welcher Box eine PA-Kette hängt.
+ */
+export function deviceColor(project: Project, assignment: Assignment, deviceId: string, depth = 0): string | null {
+  if (depth > 4) return null
+  const inputs = assignment.deviceInputs[deviceId] ?? []
+  const boxId = inputs.find((a) => a.boxId)?.boxId
+  if (boxId) return project.boxes.find((b) => b.id === boxId)?.color ?? null
+  const upstream = inputs.find((a) => a.source)?.source
+  return upstream ? deviceColor(project, assignment, upstream.deviceId, depth + 1) : null
+}
+
+/** Kabelwege für alle Boxen und Geräte eines Projekts, passend zur aktuellen Zuordnung. */
+export function routeProject(project: Project, assignment: Assignment): CableTree[] {
+  const trees: CableTree[] = []
   for (const box of project.boxes) {
     const terminals: CableTerminal[] = []
     for (const g of project.groups) {
@@ -203,9 +226,37 @@ export function routeProject(project: Project, assignment: Assignment): Record<s
     for (const o of project.outputs) {
       if (assignment.outputElements[o.id]?.boxId === box.id) terminals.push({ id: o.id, pos: o.pos, count: 1 })
     }
-    result[box.id] = routeCables(box.pos, terminals, { axis: trunkAxisFor(box.pos, project.stage) })
+    for (const d of project.devices) {
+      const count = (assignment.deviceInputs[d.id] ?? []).filter((a) => a.boxId === box.id).length
+      if (count > 0) terminals.push({ id: d.id, pos: d.pos, count })
+    }
+    trees.push({
+      kind: 'box',
+      rootId: box.id,
+      root: box.pos,
+      color: box.color,
+      route: routeCables(box.pos, terminals, { axis: trunkAxisFor(box.pos, project.stage) }),
+    })
   }
-  return result
+  for (const device of project.devices) {
+    const terminals: CableTerminal[] = []
+    for (const o of project.outputs) {
+      if (assignment.outputElements[o.id]?.source?.deviceId === device.id) terminals.push({ id: o.id, pos: o.pos, count: 1 })
+    }
+    for (const d of project.devices) {
+      const count = (assignment.deviceInputs[d.id] ?? []).filter((a) => a.source?.deviceId === device.id).length
+      if (count > 0) terminals.push({ id: d.id, pos: d.pos, count })
+    }
+    if (terminals.length === 0) continue
+    trees.push({
+      kind: 'device',
+      rootId: device.id,
+      root: device.pos,
+      color: deviceColor(project, assignment, device.id),
+      route: routeCables(device.pos, terminals, { axis: trunkAxisFor(device.pos, project.stage) }),
+    })
+  }
+  return trees
 }
 
 export interface LabelOptions {

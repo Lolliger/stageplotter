@@ -260,8 +260,8 @@ function devicePosition(project: DeviceProject): Vec2 {
   const { width, depth } = project.stage
   const taken = [...project.boxes, ...project.groups, ...project.outputs, ...project.devices].map((e) => e.pos)
   const candidates: Vec2[] = []
-  for (let y = Math.max(0.5, depth - 2.5); y >= 0; y -= 1.3) candidates.push({ x: width + 0.6, y })
-  for (let y = Math.max(0.5, depth - 2.5); y >= 0; y -= 1.3) candidates.push({ x: -0.6, y })
+  for (let y = Math.max(0.5, depth - 2.5); y >= 0; y -= 1.7) candidates.push({ x: width + 0.6, y })
+  for (let y = Math.max(0.5, depth - 2.5); y >= 0; y -= 1.7) candidates.push({ x: -0.6, y })
   return candidates.find((c) => taken.every((t) => Math.hypot(t.x - c.x, t.y - c.y) >= 1.2)) ?? candidates[0]
 }
 

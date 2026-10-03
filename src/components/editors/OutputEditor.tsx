@@ -6,7 +6,9 @@ import { ConfirmButton } from '../ui/ConfirmButton'
 import { TextField } from '../ui/TextField'
 import { Segmented } from '../ui/Toggle'
 import { OUTPUT_SHAPES } from '../../model/shapes'
+import { outputLabel, sourcesForOutputElement } from '../../model/devices'
 import { BoxPicker } from './BoxPicker'
+import { SourceSelect } from './SourceSelect'
 import { RotationControl } from './RotationControl'
 
 export function OutputEditor({ output, onDone }: { output: OutputElement; onDone: () => void }) {
@@ -14,6 +16,8 @@ export function OutputEditor({ output, onDone }: { output: OutputElement; onDone
   const a = assignment.outputElements[output.id]
   const box = a?.boxId ? project.boxes.find((b) => b.id === a.boxId) : undefined
   const update = (patch: Partial<OutputElement>) => dispatch({ type: 'updateOutput', id: output.id, patch })
+  const sources = sourcesForOutputElement(project)
+  const fedBy = a?.source ? project.devices.find((d) => d.id === a.source!.deviceId) : undefined
 
   return (
     <div className="editor">
@@ -31,10 +35,28 @@ export function OutputEditor({ output, onDone }: { output: OutputElement; onDone
           onChange={(rotation) => update({ rotation })}
         />
       )}
-      <BoxPicker boxes={project.boxes} pinnedBoxId={output.pinnedBoxId} onChange={(pinnedBoxId) => update({ pinnedBoxId })} />
+      {sources.length > 0 && (
+        <SourceSelect
+          label="Signal von"
+          value={output.source}
+          boxLabel="Stagebox (aktiver Lautsprecher)"
+          options={sources}
+          onChange={(source) => update({ source })}
+        />
+      )}
+      {!fedBy && (
+        <BoxPicker boxes={project.boxes} pinnedBoxId={output.pinnedBoxId} onChange={(pinnedBoxId) => update({ pinnedBoxId })} />
+      )}
       <div className="assign-summary">
         <span className="field-label">Zuordnung</span>
-        {box && a?.label ? (
+        {fedBy ? (
+          <ul className="chips">
+            <li className="chip">
+              ← {fedBy.name} · {outputLabel(fedBy, output.source!.output)}
+              {fedBy.kind === 'crossover' ? ` (${fedBy.outputs[output.source!.output].name})` : ''}
+            </li>
+          </ul>
+        ) : box && a?.label ? (
           <ul className="chips">
             <li className="chip" style={{ borderColor: box.color }}>
               <span className="dot" style={{ background: box.color }} />

@@ -1,5 +1,6 @@
 import { OUTPUT_LABELS, createOutput, createPaPair } from '../../model/defaults'
-import type { OutputElement, OutputKind } from '../../model/types'
+import { createAmp, createCrossover } from '../../model/devices'
+import type { ElementRef, OutputElement, OutputKind } from '../../model/types'
 import { useProject } from '../../state/useProject'
 
 interface Choice {
@@ -10,7 +11,7 @@ interface Choice {
   create: () => OutputElement[]
 }
 
-export function AddOutput({ onAdded }: { onAdded: (id: string) => void }) {
+export function AddOutput({ onAdded }: { onAdded: (target: ElementRef) => void }) {
   const { project, dispatch, assignment } = useProject()
   const free = Object.values(assignment.usage).reduce((sum, u) => sum + (u.outputs - u.outputsUsed), 0)
   const single = (kind: Exclude<OutputKind, 'pa'>) => () => [createOutput(project, kind)]
@@ -34,7 +35,7 @@ export function AddOutput({ onAdded }: { onAdded: (id: string) => void }) {
   const add = (choice: Choice) => {
     const created = choice.create()
     for (const output of created) dispatch({ type: 'addOutput', output })
-    onAdded(created[0].id)
+    onAdded({ kind: 'output', id: created[0].id })
   }
 
   const section = (title: string, choices: Choice[]) => (
@@ -58,11 +59,46 @@ export function AddOutput({ onAdded }: { onAdded: (id: string) => void }) {
     </section>
   )
 
+  const devices = [
+    {
+      id: 'crossover',
+      label: 'Frequenzweiche',
+      description: 'Controller mit Hoch-/Tiefpass je Ausgang, z. B. Tops + Sub',
+      create: () => createCrossover(project),
+    },
+    {
+      id: 'amp',
+      label: 'Endstufe',
+      description: 'Für passive Lautsprecher, gespeist von Weiche oder Stagebox',
+      create: () => createAmp(project),
+    },
+  ]
+
   return (
     <div className="editor">
       <p className="hint">Noch {free} Outputs frei auf allen Stageboxen.</p>
       {section('Monitoring', monitoring)}
       {section('PA', pa)}
+      <section className="template-group">
+        <h3>PA-Technik</h3>
+        <div className="template-grid">
+          {devices.map((d) => (
+            <button
+              key={d.id}
+              type="button"
+              className="template-btn"
+              onClick={() => {
+                const device = d.create()
+                dispatch({ type: 'addDevice', device })
+                onAdded({ kind: 'device', id: device.id })
+              }}
+            >
+              <span className="template-label">{d.label} …</span>
+              <span className="template-meta">{d.description}</span>
+            </button>
+          ))}
+        </div>
+      </section>
     </div>
   )
 }

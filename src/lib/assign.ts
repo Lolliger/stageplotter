@@ -1,5 +1,5 @@
 import { TYPE_ORDER } from '../model/defaults'
-import { inputLabel, isValidSource } from '../model/devices'
+import { consumersOf, inputLabel, isValidSource } from '../model/devices'
 import type { DeviceKind, InstrumentGroup, OutputKind, Project, SignalSource, Stagebox, Vec2 } from '../model/types'
 import { euclidean, type DistanceFn } from './geometry'
 
@@ -59,6 +59,8 @@ export interface OutputAssignment {
   pinned: boolean
   /** Gespeist von einem Geräte-Ausgang statt von der Stagebox (belegt dann keinen Box-Output). */
   source?: SignalSource
+  /** Endstufen-Kanal ohne Speisung, an dessen Ausgang nichts hängt: belegt keinen Box-Output. */
+  unused?: boolean
 }
 
 export interface UnpatchedChannel {
@@ -287,6 +289,11 @@ export function assign(project: Project, distance: DistanceFn = euclidean): Assi
     d.inputs.forEach((input, ii) => {
       if (isValidSource(project, input.source, { kind: 'device', device: d })) {
         result.deviceInputs[d.id][ii].source = input.source
+        return
+      }
+      // Freie Endstufen-Kanäle (nichts am Ausgang) brauchen keinen Box-Output.
+      if (d.kind === 'amp' && consumersOf(project, d.id, ii).length === 0) {
+        result.deviceInputs[d.id][ii].unused = true
         return
       }
       consumers.push({

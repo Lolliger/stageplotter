@@ -778,3 +778,62 @@ select:focus-visible {
   padding: 0 10px;
   font-variant-numeric: tabular-nums;
 }
+
+/* Geräte (Weiche, Endstufe) */
+.io-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.io-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.io-list > li {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.io-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+
+.targets,
+.feed {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.targets.none,
+.feed.none {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 12px;
+}
+
+.frequency-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}

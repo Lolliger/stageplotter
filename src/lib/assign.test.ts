@@ -323,6 +323,8 @@ describe('assign – PA signal chain', () => {
       [
         { ...output('PA L', -0.6, 5.5), source: { deviceId: 'amp', output: 0 } },
         output('Wedge 1', 9, 5),
+        // passiver Wedge an Endstufen-Kanal B, der direkt an der Stagebox hängt
+        { ...output('Wedge 2', 9.5, 5), source: { deviceId: 'amp', output: 1 } },
       ],
     )
     return { ...p, devices: [xo, amp] }
@@ -337,11 +339,20 @@ describe('assign – PA signal chain', () => {
       ['B-Out 3', 'Weiche · In B (R)'],
       ['B-Out 4', 'Endstufe · Kanal B'],
     ])
+    expect(r.outputElements['Wedge 2'].source).toEqual({ deviceId: 'amp', output: 1 })
     expect(r.outputs['box-B'][1]).toMatchObject({ outputId: 'xo', inputIndex: 0, kind: 'crossover' })
     expect(r.outputElements['PA L']).toEqual({ boxId: null, label: null, pinned: false, source: { deviceId: 'amp', output: 0 } })
     expect(r.deviceInputs.amp[0].source).toEqual({ deviceId: 'xo', output: 0 })
     expect(r.deviceInputs.xo.map((a) => a.label)).toEqual(['B-Out 2', 'B-Out 3'])
     expect(r.usage['box-B'].outputsUsed).toBe(4)
+  })
+
+  test('amp channels with nothing connected use no box output', () => {
+    const p = chain()
+    p.outputs = p.outputs.filter((o) => o.name !== 'Wedge 2')
+    const r = assign(p)
+    expect(r.deviceInputs.amp[1]).toEqual({ boxId: null, label: null, pinned: false, unused: true })
+    expect(r.outputs['box-B'].map((o) => o.name)).not.toContain('Endstufe · Kanal B')
   })
 
   test('device inputs count towards missing outputs with readable names', () => {

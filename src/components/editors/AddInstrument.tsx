@@ -33,7 +33,7 @@ export function AddInstrument({ onAdded, onConfigureDrums }: Props) {
         </div>
       </section>
       {[...types.map((type) => ({ title: TYPE_LABELS[type], templates: INSTRUMENT_TEMPLATES.filter((t) => t.type === type) })),
-        { title: 'Verstärker', templates: AMP_TEMPLATES }].map(({ title, templates }) => (
+        { title: 'Backline (Instrumenten-Amps)', templates: AMP_TEMPLATES }].map(({ title, templates }) => (
         <section key={title} className="template-group">
           <h3>{title}</h3>
           <div className="template-grid">
