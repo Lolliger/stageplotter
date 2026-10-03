@@ -653,3 +653,30 @@ select:focus-visible {
   background: var(--surface);
   font-size: 16px;
 }
+
+.box-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.box-picker button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: var(--tap);
+  min-height: var(--tap);
+  padding: 0 14px;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.box-picker button[aria-checked='true'] {
+  border-color: var(--box-color, var(--accent));
+  box-shadow: inset 0 0 0 2px var(--box-color, var(--accent));
+  background: var(--surface);
+}

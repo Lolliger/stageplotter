@@ -4,6 +4,7 @@ import type { InstrumentGroup, InstrumentType } from '../../model/types'
 import { useProject } from '../../state/useProject'
 import { ConfirmButton } from '../ui/ConfirmButton'
 import { TextField } from '../ui/TextField'
+import { BoxPicker } from './BoxPicker'
 import { ChannelEditor } from './ChannelEditor'
 
 interface Props {
@@ -25,6 +26,12 @@ export function GroupEditor({ group, onDone, onConfigureDrums }: Props) {
         onChange={(name) => dispatch({ type: 'updateGroup', id: group.id, patch: { name } })}
       />
 
+      <BoxPicker
+        boxes={project.boxes}
+        pinnedBoxId={group.pinnedBoxId}
+        onChange={(pinnedBoxId) => dispatch({ type: 'updateGroup', id: group.id, patch: { pinnedBoxId } })}
+      />
+
       <div className="assign-summary">
         <span className="field-label">Zuordnung</span>
         {a && a.boxIds.length > 0 ? (
@@ -34,7 +41,7 @@ export function GroupEditor({ group, onDone, onConfigureDrums }: Props) {
               return (
                 <li key={id} className="chip" style={{ borderColor: box.color }}>
                   <span className="dot" style={{ background: box.color }} />
-                  Box {box.name} · {a.channelsPerBox[id]} Kan. · {fmtM(euclidean(group.pos, box.pos))}
+                  {a.pinned && '📌 '}Box {box.name} · {a.channelsPerBox[id]} Kan. · {fmtM(euclidean(group.pos, box.pos))}
                 </li>
               )
             })}

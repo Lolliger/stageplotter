@@ -13,6 +13,16 @@ interface DragBindings {
 /** Mindestgröße der Trefferfläche in CSS-px (Radius 24 → 48 px Durchmesser). */
 const HIT_RADIUS = 24
 
+/** Kleines Pin-Symbol oben links an einem Knoten. */
+function PinMark({ x, y, k }: { x: number; y: number; k: number }) {
+  return (
+    <g className="pin-mark" transform={`translate(${x} ${y}) scale(${k})`} aria-hidden="true">
+      <circle r={8} />
+      <path d="M -2.5 -4.5 h 5 l -1 3.5 l 2.5 2 h -8 l 2.5 -2 Z M 0 1 v 4.5" />
+    </g>
+  )
+}
+
 const TYPE_ABBR: Record<InstrumentType, string> = {
   drums: 'DR',
   percussion: 'PC',
@@ -61,6 +71,7 @@ export function GroupNode({ group, assignment, boxById, k, selected, bind }: Gro
           {problem ? '!' : count}
         </text>
       </g>
+      {assignment?.pinned && <PinMark x={-r * 0.75} y={-r * 0.75} k={k} />}
       <text className="label" y={r + 13 * k} style={{ fontSize: 11 * k }} textAnchor="middle">
         {group.name}
       </text>
@@ -178,6 +189,7 @@ export function OutputNode({ output, assignment, boxById, k, selected, bind }: O
       <text className="abbr" style={{ fontSize: 9 * k }} dominantBaseline="central" textAnchor="middle">
         {abbr}
       </text>
+      {assignment?.pinned && <PinMark x={-15 * k} y={-h / 2 - 2 * k} k={k} />}
       <text className="label" y={h / 2 + 11 * k} style={{ fontSize: 10 * k }} textAnchor="middle">
         {output.name}
       </text>

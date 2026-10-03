@@ -160,3 +160,15 @@
   fill: var(--danger);
   font-weight: 800;
 }
+
+.pin-mark circle {
+  fill: var(--accent);
+}
+
+.pin-mark path {
+  fill: var(--accent-text);
+  stroke: var(--accent-text);
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}

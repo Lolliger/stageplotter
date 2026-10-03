@@ -54,6 +54,14 @@ function updateById<T extends { id: string }>(items: T[], id: string, fn: (item:
   return items.map((item) => (item.id === id ? fn(item) : item))
 }
 
+/** Entfernt einen auf undefined gesetzten Pin, damit kein leerer Schlüssel gespeichert wird. */
+function dropEmptyPin<T extends { pinnedBoxId?: string }>(item: T): T {
+  if (item.pinnedBoxId !== undefined) return item
+  const copy = { ...item }
+  delete copy.pinnedBoxId
+  return copy
+}
+
 function unpin<T extends { pinnedBoxId?: string }>(item: T, boxId: string): T {
   if (item.pinnedBoxId !== boxId) return item
   const copy = { ...item }
@@ -124,7 +132,7 @@ export function projectReducer(state: Project, action: Action): Project {
       return {
         ...state,
         groups: updateById(state.groups, action.id, (g) => {
-          const next = { ...g, ...action.patch }
+          const next = dropEmptyPin({ ...g, ...action.patch })
           return { ...next, pos: placeElement(next.pos, state.stage) }
         }),
       }
@@ -139,7 +147,7 @@ export function projectReducer(state: Project, action: Action): Project {
       return {
         ...state,
         outputs: updateById(state.outputs, action.id, (o) => {
-          const next = { ...o, ...action.patch }
+          const next = dropEmptyPin({ ...o, ...action.patch })
           return { ...next, pos: placeElement(next.pos, state.stage) }
         }),
       }

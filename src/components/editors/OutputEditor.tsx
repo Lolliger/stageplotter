@@ -5,6 +5,7 @@ import { useProject } from '../../state/useProject'
 import { ConfirmButton } from '../ui/ConfirmButton'
 import { TextField } from '../ui/TextField'
 import { Segmented } from '../ui/Toggle'
+import { BoxPicker } from './BoxPicker'
 
 export function OutputEditor({ output, onDone }: { output: OutputElement; onDone: () => void }) {
   const { project, dispatch, assignment } = useProject()
@@ -21,12 +22,14 @@ export function OutputEditor({ output, onDone }: { output: OutputElement; onDone
         options={(Object.keys(OUTPUT_LABELS) as OutputKind[]).map((k) => ({ value: k, label: OUTPUT_LABELS[k] }))}
         onChange={(kind) => update({ kind })}
       />
+      <BoxPicker boxes={project.boxes} pinnedBoxId={output.pinnedBoxId} onChange={(pinnedBoxId) => update({ pinnedBoxId })} />
       <div className="assign-summary">
         <span className="field-label">Zuordnung</span>
         {box && a?.label ? (
           <ul className="chips">
             <li className="chip" style={{ borderColor: box.color }}>
               <span className="dot" style={{ background: box.color }} />
+              {a.pinned && '📌 '}
               {a.label} · {roundMeters(euclidean(output.pos, box.pos)).toLocaleString('de-DE')} m
             </li>
           </ul>

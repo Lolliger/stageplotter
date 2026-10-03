@@ -104,6 +104,17 @@ describe('projectReducer', () => {
     expect(p.groups[0].pinnedBoxId).toBeUndefined()
   })
 
+  test('pins survive moves and can be cleared', () => {
+    let p = withGroup(createDefaultProject())
+    const id = p.groups[0].id
+    const boxId = p.boxes[1].id
+    p = projectReducer(p, { type: 'updateGroup', id, patch: { pinnedBoxId: boxId } })
+    p = projectReducer(p, { type: 'move', target: { kind: 'group', id }, pos: { x: 0.5, y: 0.5 } })
+    expect(p.groups[0].pinnedBoxId).toBe(boxId)
+    p = projectReducer(p, { type: 'updateGroup', id, patch: { pinnedBoxId: undefined } })
+    expect('pinnedBoxId' in p.groups[0]).toBe(false)
+  })
+
   test('rename and delete groups', () => {
     let p = withGroup(createDefaultProject())
     const id = p.groups[0].id
