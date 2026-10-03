@@ -3,19 +3,31 @@ import { assign } from '../lib/assign'
 import { loadProject, saveProject } from '../lib/storage'
 import { createDefaultProject } from '../model/defaults'
 import type { Project } from '../model/types'
-import { ProjectContext } from './context'
-import { projectReducer } from './reducer'
+import { ProjectContext, type ProjectStore } from './context'
+import { historyReducer, initHistory } from './history'
 
 const SAVE_DELAY = 300
 
 export function ProjectProvider({ initial, children }: { initial?: Project; children: ReactNode }) {
-  const [project, dispatch] = useReducer(
-    projectReducer,
-    initial,
-    (p) => p ?? loadProject() ?? createDefaultProject(),
+  const [history, dispatch] = useReducer(historyReducer, initial, (p) =>
+    initHistory(p ?? loadProject() ?? createDefaultProject()),
   )
+  const project = history.present
   const assignment = useMemo(() => assign(project), [project])
-  const store = useMemo(() => ({ project, dispatch, assignment }), [project, assignment])
+  const canUndo = history.past.length > 0
+  const canRedo = history.future.length > 0
+  const store = useMemo<ProjectStore>(
+    () => ({
+      project,
+      dispatch,
+      assignment,
+      undo: () => dispatch({ type: 'undo' }),
+      redo: () => dispatch({ type: 'redo' }),
+      canUndo,
+      canRedo,
+    }),
+    [project, assignment, canUndo, canRedo],
+  )
 
   // Debounced speichern, damit Drag nicht bei jedem Pixel schreibt.
   useEffect(() => {

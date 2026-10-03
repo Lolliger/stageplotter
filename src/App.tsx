@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { AddInstrument } from './components/editors/AddInstrument'
 import { AddOutput } from './components/editors/AddOutput'
 import { DrumConfigurator } from './components/editors/DrumConfigurator'
@@ -31,9 +31,25 @@ type Panel =
   | null
 
 function Workspace() {
-  const { project, dispatch } = useProject()
+  const { project, dispatch, undo, redo, canUndo, canRedo } = useProject()
   const [panel, setPanel] = useState<Panel>(null)
   const close = useCallback(() => setPanel(null), [])
+
+  // Strg/Cmd+Z, Strg/Cmd+Umschalt+Z, Strg+Y – nicht während der Eingabe in Feldern.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement | null
+      if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT')) return
+      if (!(e.metaKey || e.ctrlKey)) return
+      const key = e.key.toLowerCase()
+      if (key === 'z' && !e.shiftKey) undo()
+      else if ((key === 'z' && e.shiftKey) || key === 'y') redo()
+      else return
+      e.preventDefault()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [undo, redo])
 
   const selected = panel?.kind === 'edit' ? panel.target : null
   const select = (target: ElementRef | null) => setPanel(target ? { kind: 'edit', target } : null)
@@ -119,6 +135,16 @@ function Workspace() {
           onSettings={() => setPanel({ kind: 'settings' })}
         />
         <div className="topbar-actions">
+          <button type="button" className="icon-btn" aria-label="Rückgängig" title="Rückgängig" disabled={!canUndo} onClick={undo}>
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+              <path d="M9 14 4 9l5-5M4 9h11a5 5 0 0 1 0 10h-3" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+          <button type="button" className="icon-btn" aria-label="Wiederholen" title="Wiederholen" disabled={!canRedo} onClick={redo}>
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+              <path d="m15 14 5-5-5-5M20 9H9a5 5 0 0 0 0 10h3" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
           <button
             type="button"
             className="icon-btn"

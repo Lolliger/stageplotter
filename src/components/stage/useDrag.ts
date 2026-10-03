@@ -12,6 +12,8 @@ interface DragState {
   startSvg: DOMPoint
   startPos: Vec2
   moved: boolean
+  /** Eindeutig pro Drag, damit alle Bewegungen ein Undo-Schritt sind. */
+  session: string
 }
 
 function round(v: number): number {
@@ -24,10 +26,11 @@ function round(v: number): number {
  */
 export function useDrag(
   svgRef: RefObject<SVGSVGElement | null>,
-  onMove: (target: ElementRef, pos: Vec2) => void,
+  onMove: (target: ElementRef, pos: Vec2, session: string) => void,
   onTap: (target: ElementRef) => void,
 ) {
   const drag = useRef<DragState | null>(null)
+  const sessions = useRef(0)
 
   function toSvg(clientX: number, clientY: number): DOMPoint | null {
     const ctm = svgRef.current?.getScreenCTM()
@@ -51,6 +54,7 @@ export function useDrag(
           startSvg,
           startPos: pos,
           moved: false,
+          session: `drag-${++sessions.current}`,
         }
       },
       onPointerMove(e: ReactPointerEvent<SVGGElement>) {
@@ -63,10 +67,14 @@ export function useDrag(
         }
         const p = toSvg(e.clientX, e.clientY)
         if (!p) return
-        onMove(d.target, {
-          x: round(d.startPos.x + (p.x - d.startSvg.x) / PX_PER_M),
-          y: round(d.startPos.y + (p.y - d.startSvg.y) / PX_PER_M),
-        })
+        onMove(
+          d.target,
+          {
+            x: round(d.startPos.x + (p.x - d.startSvg.x) / PX_PER_M),
+            y: round(d.startPos.y + (p.y - d.startSvg.y) / PX_PER_M),
+          },
+          d.session,
+        )
       },
       onPointerUp(e: ReactPointerEvent<SVGGElement>) {
         const d = drag.current

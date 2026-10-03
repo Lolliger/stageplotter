@@ -33,7 +33,7 @@ export function StagePlot({ selected, onSelect }: Props) {
 
   const bind = useDrag(
     svgRef,
-    (target, pos) => dispatch({ type: 'move', target, pos }),
+    (target, pos, session) => dispatch({ type: 'move', target, pos, coalesce: session }),
     (target) => onSelect(target),
   )
 

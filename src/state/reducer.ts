@@ -15,7 +15,8 @@ export type Action =
   | { type: 'setName'; name: string }
   | { type: 'setStage'; stage: StageSize }
   | { type: 'setCableView'; cableView: CableView }
-  | { type: 'move'; target: ElementRef; pos: Vec2 }
+  /** `coalesce`: gleicher Schlüssel = gleicher Undo-Schritt (z. B. alle Bewegungen eines Drags). */
+  | { type: 'move'; target: ElementRef; pos: Vec2; coalesce?: string }
   | { type: 'addBox'; box: Stagebox }
   | { type: 'updateBox'; id: string; patch: Partial<Omit<Stagebox, 'id'>> }
   | { type: 'addGroup'; group: InstrumentGroup }

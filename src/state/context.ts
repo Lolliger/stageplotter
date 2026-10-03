@@ -8,6 +8,10 @@ export interface ProjectStore {
   dispatch: Dispatch<Action>
   /** Aus dem Projekt abgeleitet, nie gespeichert. */
   assignment: Assignment
+  undo: () => void
+  redo: () => void
+  canUndo: boolean
+  canRedo: boolean
 }
 
 export const ProjectContext = createContext<ProjectStore | null>(null)
