@@ -7,6 +7,8 @@ import { CableLabels, CableLines } from './Cables'
 import { BoxNode, GroupNode, OutputNode } from './nodes'
 import { useDrag } from './useDrag'
 import { useUnitsPerPx } from './useUnitsPerPx'
+import { useZoomPan } from './useZoomPan'
+import { ZOOM_LIMITS } from '../../lib/viewport'
 import './stage.css'
 
 /** Rand um die Bühne in Metern (Platz für Boxen außerhalb und Beschriftung). */
@@ -26,7 +28,10 @@ export function StagePlot({ selected, onSelect }: Props) {
   const vy = -PAD * PX_PER_M
   const vw = (stage.width + 2 * PAD) * PX_PER_M
   const vh = (stage.depth + 2 * PAD) * PX_PER_M
-  const { unitsPerPx, widthPx } = useUnitsPerPx(svgRef, vw, vh)
+  const zp = useZoomPan(svgRef, { x: vx, y: vy, w: vw, h: vh }, () => onSelect(null))
+  const vb = zp.viewBox
+  // Gezoomt werden Knoten nicht größer, sondern es entsteht mehr Platz zwischen ihnen.
+  const { unitsPerPx, widthPx } = useUnitsPerPx(svgRef, vb.w, vb.h)
   // Auf großen Flächen Knoten etwas größer zeichnen, auf dem Handy Basisgröße.
   const boost = Math.min(1.4, Math.max(1, widthPx / 520))
   const k = Math.min(4, Math.max(0.35, unitsPerPx * boost))
@@ -49,136 +54,148 @@ export function StagePlot({ selected, onSelect }: Props) {
   const ys = range(0, stage.depth, gridStep)
 
   return (
-    <svg
-      ref={svgRef}
-      className="stage-svg"
-      viewBox={`${vx} ${vy} ${vw} ${vh}`}
-      preserveAspectRatio="xMidYMid meet"
-      style={{ aspectRatio: `${vw} / ${vh}` }}
-      role="img"
-      aria-label={`Bühnenplan ${fmt(stage.width)} × ${fmt(stage.depth)} m`}
-      onPointerDown={(e) => {
-        if (e.target === e.currentTarget || (e.target as Element).classList.contains('stage-floor')) onSelect(null)
-      }}
-    >
-      {/* Bühne und Raster */}
-      <rect className="stage-floor" x={0} y={0} width={W} height={D} />
-      <g className="stage-grid">
-        {xs.map((m) => (
-          <line key={`x${m}`} x1={m * PX_PER_M} y1={0} x2={m * PX_PER_M} y2={D} className={m % 5 === 0 ? 'major' : ''} />
-        ))}
-        {ys.map((m) => (
-          <line key={`y${m}`} x1={0} y1={m * PX_PER_M} x2={W} y2={m * PX_PER_M} className={m % 5 === 0 ? 'major' : ''} />
-        ))}
-      </g>
-      <rect className="stage-outline" x={0} y={0} width={W} height={D} />
-      <line className="stage-front" x1={0} y1={D} x2={W} y2={D} />
+    <div className="stage-wrap">
+      <svg
+        ref={svgRef}
+        className="stage-svg"
+        viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`}
+        preserveAspectRatio="xMidYMid meet"
+        // Ungezoomt darf die Seite über dem Plan scrollen; gezoomt gehören alle Gesten dem Plan.
+        style={{ aspectRatio: `${vw} / ${vh}`, touchAction: zp.zoom > 1 ? 'none' : 'pan-y' }}
+        role="img"
+        aria-label={`Bühnenplan ${fmt(stage.width)} × ${fmt(stage.depth)} m`}
+        {...zp.handlers}
+      >
+        {/* Bühne und Raster */}
+        <rect className="stage-floor" x={0} y={0} width={W} height={D} />
+        <g className="stage-grid">
+          {xs.map((m) => (
+            <line key={`x${m}`} x1={m * PX_PER_M} y1={0} x2={m * PX_PER_M} y2={D} className={m % 5 === 0 ? 'major' : ''} />
+          ))}
+          {ys.map((m) => (
+            <line key={`y${m}`} x1={0} y1={m * PX_PER_M} x2={W} y2={m * PX_PER_M} className={m % 5 === 0 ? 'major' : ''} />
+          ))}
+        </g>
+        <rect className="stage-outline" x={0} y={0} width={W} height={D} />
+        <line className="stage-front" x1={0} y1={D} x2={W} y2={D} />
 
-      <g className="stage-scale" style={{ fontSize: 9 * k }}>
-        {xs.map((m) => (
-          <text key={`lx${m}`} x={m * PX_PER_M} y={-5 * k} textAnchor="middle">
-            {m}
+        <g className="stage-scale" style={{ fontSize: 9 * k }}>
+          {xs.map((m) => (
+            <text key={`lx${m}`} x={m * PX_PER_M} y={-5 * k} textAnchor="middle">
+              {m}
+            </text>
+          ))}
+          {ys.map((m) => (
+            <text key={`ly${m}`} x={-5 * k} y={m * PX_PER_M} textAnchor="end" dominantBaseline="middle">
+              {m}
+            </text>
+          ))}
+          <text x={W + 5 * k} y={-5 * k}>
+            m
           </text>
-        ))}
-        {ys.map((m) => (
-          <text key={`ly${m}`} x={-5 * k} y={m * PX_PER_M} textAnchor="end" dominantBaseline="middle">
-            {m}
-          </text>
-        ))}
-        <text x={W + 5 * k} y={-5 * k}>
-          m
+        </g>
+        <text className="stage-audience" x={W / 2} y={D + 14 * k} style={{ fontSize: 11 * k }}>
+          PUBLIKUM · {fmt(stage.width)} × {fmt(stage.depth)} m
         </text>
-      </g>
-      <text className="stage-audience" x={W / 2} y={D + 14 * k} style={{ fontSize: 11 * k }}>
-        PUBLIKUM · {fmt(stage.width)} × {fmt(stage.depth)} m
-      </text>
 
-      {/* Verbindungen Gruppe/Output → Box: gebündelt oder als Luftlinie */}
-      {routes ? (
-        <CableLines boxes={project.boxes} routes={routes} k={k} />
-      ) : (
-      <g className="links">
-        {project.groups.flatMap((g) => {
-          const a = assignment.groups[g.id]
-          if (!a) return []
-          return a.boxIds.map((boxId) => {
-            const box = boxById.get(boxId)!
+        {/* Verbindungen Gruppe/Output → Box: gebündelt oder als Luftlinie */}
+        {routes ? (
+          <CableLines boxes={project.boxes} routes={routes} k={k} />
+        ) : (
+        <g className="links">
+          {project.groups.flatMap((g) => {
+            const a = assignment.groups[g.id]
+            if (!a) return []
+            return a.boxIds.map((boxId) => {
+              const box = boxById.get(boxId)!
+              return (
+                <line
+                  key={`${g.id}-${boxId}`}
+                  x1={g.pos.x * PX_PER_M}
+                  y1={g.pos.y * PX_PER_M}
+                  x2={box.pos.x * PX_PER_M}
+                  y2={box.pos.y * PX_PER_M}
+                  stroke={box.color}
+                  strokeWidth={2 * k}
+                  strokeDasharray={a.split ? `${6 * k} ${4 * k}` : undefined}
+                />
+              )
+            })
+          })}
+          {project.outputs.map((o) => {
+            const boxId = assignment.outputElements[o.id]?.boxId
+            const box = boxId ? boxById.get(boxId) : undefined
+            if (!box) return null
             return (
               <line
-                key={`${g.id}-${boxId}`}
-                x1={g.pos.x * PX_PER_M}
-                y1={g.pos.y * PX_PER_M}
+                key={`${o.id}-${box.id}`}
+                x1={o.pos.x * PX_PER_M}
+                y1={o.pos.y * PX_PER_M}
                 x2={box.pos.x * PX_PER_M}
                 y2={box.pos.y * PX_PER_M}
                 stroke={box.color}
-                strokeWidth={2 * k}
-                strokeDasharray={a.split ? `${6 * k} ${4 * k}` : undefined}
+                strokeWidth={1.5 * k}
+                strokeDasharray={`${2 * k} ${3 * k}`}
               />
             )
-          })
-        })}
-        {project.outputs.map((o) => {
-          const boxId = assignment.outputElements[o.id]?.boxId
-          const box = boxId ? boxById.get(boxId) : undefined
-          if (!box) return null
-          return (
-            <line
-              key={`${o.id}-${box.id}`}
-              x1={o.pos.x * PX_PER_M}
-              y1={o.pos.y * PX_PER_M}
-              x2={box.pos.x * PX_PER_M}
-              y2={box.pos.y * PX_PER_M}
-              stroke={box.color}
-              strokeWidth={1.5 * k}
-              strokeDasharray={`${2 * k} ${3 * k}`}
-            />
-          )
-        })}
-      </g>
-      )}
-
-      {/* Reihenfolge: Instrumente, darüber Boxen (Kapazität bleibt lesbar), ausgewähltes Element ganz oben. */}
-      {[
-        ...project.outputs.map((o) => ({ kind: 'output' as const, el: o })),
-        ...project.groups.map((g) => ({ kind: 'group' as const, el: g })),
-        ...project.boxes.map((b) => ({ kind: 'box' as const, el: b })),
-      ]
-        .sort((a, b) => Number(isSelected(a.kind, a.el.id)) - Number(isSelected(b.kind, b.el.id)))
-        .map((item) =>
-          item.kind === 'output' ? (
-            <OutputNode
-              key={item.el.id}
-              output={item.el}
-              assignment={assignment.outputElements[item.el.id]}
-              boxById={boxById}
-              k={k}
-              selected={isSelected('output', item.el.id)}
-              bind={bind({ kind: 'output', id: item.el.id }, item.el.pos)}
-            />
-          ) : item.kind === 'box' ? (
-            <BoxNode
-              key={item.el.id}
-              box={item.el}
-              usage={assignment.usage[item.el.id]}
-              k={k}
-              selected={isSelected('box', item.el.id)}
-              bind={bind({ kind: 'box', id: item.el.id }, item.el.pos)}
-            />
-          ) : (
-            <GroupNode
-              key={item.el.id}
-              group={item.el}
-              assignment={assignment.groups[item.el.id]}
-              boxById={boxById}
-              k={k}
-              selected={isSelected('group', item.el.id)}
-              bind={bind({ kind: 'group', id: item.el.id }, item.el.pos)}
-            />
-          ),
+          })}
+        </g>
         )}
 
-      {routes && <CableLabels boxes={project.boxes} routes={routes} k={k} />}
-    </svg>
+        {/* Reihenfolge: Instrumente, darüber Boxen (Kapazität bleibt lesbar), ausgewähltes Element ganz oben. */}
+        {[
+          ...project.outputs.map((o) => ({ kind: 'output' as const, el: o })),
+          ...project.groups.map((g) => ({ kind: 'group' as const, el: g })),
+          ...project.boxes.map((b) => ({ kind: 'box' as const, el: b })),
+        ]
+          .sort((a, b) => Number(isSelected(a.kind, a.el.id)) - Number(isSelected(b.kind, b.el.id)))
+          .map((item) =>
+            item.kind === 'output' ? (
+              <OutputNode
+                key={item.el.id}
+                output={item.el}
+                assignment={assignment.outputElements[item.el.id]}
+                boxById={boxById}
+                k={k}
+                selected={isSelected('output', item.el.id)}
+                bind={bind({ kind: 'output', id: item.el.id }, item.el.pos)}
+              />
+            ) : item.kind === 'box' ? (
+              <BoxNode
+                key={item.el.id}
+                box={item.el}
+                usage={assignment.usage[item.el.id]}
+                k={k}
+                selected={isSelected('box', item.el.id)}
+                bind={bind({ kind: 'box', id: item.el.id }, item.el.pos)}
+              />
+            ) : (
+              <GroupNode
+                key={item.el.id}
+                group={item.el}
+                assignment={assignment.groups[item.el.id]}
+                boxById={boxById}
+                k={k}
+                selected={isSelected('group', item.el.id)}
+                bind={bind({ kind: 'group', id: item.el.id }, item.el.pos)}
+              />
+            ),
+          )}
+
+        {routes && <CableLabels boxes={project.boxes} routes={routes} k={k} />}
+      </svg>
+      <div className="zoom-controls" role="group" aria-label="Zoom">
+        <button type="button" className="icon-btn" aria-label="Vergrößern" onClick={zp.zoomIn} disabled={zp.zoom >= ZOOM_LIMITS.max}>
+          +
+        </button>
+        <button type="button" className="icon-btn" aria-label="Verkleinern" onClick={zp.zoomOut} disabled={zp.zoom <= ZOOM_LIMITS.min}>
+          −
+        </button>
+        <button type="button" className="icon-btn" aria-label="Ganze Bühne zeigen" onClick={zp.reset} disabled={zp.zoom <= ZOOM_LIMITS.min}>
+          ⤢
+        </button>
+      </div>
+    </div>
   )
 }
 

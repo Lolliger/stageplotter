@@ -120,3 +120,11 @@ CSS-Variablen (svg2pdf löst diese nicht auf), Text manuell vertikal zentriert (
 passend zum Papier (Radius ca. 4,5 mm). Seite 1 ist A4 quer (Plan + Legende), die Listen folgen
 auf A4 hoch; gepinnte Elemente sind mit „(fest)“ markiert, weil die Standardschrift keine Emojis
 kann. Der PDF-Code (jsPDF, svg2pdf, autotable) ist ein eigener, nachgeladener Chunk.
+
+## D21 – Zoom/Pan: Seite scrollt, solange nicht gezoomt ist
+Der Plan lässt sich über Buttons (+ / − / ganze Bühne), Mausrad bzw. Trackpad-Pinch und
+Zwei-Finger-Pinch zoomen (1- bis 5-fach). Ungezoomt hat der Plan `touch-action: pan-y`, damit
+man auf dem Handy über den Plan hinweg zur Liste scrollen kann; erst gezoomt gehören alle Gesten
+dem Plan (ein Finger auf freier Fläche verschiebt). Auf schmalen Layouts zoomt das Mausrad nur mit
+Strg/Cmd. Knoten behalten beim Zoomen ihre Bildschirmgröße – Zoomen schafft Platz zwischen ihnen.
+Der Ausschnitt ist reine Ansicht und wird nicht gespeichert.

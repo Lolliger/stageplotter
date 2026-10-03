@@ -76,6 +76,10 @@
     padding: 16px;
   }
 
+  .stage-panel .stage-wrap {
+    height: 100%;
+  }
+
   .stage-panel .stage-svg {
     width: 100%;
     height: 100%;

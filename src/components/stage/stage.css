@@ -8,6 +8,35 @@
   -webkit-touch-callout: none;
 }
 
+.stage-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.zoom-controls {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  box-shadow: var(--shadow);
+}
+
+.zoom-controls .icon-btn {
+  font-size: 1.25rem;
+  font-weight: 700;
+  border-radius: 9px;
+}
+
+.zoom-controls .icon-btn:disabled {
+  opacity: 0.35;
+}
+
 .stage-floor {
   fill: var(--stage-floor);
 }
