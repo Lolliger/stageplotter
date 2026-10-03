@@ -204,6 +204,16 @@ Nach jedem Schritt: `npm run lint && npm test && npm run build`, dann Commit.
     Fokus), optional PWA für Offline-Nutzung in Venues ohne Netz
 17. README finalisieren, Vercel-Deployment prüfen
 
+### Phase 4 – PA-Signalweg und Ausrichtung
+18. Drehen: Wedges, PA, Sidefills, Subs und Backline-Amps mit Ausrichtung (Grad), Pfeil für die
+    Abstrahlrichtung, Bedienung im Editor (±15°/±45°, Richtungsknöpfe); auch im PDF
+19. Geräte im Modell: Frequenzweiche und Endstufe mit Ein-/Ausgängen, Anschlusstypen, Filtern
+    (HP/LP, Flanke, Charakteristik, Speisung aus Eingängen) bzw. Kanälen und Leistung; Vorlagen
+20. Signalfluss in `assign`: Quelle je Lautsprecher/Geräte-Eingang (Stagebox oder Geräte-
+    Ausgang); nur Stagebox-gespeiste Ziele belegen Box-Outputs; Tests
+21. UI: Geräte hinzufügen, Konfiguratoren, Quellen-Auswahl, Geräte im Plan, Kabel ab Gerät
+22. Liste „PA-Signalweg“ und PDF-Tabellen
+
 ## 6. Risiken
 
 - **Drag auf iOS:** Safari-Gesten (Zurück-Wischen, Scroll) können mit Drag kollidieren →
