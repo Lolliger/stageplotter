@@ -1,0 +1,80 @@
+/* Farben und Grundwerte. Alle Komponenten nutzen nur diese Variablen. */
+:root {
+  color-scheme: light dark;
+
+  --bg: #f4f5f7;
+  --surface: #ffffff;
+  --surface-2: #eceef2;
+  --border: #d5d9e0;
+  --text: #16181d;
+  --text-muted: #5b6270;
+  --accent: #2563eb;
+  --accent-text: #ffffff;
+  --danger: #dc2626;
+  --danger-bg: #fdecec;
+  --warning: #b45309;
+  --warning-bg: #fdf3e2;
+  --ok: #15803d;
+
+  --stage-floor: #ffffff;
+  --stage-edge: #9aa2af;
+  --stage-grid: #e7e9ee;
+  --stage-grid-major: #d3d7de;
+  --stage-label: #8a919d;
+
+  --radius: 10px;
+  --tap: 44px;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 4px 16px rgb(0 0 0 / 0.08);
+  --font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14161a;
+    --surface: #1d2026;
+    --surface-2: #262a32;
+    --border: #353a44;
+    --text: #e8eaee;
+    --text-muted: #9aa1ad;
+    --accent: #4f8cff;
+    --accent-text: #0b1020;
+    --danger: #f26b6b;
+    --danger-bg: #3a1d1f;
+    --warning: #f0b45a;
+    --warning-bg: #3a2c16;
+    --ok: #4ade80;
+
+    --stage-floor: #1a1d23;
+    --stage-edge: #5d6572;
+    --stage-grid: #23272e;
+    --stage-grid-major: #2e333c;
+    --stage-label: #6b7280;
+
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 16px rgb(0 0 0 / 0.4);
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.4;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
