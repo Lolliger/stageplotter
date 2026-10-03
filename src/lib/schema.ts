@@ -1,9 +1,17 @@
 import { normalizeDrumConfig } from '../model/drums'
 import { normalizeRotation } from '../model/shapes'
+import { CONNECTORS, FILTER_SLOPES, clampFrequency, cleanSources } from '../model/devices'
 import { BOX_COLORS, DEFAULT_BOX_INPUTS, DEFAULT_BOX_OUTPUTS, DEFAULT_STAGE, STAGE_LIMITS } from '../model/defaults'
 import type {
   Channel,
+  ConnectorType,
+  Device,
+  DeviceInput,
+  DeviceKind,
+  DeviceOutput,
   DrumConfig,
+  FilterSlope,
+  SignalSource,
   InstrumentGroup,
   InstrumentType,
   OutputElement,
@@ -71,6 +79,11 @@ function channel(v: unknown, where: string): Channel {
   if (typeof o.note === 'string' && o.note !== '') c.note = o.note
   if (typeof o.slot === 'string' && o.slot !== '') c.slot = o.slot
   return c
+}
+
+function source(v: unknown): { source?: SignalSource } {
+  if (!isObj(v) || typeof v.deviceId !== 'string' || !Number.isInteger(v.output)) return {}
+  return { source: { deviceId: v.deviceId, output: v.output as number } }
 }
 
 function rotation(v: unknown): { rotation?: number } {
@@ -149,7 +162,51 @@ export function parseProject(data: unknown): ParseResult {
         pos: vec(e.pos, `outputs[${i}].pos`),
         ...pin(e.pinnedBoxId),
         ...rotation(e.rotation),
+        ...source(e.source),
       }
+    })
+
+    const devices: Device[] = arr(o.devices, 'devices').map((v, i) => {
+      const d = obj(v, `devices[${i}]`)
+      const kind: DeviceKind = d.kind === 'amp' ? 'amp' : 'crossover'
+      const allowed = CONNECTORS[kind]
+      const connector = (c: unknown, list: ConnectorType[]): ConnectorType =>
+        list.includes(c as ConnectorType) ? (c as ConnectorType) : list[0]
+      const inputs: DeviceInput[] = arr(d.inputs, `devices[${i}].inputs`).map((iv, j) => {
+        const x = obj(iv, `devices[${i}].inputs[${j}]`)
+        return { name: str(x.name, `In ${j + 1}`), connector: connector(x.connector, allowed.inputs), ...source(x.source) }
+      })
+      const outputs: DeviceOutput[] = arr(d.outputs, `devices[${i}].outputs`).map((ov, j) => {
+        const x = obj(ov, `devices[${i}].outputs[${j}]`)
+        const out: DeviceOutput = { name: str(x.name, `Out ${j + 1}`), connector: connector(x.connector, allowed.outputs) }
+        if (kind === 'crossover') {
+          if (typeof x.hp === 'number') out.hp = clampFrequency(x.hp)
+          if (typeof x.lp === 'number') out.lp = clampFrequency(x.lp)
+          out.slope = FILTER_SLOPES.includes(x.slope as FilterSlope) ? (x.slope as FilterSlope) : 24
+          out.filter = x.filter === 'bw' || x.filter === 'bessel' ? x.filter : 'lr'
+          out.from = Array.isArray(x.from)
+            ? [...new Set(x.from.filter((f): f is number => Number.isInteger(f) && f >= 0 && f < inputs.length))]
+            : []
+        }
+        return out
+      })
+      const device: Device = {
+        id: id(d.id),
+        kind,
+        name: str(d.name, kind === 'amp' ? 'Endstufe' : 'Weiche'),
+        pos: vec(d.pos, `devices[${i}].pos`),
+        inputs,
+        outputs,
+        ...pin(d.pinnedBoxId),
+      }
+      if (kind === 'amp') {
+        const power = isObj(d.power) ? d.power : {}
+        device.power = {
+          watts: typeof power.watts === 'number' && power.watts > 0 ? Math.round(power.watts) : 1000,
+          ohms: typeof power.ohms === 'number' && power.ohms > 0 ? power.ohms : 4,
+        }
+      }
+      return device
     })
 
     return {
@@ -160,9 +217,8 @@ export function parseProject(data: unknown): ParseResult {
         stage,
         ...(o.cableView === 'direct' || o.cableView === 'bundled' ? { cableView: o.cableView } : {}),
         ...(typeof o.snap === 'boolean' ? { snap: o.snap } : {}),
-        boxes,
-        groups,
-        outputs,
+        // Verweise auf fehlende Geräte/Ausgänge oder unerlaubte Verbindungen fallen weg
+        ...cleanSources({ boxes, groups, outputs, devices }),
       },
     }
   } catch (e) {

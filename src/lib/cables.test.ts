@@ -215,6 +215,7 @@ describe('routeProject', () => {
         },
       ],
       outputs: [{ id: 'w', kind: 'wedge', name: 'w', pos: { x: 4, y: 5 } }],
+      devices: [],
     }
     const routes = routeProject(project, assign(project))
     expect(routes.A.total).toBe(3)

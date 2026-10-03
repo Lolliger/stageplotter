@@ -76,6 +76,58 @@ export interface OutputElement {
   pinnedBoxId?: string
   /** Drehung in Grad im Uhrzeigersinn; 0 = Grundausrichtung der Form (siehe model/shapes.ts). */
   rotation?: number
+  /** Gespeist von einem Geräte-Ausgang (Weiche/Endstufe) statt direkt von der Stagebox. */
+  source?: SignalSource
+}
+
+/** Verweis auf einen Ausgang eines Geräts (Frequenzweiche oder Endstufe). */
+export interface SignalSource {
+  deviceId: string
+  /** Index des Ausgangs, ab 0. */
+  output: number
+}
+
+export type DeviceKind = 'crossover' | 'amp'
+
+export type ConnectorType = 'xlr' | 'aes' | 'dante' | 'jack' | 'speakon-nl4' | 'speakon-nl8' | 'binding'
+
+/** Flankensteilheit in dB/Oktave. */
+export type FilterSlope = 12 | 18 | 24 | 48
+
+/** Filtercharakteristik: Linkwitz-Riley, Butterworth, Bessel. */
+export type FilterType = 'lr' | 'bw' | 'bessel'
+
+export interface DeviceInput {
+  name: string
+  connector: ConnectorType
+  /** Nur Endstufe: gespeist von einem Weichen-Ausgang. Fehlt = von der Stagebox. */
+  source?: SignalSource
+}
+
+export interface DeviceOutput {
+  name: string
+  connector: ConnectorType
+  /** Nur Weiche: Hochpass in Hz (fehlt = aus). */
+  hp?: number
+  /** Nur Weiche: Tiefpass in Hz (fehlt = aus). */
+  lp?: number
+  slope?: FilterSlope
+  filter?: FilterType
+  /** Nur Weiche: welche Eingänge (Index) auf diesen Ausgang gemischt werden. */
+  from?: number[]
+}
+
+export interface Device {
+  id: string
+  kind: DeviceKind
+  name: string
+  pos: Vec2
+  pinnedBoxId?: string
+  inputs: DeviceInput[]
+  /** Endstufe: ein Ausgang je Kanal, gleiche Anzahl wie Eingänge. */
+  outputs: DeviceOutput[]
+  /** Nur Endstufe: Leistung pro Kanal. */
+  power?: { watts: number; ohms: number }
 }
 
 export interface StageSize {
@@ -99,9 +151,11 @@ export interface Project {
   /** Reihenfolge im Array = Erstellungsreihenfolge. */
   groups: InstrumentGroup[]
   outputs: OutputElement[]
+  /** Frequenzweichen und Endstufen der PA. */
+  devices: Device[]
 }
 
-export type ElementKind = 'box' | 'group' | 'output'
+export type ElementKind = 'box' | 'group' | 'output' | 'device'
 
 export interface ElementRef {
   kind: ElementKind

@@ -33,7 +33,7 @@ function output(id: string, x: number, y: number, pinnedBoxId?: string): OutputE
 }
 
 function project(boxes: Stagebox[], groups: InstrumentGroup[] = [], outputs: OutputElement[] = []): Project {
-  return { version: 1, name: 'Test', stage: { width: 10, depth: 6 }, boxes, groups, outputs }
+  return { version: 1, name: 'Test', stage: { width: 10, depth: 6 }, boxes, groups, outputs, devices: [] }
 }
 
 const A = box('A', 0, 0)

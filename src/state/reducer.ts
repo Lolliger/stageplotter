@@ -1,8 +1,10 @@
 import { clampToStage, snap } from '../lib/geometry'
 import { BOX_STAGE_MARGIN, SNAP_STEP, STAGE_LIMITS } from '../model/defaults'
 import { OFFSTAGE_OUTPUTS, normalizeRotation } from '../model/shapes'
+import { cleanSources } from '../model/devices'
 import type {
   CableView,
+  Device,
   ElementRef,
   InstrumentGroup,
   OutputElement,
@@ -24,6 +26,8 @@ export type Action =
   | { type: 'addGroup'; group: InstrumentGroup }
   | { type: 'updateGroup'; id: string; patch: Partial<Omit<InstrumentGroup, 'id'>> }
   | { type: 'addOutput'; output: OutputElement }
+  | { type: 'addDevice'; device: Device }
+  | { type: 'updateDevice'; id: string; device: Device }
   | { type: 'updateOutput'; id: string; patch: Partial<Omit<OutputElement, 'id'>> }
   | { type: 'delete'; target: ElementRef }
   | { type: 'replace'; project: Project }
@@ -72,6 +76,14 @@ function dropEmptyPin<T extends { pinnedBoxId?: string }>(item: T): T {
   return copy
 }
 
+/** Quelle auf undefined gesetzt = wieder direkt von der Stagebox. */
+function dropEmptySource<T extends { source?: unknown }>(item: T): T {
+  if (item.source !== undefined) return item
+  const copy = { ...item }
+  delete copy.source
+  return copy
+}
+
 function withRotation<T extends { rotation?: number }>(item: T): T {
   return item.rotation === undefined ? item : { ...item, rotation: normalizeRotation(item.rotation) }
 }
@@ -102,6 +114,7 @@ export function projectReducer(state: Project, action: Action): Project {
         boxes: state.boxes.map((b) => ({ ...b, pos: placeBox(b.pos, stage) })),
         groups: state.groups.map((g) => ({ ...g, pos: placeElement(g.pos, stage) })),
         outputs: state.outputs.map((o) => ({ ...o, pos: placeOutput(o, o.pos, stage) })),
+        devices: state.devices.map((d) => ({ ...d, pos: placeBox(d.pos, stage) })),
       }
     }
 
@@ -130,9 +143,27 @@ export function projectReducer(state: Project, action: Action): Project {
               pos: placeOutput(o, pos, state.stage),
             })),
           }
+        case 'device':
+          return {
+            ...state,
+            devices: updateById(state.devices, target.id, (d) => ({ ...d, pos: placeBox(pos, state.stage) })),
+          }
       }
       return state
     }
+
+    case 'addDevice':
+      return { ...state, devices: [...state.devices, { ...action.device, pos: placeBox(action.device.pos, state.stage) }] }
+
+    case 'updateDevice':
+      // Ganze Geräte ersetzen (Konfiguratoren ändern mehrere Felder auf einmal); danach Verweise
+      // auf entfernte Ausgänge aufräumen.
+      return cleanSources({
+        ...state,
+        devices: updateById(state.devices, action.id, () =>
+          dropEmptyPin({ ...action.device, id: action.id, pos: placeBox(action.device.pos, state.stage) }),
+        ),
+      })
 
     case 'addBox':
       return { ...state, boxes: [...state.boxes, sanitizeBox(action.box, state.stage)] }
@@ -168,7 +199,7 @@ export function projectReducer(state: Project, action: Action): Project {
       return {
         ...state,
         outputs: updateById(state.outputs, action.id, (o) => {
-          const next = withRotation(dropEmptyPin({ ...o, ...action.patch }))
+          const next = withRotation(dropEmptyPin(dropEmptySource({ ...o, ...action.patch })))
           return { ...next, pos: placeOutput(next, next.pos, state.stage) }
         }),
       }
@@ -182,9 +213,11 @@ export function projectReducer(state: Project, action: Action): Project {
           boxes: state.boxes.filter((b) => b.id !== id),
           groups: state.groups.map((g) => unpin(g, id)),
           outputs: state.outputs.map((o) => unpin(o, id)),
+          devices: state.devices.map((d) => unpin(d, id)),
         }
       }
       if (kind === 'group') return { ...state, groups: state.groups.filter((g) => g.id !== id) }
+      if (kind === 'device') return cleanSources({ ...state, devices: state.devices.filter((d) => d.id !== id) })
       return { ...state, outputs: state.outputs.filter((o) => o.id !== id) }
     }
 
