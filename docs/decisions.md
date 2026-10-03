@@ -79,3 +79,15 @@ Standardprojekt statt zu einem Absturz.
 Instrumente unten, Stageboxen darüber (die Kapazitätsanzeige muss lesbar bleiben), das gerade
 ausgewählte Element ganz oben. Knoten, Schrift und Trefferflächen haben auf dem Bildschirm eine
 feste Größe (über SVG-Einheiten pro CSS-Pixel), unabhängig von Bühnengröße und Display.
+
+## D16 – Kabelwege: rechtwinklige Bündel ohne Umweg
+Kabel werden im Plan pro Stagebox als rechtwinkliger Baum gezeichnet (Rectilinear Steiner
+Arborescence, Heuristik nach Rao et al.). Jedes Kabel bleibt dabei ein kürzester rechtwinkliger
+Weg zur Box (Länge = Manhattan-Distanz); Kabel werden genau dort zu einer Strippe
+zusammengelegt, wo sich ihre kürzesten Wege ohne Umweg überlappen können – das ist das
+Kriterium für „wo es Sinn macht“. Die Strichstärke wächst mit der Kabelanzahl, am Abgang zur Box
+steht die Anzahl. Die letzte Strecke zur Box läuft an der Wand entlang, an der die Box steht
+(Box hinten/vorne → waagerecht, Box seitlich → senkrecht). Hindernisse werden nicht umgangen.
+Outputs (Wedges usw.) laufen im selben Bündel. Die Zuordnung nutzt weiterhin die Luftlinie
+(Vorgabe); `manhattan` steht als austauschbare `DistanceFn` bereit. Direkte Linien bleiben als
+Ansicht wählbar.

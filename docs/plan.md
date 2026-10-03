@@ -188,16 +188,19 @@ Nach jedem Schritt: `npm run lint && npm test && npm run build`, dann Commit.
 11. Output-Elemente (Wedge, IEM, Sidefill): platzieren, Zuordnung, Output-Liste
 12. Pinning für Gruppen und Outputs: Box fest zuweisen/lösen, Pin-Symbol im Plan, bleibt beim
     Verschieben erhalten
+13. Gebündelte Kabelwege: statt Luftlinien rechtwinklige Kabelbäume je Stagebox
+    (`src/lib/cables.ts`, rein + getestet). Kabel werden zu Strippen zusammengelegt, wo das ohne
+    Umweg geht; Strichstärke nach Kabelanzahl. Umschaltbar auf direkte Linien.
 
 ### Phase 3 – Export und Feinschliff
-13. JSON-Export/-Import (Datei-Download bzw. Share-Sheet, Validierung, Fehlermeldung bei
+14. JSON-Export/-Import (Datei-Download bzw. Share-Sheet, Validierung, Fehlermeldung bei
     ungültiger Datei, Schema-Version)
-14. PDF-Export: Seite 1 Bühnenplan (Vektor), danach Inputliste und Output-Liste als Tabellen,
+15. PDF-Export: Seite 1 Bühnenplan (Vektor), danach Inputliste und Output-Liste als Tabellen,
     immer helles Farbschema
-15. Feinschliff: Undo/Redo, Raster-Snapping, Zoom/Pan der Bühne auf kleinen Displays, leere
+16. Feinschliff: Undo/Redo, Raster-Snapping, Zoom/Pan der Bühne auf kleinen Displays, leere
     Zustände, Bestätigung beim Löschen, neues Projekt/Zurücksetzen, Barrierefreiheit (Labels,
     Fokus), optional PWA für Offline-Nutzung in Venues ohne Netz
-16. README finalisieren, Vercel-Deployment prüfen
+17. README finalisieren, Vercel-Deployment prüfen
 
 ## 6. Risiken
 
