@@ -94,3 +94,49 @@
     padding: 16px;
   }
 }
+
+/* Eingebettet im iframe (main.tsx setzt html.embedded), nur Handy-Layout.
+   iOS meldet im iframe die Safe Areas des ganzen Bildschirms, obwohl die
+   einbettende Seite Statusleiste und Tab-Leiste schon ausspart: ohne das hier
+   kämen die Abstände doppelt (leere Streifen über der Kopfzeile und unter der
+   Toolbar). Außerdem scrollt sonst das ganze Dokument im iframe, und iOS
+   federt Kopfzeile und Toolbar mit. Deshalb: festes Gerüst, das Dokument
+   selbst scrollt nicht, nur .workspace dazwischen. */
+@media (max-width: 899px) {
+  html.embedded,
+  html.embedded body {
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  html.embedded #root {
+    height: 100%;
+  }
+
+  html.embedded .app {
+    height: 100%;
+    min-height: 0;
+  }
+
+  html.embedded .topbar {
+    flex: none;
+    padding-top: 6px;
+  }
+
+  html.embedded .workspace {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 72px;
+  }
+
+  html.embedded .toolbar {
+    padding-bottom: 6px;
+  }
+
+  html.embedded .sheet {
+    padding-bottom: 0;
+  }
+}
