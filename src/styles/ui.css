@@ -948,3 +948,15 @@ a.btn {
     linear-gradient(var(--surface), var(--surface)) padding-box,
     var(--mode-gradient) border-box;
 }
+
+button.chip {
+  min-height: var(--tap);
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.dmx-range {
+  margin: 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}

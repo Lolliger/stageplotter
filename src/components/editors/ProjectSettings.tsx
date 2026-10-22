@@ -1,4 +1,7 @@
 import { STAGE_LIMITS } from '../../model/defaults'
+import { viewSettings } from '../../model/lights'
+import type { ViewSettings } from '../../model/types'
+import type { PlotMode } from '../../state/mode'
 import { useProject } from '../../state/useProject'
 import { Stepper } from '../ui/Stepper'
 import { TextField } from '../ui/TextField'
@@ -11,7 +14,45 @@ const PRESETS = [
   { label: 'Open Air', width: 16, depth: 10 },
 ]
 
-export function ProjectSettings() {
+const SOUND_IN_LIGHT: { key: keyof ViewSettings['sound']; label: string }[] = [
+  { key: 'instruments', label: 'Instrumente' },
+  { key: 'pa', label: 'PA & Subs' },
+  { key: 'monitors', label: 'Wedges, IEMs, Sidefills' },
+  { key: 'boxes', label: 'Stageboxen & PA-Technik' },
+  { key: 'cables', label: 'Kabel' },
+]
+
+/** Was vom anderen Gewerk zu sehen ist; der aktuelle Modus steht oben. */
+function Visibility({ mode }: { mode: PlotMode }) {
+  const { project, dispatch } = useProject()
+  const view = viewSettings(project)
+  const set = (next: ViewSettings) => dispatch({ type: 'setView', view: next })
+  const light = (
+    <div className="field" key="light">
+      <span className="field-label">Im Lichtplot zeigen (klein und grau)</span>
+      <div className="toggle-row">
+        {SOUND_IN_LIGHT.map(({ key, label }) => (
+          <Toggle key={key} pressed={view.sound[key]} onChange={(on) => set({ ...view, sound: { ...view.sound, [key]: on } })}>
+            {label}
+          </Toggle>
+        ))}
+      </div>
+    </div>
+  )
+  const sound = (
+    <div className="field" key="sound">
+      <span className="field-label">Im Tonplot zeigen</span>
+      <div className="toggle-row">
+        <Toggle pressed={view.lights} onChange={(lights) => set({ ...view, lights })}>
+          Lampen und Traversen (klein und grau)
+        </Toggle>
+      </div>
+    </div>
+  )
+  return <>{mode === 'lighting' ? [light, sound] : [sound, light]}</>
+}
+
+export function ProjectSettings({ mode }: { mode: PlotMode }) {
   const { project, dispatch } = useProject()
   const { stage } = project
   const setStage = (patch: Partial<typeof stage>) => dispatch({ type: 'setStage', stage: { ...stage, ...patch } })
@@ -77,6 +118,7 @@ export function ProjectSettings() {
           </Toggle>
         </div>
       </div>
+      <Visibility mode={mode} />
       <p className="hint">
         Breite = von links nach rechts (Sicht Publikum), Tiefe = von der Rückwand bis zur Bühnenkante. Beim
         Verkleinern werden Elemente an den Rand geschoben.

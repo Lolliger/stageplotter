@@ -5,6 +5,8 @@ interface Props {
   front: 'up' | 'down'
   rotation: number
   onChange: (rotation: number) => void
+  /** „strahlt“ (Lautsprecher) oder „leuchtet“ (Lampen) */
+  verb?: string
 }
 
 const DIRECTIONS: { dir: Direction; arrow: string; label: string }[] = [
@@ -17,7 +19,7 @@ const DIRECTIONS: { dir: Direction; arrow: string; label: string }[] = [
 const STEPS = [-45, -15, 15, 45]
 
 /** Ausrichtung: Richtungsknöpfe (zeigt nach …) und Feinschritte in Grad. */
-export function RotationControl({ front, rotation, onChange }: Props) {
+export function RotationControl({ front, rotation, onChange, verb = 'strahlt' }: Props) {
   const current = normalizeRotation(rotation)
   const exact = current % 90 === 0
   const facing = facingDirection(front, current)
@@ -25,7 +27,7 @@ export function RotationControl({ front, rotation, onChange }: Props) {
   return (
     <div className="field">
       <span className="field-label">
-        Ausrichtung · {current}° · strahlt {DIRECTIONS.find((d) => d.dir === facing)!.label}
+        Ausrichtung · {current}° · {verb} {DIRECTIONS.find((d) => d.dir === facing)!.label}
         {exact ? '' : ' (schräg)'}
       </span>
       <div className="rotation">
@@ -36,8 +38,8 @@ export function RotationControl({ front, rotation, onChange }: Props) {
               type="button"
               role="radio"
               aria-checked={exact && facing === d.dir}
-              aria-label={`Strahlt ${d.label}`}
-              title={`Strahlt ${d.label}`}
+              aria-label={`${capitalize(verb)} ${d.label}`}
+              title={`${capitalize(verb)} ${d.label}`}
               onClick={() => onChange(rotationFacing(front, d.dir))}
             >
               {d.arrow}
@@ -60,4 +62,8 @@ export function RotationControl({ front, rotation, onChange }: Props) {
       </div>
     </div>
   )
+}
+
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1)
 }

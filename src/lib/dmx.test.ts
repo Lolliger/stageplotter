@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import type { Fixture, Truss } from '../model/types'
-import { addressList, autoAddress, dmxIssues, fixtureOrder, formatAddress, formatRange } from './dmx'
+import { addressList, autoAddress, dmxIssues, fixtureOrder, formatAddress, formatRange, nextFreeAddress } from './dmx'
 
 function fx(id: string, channels: number, extra: Partial<Fixture> = {}): Fixture {
   return { id, kind: 'par', number: Number(id.replace(/\D/g, '')) || 1, name: id, pos: { x: 0, y: 0 }, channels, universe: 1, ...extra }
@@ -95,4 +95,13 @@ test('addressList groups by universe and lists unaddressed fixtures last', () =>
   ])
   expect(list.universes[0].rows[1]).toMatchObject({ address: '1.009', range: '1.009–1.016', place: 'Hinten' })
   expect(list.unaddressed.map((r) => r.fixture.id)).toEqual(['f4'])
+})
+
+test('nextFreeAddress finds the first gap that fits', () => {
+  const rig = [fx('a1', 8, { address: 1 }), fx('b2', 8, { address: 13 }), fx('c3', 4, { address: 9, universe: 2 })]
+  expect(nextFreeAddress(rig, 1, 4)).toBe(9)
+  expect(nextFreeAddress(rig, 1, 5)).toBe(21)
+  expect(nextFreeAddress(rig, 1, 8, 'a1')).toBe(1)
+  expect(nextFreeAddress(rig, 2, 8)).toBe(1)
+  expect(nextFreeAddress([fx('big', 510, { address: 1 })], 1, 4)).toBeNull()
 })

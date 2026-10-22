@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useLayoutEffect, useState } from 'react'
 import { AddInstrument } from './components/editors/AddInstrument'
+import { AddFixture } from './components/editors/AddFixture'
 import { AddOutput } from './components/editors/AddOutput'
+import { AddressTool } from './components/editors/AddressTool'
+import { FixtureEditor } from './components/editors/FixtureEditor'
+import { TrussEditor } from './components/editors/TrussEditor'
 import { DeviceEditor } from './components/editors/DeviceEditor'
 import { DrumConfigurator } from './components/editors/DrumConfigurator'
 import { GroupEditor } from './components/editors/GroupEditor'
@@ -18,6 +22,7 @@ import { Toolbar } from './components/toolbar/Toolbar'
 import { ModeSwitch } from './components/ui/ModeSwitch'
 import { loadMode, saveMode, type PlotMode } from './state/mode'
 import { createStagebox } from './model/defaults'
+import { createTruss } from './model/lights'
 import { DEVICE_LABELS } from './model/devices'
 import type { ElementRef } from './model/types'
 import { ProjectProvider } from './state/ProjectProvider'
@@ -31,6 +36,8 @@ type Panel =
   | { kind: 'addInstrument' }
   | { kind: 'addOutput' }
   | { kind: 'drums'; groupId?: string }
+  | { kind: 'addFixture'; trussId?: string }
+  | { kind: 'addresses' }
   | { kind: 'settings' }
   | { kind: 'project' }
   | null
@@ -77,6 +84,12 @@ function Workspace() {
     select({ kind: 'box', id: box.id })
   }
 
+  const addTruss = () => {
+    const truss = createTruss(project)
+    dispatch({ type: 'addTruss', truss })
+    select({ kind: 'truss', id: truss.id })
+  }
+
   let sheet = null
   if (panel?.kind === 'addInstrument') {
     sheet = (
@@ -88,6 +101,18 @@ function Workspace() {
     sheet = (
       <Sheet title="Output hinzufügen" onClose={close}>
         <AddOutput onAdded={(target) => (target.kind === 'device' ? select(target) : close())} />
+      </Sheet>
+    )
+  } else if (panel?.kind === 'addFixture') {
+    sheet = (
+      <Sheet title="Lampe hinzufügen" onClose={close}>
+        <AddFixture trussId={panel.trussId} onAdded={select} />
+      </Sheet>
+    )
+  } else if (panel?.kind === 'addresses') {
+    sheet = (
+      <Sheet title="DMX-Adressen vergeben" onClose={close}>
+        <AddressTool onDone={close} />
       </Sheet>
     )
   } else if (panel?.kind === 'drums') {
@@ -110,7 +135,7 @@ function Workspace() {
   } else if (panel?.kind === 'settings') {
     sheet = (
       <Sheet title="Bühne & Projekt" onClose={close}>
-        <ProjectSettings />
+        <ProjectSettings mode={mode} />
       </Sheet>
     )
   } else if (selected?.kind === 'group') {
@@ -137,6 +162,27 @@ function Workspace() {
           <OutputEditor output={output} onDone={close} />
         </Sheet>
       )
+  } else if (selected?.kind === 'fixture') {
+    const fixture = project.fixtures.find((f) => f.id === selected.id)
+    if (fixture)
+      sheet = (
+        <Sheet title={`#${fixture.number} ${fixture.name}`} onClose={close}>
+          <FixtureEditor key={fixture.id} fixture={fixture} onDone={close} onSelect={(id) => select({ kind: 'fixture', id })} />
+        </Sheet>
+      )
+  } else if (selected?.kind === 'truss') {
+    const truss = project.trusses.find((t) => t.id === selected.id)
+    if (truss)
+      sheet = (
+        <Sheet title={truss.name} onClose={close}>
+          <TrussEditor
+            truss={truss}
+            onDone={close}
+            onAddFixtures={() => setPanel({ kind: 'addFixture', trussId: truss.id })}
+            onSelectFixture={(id) => select({ kind: 'fixture', id })}
+          />
+        </Sheet>
+      )
   } else if (selected?.kind === 'box') {
     const box = project.boxes.find((b) => b.id === selected.id)
     if (box)
@@ -155,6 +201,10 @@ function Workspace() {
         </h1>
         <ModeSwitch mode={mode} onChange={switchMode} />
         <Toolbar
+          mode={mode}
+          onAddFixture={() => setPanel({ kind: 'addFixture' })}
+          onAddTruss={addTruss}
+          onAddresses={() => setPanel({ kind: 'addresses' })}
           onAddInstrument={() => setPanel({ kind: 'addInstrument' })}
           onAddOutput={() => setPanel({ kind: 'addOutput' })}
           onAddBox={addBox}

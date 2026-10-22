@@ -195,3 +195,18 @@ export function addressList(fixtures: Fixture[], trusses: Truss[]): { universes:
   ).map(row)
   return { universes, unaddressed }
 }
+
+/** Erste freie Startadresse im Universe für `channels` Kanäle (andere Lampen als `exceptId`). */
+export function nextFreeAddress(fixtures: Fixture[], universe: number, channels: number, exceptId?: string): number | null {
+  const taken = fixtures
+    .filter((f) => f.id !== exceptId && f.universe === universe && addressEnd(f) !== null)
+    .map((f) => [f.address!, addressEnd(f)!] as const)
+    .sort((a, b) => a[0] - b[0])
+  const need = Math.max(1, channels)
+  let cursor = 1
+  for (const [from, to] of taken) {
+    if (cursor + need - 1 < from) break
+    cursor = Math.max(cursor, to + 1)
+  }
+  return cursor + need - 1 <= DMX_SIZE ? cursor : null
+}
