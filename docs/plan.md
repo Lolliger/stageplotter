@@ -214,6 +214,25 @@ Nach jedem Schritt: `npm run lint && npm test && npm run build`, dann Commit.
 21. UI: Geräte hinzufügen, Konfiguratoren, Quellen-Auswahl, Geräte im Plan, Kabel ab Gerät
 22. Liste „PA-Signalweg“ und PDF-Tabellen
 
+### Phase 5 – Lichtplot
+Schalter „Ton | Licht“ im selben Projekt; der Lichtmodus hat eigene Optik (warmer Akzent,
+Verlauf beim Umschalten), Lampen mit DMX-Adressen und Traversen. Je Modus einstellbar, was vom
+Gegenpart sichtbar ist (Standard: im Lichtmodus nur Instrumente und PA, im Tonmodus kein Licht).
+23. Modell: Lampen (Typ, Modus/Kanäle, Universe, Adresse, Nummer, Drehung, Farbe, Notiz,
+    Traverse) und Traversen (Länge, Drehung); Lampenbibliothek; DMX-Funktionen (Bereiche,
+    Überschneidungen, Auto-Adressierung); Sichtbarkeits-Einstellungen; Reducer und `schema.ts`;
+    Tests
+24. Modus-Schalter, Licht-Farbschema (Dunkel/Hell), Übergangsanimation (reduzierte Bewegung
+    beachten); Modus wird im Browser gemerkt
+25. Plan im Lichtmodus: Fläche um die Bühne, Ton-Elemente klein, grau und gesperrt, Kabel
+    transparent; Lampen mit Lichtkegel in Leuchtrichtung, Traversen; Ziehen, Einrasten an
+    Traversen, Lampen wandern mit ihrer Traverse
+26. Editoren: Lampen hinzufügen (auch mehrere auf eine Traverse), Lampe und Traverse bearbeiten
+    (inkl. Drehung), Auto-Adressieren, Sichtbarkeit je Modus
+27. Seitenleiste im Lichtmodus: Adressliste je Universe und DMX-Hinweise
+28. Export: PDF nur Ton, nur Licht oder komplett (Lichtplot + Adressliste); JSON mit Adressliste
+    im `patch`; README und Entscheidungen
+
 ## 6. Risiken
 
 - **Drag auf iOS:** Safari-Gesten (Zurück-Wischen, Scroll) können mit Drag kollidieren →
