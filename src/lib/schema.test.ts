@@ -18,6 +18,30 @@ describe('parseProject', () => {
     expect(r).toEqual({ ok: true, project: p })
   })
 
+  test('round-trips lights, trusses and view settings', () => {
+    const p = createDefaultProject()
+    p.trusses.push({ id: 't1', name: 'FOH', pos: { x: 5, y: 9 }, length: 8, rotation: 0 })
+    p.fixtures.push(
+      { id: 'f1', kind: 'wash', number: 1, name: 'Wash', pos: { x: 3, y: 9 }, rotation: 180, channels: 16, mode: '16 Kanal', universe: 1, address: 1, trussId: 't1', color: 'L201', note: 'Front' },
+      { id: 'f2', kind: 'fog', number: 2, name: 'Hazer', pos: { x: -1, y: 5 }, channels: 2, universe: 2 },
+    )
+    p.view = { sound: { instruments: true, pa: false, monitors: true, boxes: false, cables: true }, lights: true }
+    expect(parseProject(JSON.parse(JSON.stringify(p)))).toEqual({ ok: true, project: p })
+  })
+
+  test('repairs broken light data', () => {
+    const r = parseProject({
+      trusses: [{ pos: { x: 1, y: 1 }, length: 999 }],
+      fixtures: [{ kind: 'laser', pos: { x: 1, y: 1 }, channels: 9000, universe: 0, address: 700, trussId: 'gone' }],
+    })
+    expect(r.ok).toBe(true)
+    if (!r.ok) return
+    expect(r.project.trusses[0]).toMatchObject({ name: 'Traverse', length: 30, rotation: 0 })
+    expect(r.project.fixtures[0]).toMatchObject({ kind: 'custom', number: 1, channels: 512, universe: 1, address: 512 })
+    expect(r.project.fixtures[0].trussId).toBeUndefined()
+    expect(r.project.view).toBeUndefined()
+  })
+
   test('fills in missing optional fields', () => {
     const r = parseProject({ boxes: [{ pos: { x: 1, y: 1 } }], groups: [{ pos: { x: 2, y: 2 } }] })
     expect(r.ok).toBe(true)

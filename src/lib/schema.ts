@@ -2,8 +2,13 @@ import { normalizeDrumConfig } from '../model/drums'
 import { normalizeRotation } from '../model/shapes'
 import { CONNECTORS, FILTER_SLOPES, clampFrequency, cleanSources } from '../model/devices'
 import { BOX_COLORS, DEFAULT_BOX_INPUTS, DEFAULT_BOX_OUTPUTS, DEFAULT_STAGE, STAGE_LIMITS } from '../model/defaults'
+import { DEFAULT_VIEW, FIXTURE_TYPES, FIXTURE_CHANNEL_LIMITS, TRUSS_LIMITS, UNIVERSE_LIMITS } from '../model/lights'
 import type {
   Channel,
+  Fixture,
+  FixtureKind,
+  Truss,
+  ViewSettings,
   ConnectorType,
   Device,
   DeviceInput,
@@ -104,6 +109,29 @@ function drumConfig(v: unknown): { drumConfig?: DrumConfig } {
       rooms: n(v.rooms),
       percussion: v.percussion === true,
     }),
+  }
+}
+
+function text(v: unknown): string | undefined {
+  return typeof v === 'string' && v.trim() !== '' ? v : undefined
+}
+
+function view(v: unknown): { view?: ViewSettings } {
+  if (!isObj(v)) return {}
+  const sound = isObj(v.sound) ? v.sound : {}
+  const flag = (x: unknown, fallback: boolean) => (typeof x === 'boolean' ? x : fallback)
+  const d = DEFAULT_VIEW.sound
+  return {
+    view: {
+      sound: {
+        instruments: flag(sound.instruments, d.instruments),
+        pa: flag(sound.pa, d.pa),
+        monitors: flag(sound.monitors, d.monitors),
+        boxes: flag(sound.boxes, d.boxes),
+        cables: flag(sound.cables, d.cables),
+      },
+      lights: flag(v.lights, DEFAULT_VIEW.lights),
+    },
   }
 }
 
@@ -209,6 +237,42 @@ export function parseProject(data: unknown): ParseResult {
       return device
     })
 
+    const trusses: Truss[] = arr(o.trusses, 'trusses').map((v, i) => {
+      const t = obj(v, `trusses[${i}]`)
+      return {
+        id: id(t.id),
+        name: str(t.name, 'Traverse'),
+        pos: vec(t.pos, `trusses[${i}].pos`),
+        length: clamp(typeof t.length === 'number' ? t.length : 6, TRUSS_LIMITS.min, TRUSS_LIMITS.max),
+        rotation: typeof t.rotation === 'number' ? normalizeRotation(t.rotation) : 0,
+      }
+    })
+    const trussIds = new Set(trusses.map((t) => t.id))
+
+    const fixtures: Fixture[] = arr(o.fixtures, 'fixtures').map((v, i) => {
+      const f = obj(v, `fixtures[${i}]`)
+      const kind = (Object.keys(FIXTURE_TYPES) as FixtureKind[]).includes(f.kind as FixtureKind) ? (f.kind as FixtureKind) : 'custom'
+      const int = (x: unknown, fallback: number, min: number, max: number) =>
+        typeof x === 'number' && Number.isFinite(x) ? clamp(Math.round(x), min, max) : fallback
+      const fixture: Fixture = {
+        id: id(f.id),
+        kind,
+        number: int(f.number, i + 1, 1, 9999),
+        name: str(f.name, FIXTURE_TYPES[kind].label),
+        pos: vec(f.pos, `fixtures[${i}].pos`),
+        ...rotation(f.rotation),
+        channels: int(f.channels, FIXTURE_TYPES[kind].modes[0].channels, FIXTURE_CHANNEL_LIMITS.min, FIXTURE_CHANNEL_LIMITS.max),
+        universe: int(f.universe, 1, UNIVERSE_LIMITS.min, UNIVERSE_LIMITS.max),
+      }
+      if (typeof f.address === 'number' && Number.isFinite(f.address)) fixture.address = int(f.address, 1, 1, 512)
+      for (const key of ['mode', 'model', 'color', 'note'] as const) {
+        const value = text(f[key])
+        if (value) fixture[key] = value
+      }
+      if (typeof f.trussId === 'string' && trussIds.has(f.trussId)) fixture.trussId = f.trussId
+      return fixture
+    })
+
     return {
       ok: true,
       project: {
@@ -217,6 +281,9 @@ export function parseProject(data: unknown): ParseResult {
         stage,
         ...(o.cableView === 'direct' || o.cableView === 'bundled' ? { cableView: o.cableView } : {}),
         ...(typeof o.snap === 'boolean' ? { snap: o.snap } : {}),
+        ...view(o.view),
+        fixtures,
+        trusses,
         // Verweise auf fehlende Geräte/Ausgänge oder unerlaubte Verbindungen fallen weg
         ...cleanSources({ boxes, groups, outputs, devices }),
       },

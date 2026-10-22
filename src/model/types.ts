@@ -130,6 +130,79 @@ export interface Device {
   power?: { watts: number; ohms: number }
 }
 
+// ---------- Licht ----------
+
+/** Lampentyp aus der Bibliothek (model/lights.ts). */
+export type FixtureKind =
+  | 'par'
+  | 'spot'
+  | 'wash'
+  | 'beam'
+  | 'profile'
+  | 'fresnel'
+  | 'blinder'
+  | 'strobe'
+  | 'bar'
+  | 'follow'
+  | 'fog'
+  | 'custom'
+
+export interface Fixture {
+  id: string
+  kind: FixtureKind
+  /** Lampennummer wie am Pult (#1, #2 …). */
+  number: number
+  name: string
+  /** Position in Metern; darf außerhalb der Bühne liegen (FOH, Türme). */
+  pos: Vec2
+  /** Leuchtrichtung in Grad im Uhrzeigersinn; 0 = zum Publikum. */
+  rotation?: number
+  /** Belegte DMX-Kanäle im gewählten Modus. */
+  channels: number
+  /** Name des Modus, z. B. „8 Kanal“. */
+  mode?: string
+  /** Gerätebezeichnung, z. B. „Cameo Zenit W600“. */
+  model?: string
+  /** DMX-Universe ab 1. */
+  universe: number
+  /** Startadresse 1–512; fehlt = noch nicht adressiert. */
+  address?: number
+  /** Farbe/Filter als Text, z. B. „L201“ oder „Warmweiß“. */
+  color?: string
+  note?: string
+  /** Hängt an dieser Traverse und wandert mit ihr. */
+  trussId?: string
+}
+
+/** Traverse oder Lichtstange, als gerades Stück. */
+export interface Truss {
+  id: string
+  name: string
+  /** Mitte in Metern. */
+  pos: Vec2
+  /** Länge in Metern. */
+  length: number
+  /** Drehung in Grad im Uhrzeigersinn; 0 = quer (parallel zur Bühnenkante). */
+  rotation?: number
+}
+
+/** Was vom jeweils anderen Gewerk im Plan (und im PDF) zu sehen ist. */
+export interface ViewSettings {
+  /** Lichtmodus: sichtbare Ton-Elemente (klein und grau). */
+  sound: {
+    instruments: boolean
+    /** PA und Subs */
+    pa: boolean
+    /** Wedges, IEMs, Sidefills */
+    monitors: boolean
+    /** Stageboxen, Weichen, Endstufen */
+    boxes: boolean
+    cables: boolean
+  }
+  /** Tonmodus: Lampen und Traversen sichtbar. */
+  lights: boolean
+}
+
 export interface StageSize {
   /** Breite in Metern (x). */
   width: number
@@ -153,9 +226,14 @@ export interface Project {
   outputs: OutputElement[]
   /** Frequenzweichen und Endstufen der PA. */
   devices: Device[]
+  /** Lampen des Lichtplots. */
+  fixtures: Fixture[]
+  trusses: Truss[]
+  /** Sichtbarkeit des Gegenparts je Modus; fehlt = Standard (DEFAULT_VIEW). */
+  view?: ViewSettings
 }
 
-export type ElementKind = 'box' | 'group' | 'output' | 'device'
+export type ElementKind = 'box' | 'group' | 'output' | 'device' | 'fixture' | 'truss'
 
 export interface ElementRef {
   kind: ElementKind

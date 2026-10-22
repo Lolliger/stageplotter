@@ -198,6 +198,8 @@ export function createDefaultProject(): Project {
     groups: [],
     outputs: [],
     devices: [],
+    fixtures: [],
+    trusses: [],
   }
   project.boxes.push(createStagebox(project, { x: 1.5, y: 0.75 }))
   project.boxes.push(createStagebox(project, { x: stage.width - 1.5, y: 0.75 }))

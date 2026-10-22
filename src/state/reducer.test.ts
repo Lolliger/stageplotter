@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { createDefaultProject, createOutput, createPaPair, createStagebox, spawnPosition } from '../model/defaults'
+import { createFixtures } from '../model/lights'
 import { createGroupFromTemplate, getTemplate } from '../model/templates'
 import type { Project } from '../model/types'
 import { projectReducer } from './reducer'
@@ -187,4 +188,60 @@ test('rotation is normalized and sidefills face the stage center', () => {
   expect(right.rotation).toBe(270)
   p = projectReducer(p, { type: 'updateOutput', id: left.id, patch: { rotation: -15 } })
   expect(p.outputs[0].rotation).toBe(345)
+})
+
+describe('lights', () => {
+  function rig(): Project {
+    let p = createDefaultProject()
+    p = projectReducer(p, { type: 'addTruss', truss: { id: 't', name: 'Hinten', pos: { x: 5, y: 1 }, length: 8, rotation: 0 } })
+    const fixtures = createFixtures(p, 'par', 2, 't')
+    return projectReducer(p, { type: 'addFixtures', fixtures })
+  }
+
+  test('fixtures snap onto a truss and come loose when dragged away', () => {
+    let p = rig()
+    const id = p.fixtures[0].id
+    p = projectReducer(p, { type: 'move', target: { kind: 'fixture', id }, pos: { x: 4, y: 1.25 } })
+    expect(p.fixtures[0]).toMatchObject({ pos: { x: 4, y: 1 }, trussId: 't' })
+    p = projectReducer(p, { type: 'move', target: { kind: 'fixture', id }, pos: { x: 4, y: 12 } })
+    expect(p.fixtures[0].pos).toEqual({ x: 4, y: 12 })
+    expect('trussId' in p.fixtures[0]).toBe(false)
+  })
+
+  test('fixtures may stand far off stage but not anywhere', () => {
+    const start = rig()
+    const p = projectReducer(start, { type: 'move', target: { kind: 'fixture', id: start.fixtures[0].id }, pos: { x: -50, y: 50 } })
+    expect(p.fixtures[0].pos).toEqual({ x: -8, y: 14 })
+  })
+
+  test('moving and turning a truss carries its fixtures', () => {
+    let p = rig()
+    const before = p.fixtures.map((f) => f.pos.x)
+    p = projectReducer(p, { type: 'move', target: { kind: 'truss', id: 't' }, pos: { x: 5, y: 3 } })
+    expect(p.fixtures.map((f) => f.pos)).toEqual(before.map((x) => ({ x, y: 3 })))
+    p = projectReducer(p, { type: 'updateTruss', id: 't', patch: { rotation: 90 } })
+    expect(p.fixtures.every((f) => f.rotation === 90 && Math.abs(f.pos.x - 5) < 1e-9)).toBe(true)
+  })
+
+  test('deleting a truss keeps its fixtures in place', () => {
+    const p = projectReducer(rig(), { type: 'delete', target: { kind: 'truss', id: 't' } })
+    expect(p.trusses).toEqual([])
+    expect(p.fixtures).toHaveLength(2)
+    expect(p.fixtures.some((f) => f.trussId)).toBe(false)
+  })
+
+  test('fixture values are kept in range and empty fields dropped', () => {
+    let p = rig()
+    const id = p.fixtures[0].id
+    p = projectReducer(p, { type: 'updateFixture', id, patch: { channels: 999, universe: 0, address: 0, color: '', rotation: -90 } })
+    expect(p.fixtures[0]).toMatchObject({ channels: 512, universe: 1, address: 1, rotation: 270 })
+    expect('color' in p.fixtures[0]).toBe(false)
+    p = projectReducer(p, { type: 'updateFixture', id, patch: { address: undefined } })
+    expect('address' in p.fixtures[0]).toBe(false)
+  })
+
+  test('auto-addressing goes through the reducer (undo-able)', () => {
+    const p = projectReducer(rig(), { type: 'autoAddress', options: { universe: 1, address: 1, keepExisting: false } })
+    expect(p.fixtures.map((f) => f.address)).toEqual([1, 4])
+  })
 })

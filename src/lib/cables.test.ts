@@ -216,6 +216,8 @@ describe('routeProject', () => {
       ],
       outputs: [{ id: 'w', kind: 'wedge', name: 'w', pos: { x: 4, y: 5 } }],
       devices: [],
+      fixtures: [],
+      trusses: [],
     }
     const trees = routeProject(project, assign(project))
     const a = trees.find((t) => t.rootId === 'A')!.route
@@ -253,6 +255,8 @@ test('devices get their own cable trees in the color of the feeding box', () => 
         power: { watts: 1000, ohms: 4 },
       },
     ],
+    fixtures: [],
+    trusses: [],
   }
   const trees = routeProject(project, assign(project))
   const box = trees.find((t) => t.rootId === 'B')!
