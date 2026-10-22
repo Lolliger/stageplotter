@@ -28,6 +28,8 @@ export function useDrag(
   svgRef: RefObject<SVGSVGElement | null>,
   onMove: (target: ElementRef, pos: Vec2, session: string) => void,
   onTap: (target: ElementRef) => void,
+  /** Nach einem echten Drag (nicht nach einem Tap). */
+  onEnd?: () => void,
 ) {
   const drag = useRef<DragState | null>(null)
   const sessions = useRef(0)
@@ -81,9 +83,13 @@ export function useDrag(
         if (!d || d.pointerId !== e.pointerId) return
         drag.current = null
         if (!d.moved) onTap(d.target)
+        else onEnd?.()
       },
       onPointerCancel(e: ReactPointerEvent<SVGGElement>) {
-        if (drag.current?.pointerId === e.pointerId) drag.current = null
+        if (drag.current?.pointerId !== e.pointerId) return
+        const moved = drag.current.moved
+        drag.current = null
+        if (moved) onEnd?.()
       },
     }
   }

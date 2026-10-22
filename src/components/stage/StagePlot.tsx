@@ -1,9 +1,15 @@
-import { useMemo, useRef } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { deviceColor, routeProject } from '../../lib/cables'
+import { dmxIssues } from '../../lib/dmx'
 import { PX_PER_M } from '../../model/defaults'
+import { DEFAULT_VIEW, LIGHT_VIEW_PAD, lightExtent, viewSettings } from '../../model/lights'
+import { OFFSTAGE_OUTPUTS } from '../../model/shapes'
 import type { ElementRef } from '../../model/types'
+import type { PlotMode } from '../../state/mode'
 import { useProject } from '../../state/useProject'
 import { CableLabels, CableLines } from './Cables'
+import { GhostBox, GhostDevice, GhostFixture, GhostGroup, GhostOutput } from './ghost'
+import { Beam, FixtureNode, TrussNode } from './lightNodes'
 import { BoxNode, DeviceNode, GroupNode, OutputNode } from './nodes'
 import { useDrag } from './useDrag'
 import { useUnitsPerPx } from './useUnitsPerPx'
@@ -17,19 +23,52 @@ const PAD = 1.6
 const PAD_BOTTOM = 2.2
 
 interface Props {
+  mode: PlotMode
   selected: ElementRef | null
   onSelect: (target: ElementRef | null) => void
 }
 
-export function StagePlot({ selected, onSelect }: Props) {
+interface Bounds {
+  minX: number
+  minY: number
+  maxX: number
+  maxY: number
+}
+
+/**
+ * Ausschnitt in Metern. Ton: Bühne mit Rand (Licht nur, wenn eingeblendet). Licht: größerer Rand
+ * für FOH und Türme, wächst mit den Lampen und Traversen (auf halbe Meter gerundet).
+ */
+function plotBounds(project: Parameters<typeof lightExtent>[0] & { stage: { width: number; depth: number } }, mode: PlotMode, showLights: boolean): Bounds {
+  const { width, depth } = project.stage
+  const lights = mode === 'lighting' || showLights ? lightExtent(project) : null
+  const pad = mode === 'lighting' ? LIGHT_VIEW_PAD : PAD
+  const b: Bounds = { minX: -pad, minY: -pad, maxX: width + pad, maxY: depth + (mode === 'lighting' ? pad : PAD_BOTTOM) }
+  if (lights) {
+    // Rand für Beschriftungen neben den Lampen; unten zusätzlich für die Publikumszeile
+    b.minX = Math.min(b.minX, Math.floor((lights.minX - 3) * 2) / 2)
+    b.minY = Math.min(b.minY, Math.floor((lights.minY - 1.5) * 2) / 2)
+    b.maxX = Math.max(b.maxX, Math.ceil((lights.maxX + 3) * 2) / 2)
+    b.maxY = Math.max(b.maxY, Math.ceil((lights.maxY + 3) * 2) / 2)
+  }
+  return b
+}
+
+export function StagePlot({ mode, selected, onSelect }: Props) {
   const { project, assignment, dispatch } = useProject()
   const { stage } = project
   const svgRef = useRef<SVGSVGElement>(null)
+  const lighting = mode === 'lighting'
+  const view = viewSettings(project)
 
-  const vx = -PAD * PX_PER_M
-  const vy = -PAD * PX_PER_M
-  const vw = (stage.width + 2 * PAD) * PX_PER_M
-  const vh = (stage.depth + PAD + PAD_BOTTOM) * PX_PER_M
+  // Während eines Drags bleibt der Ausschnitt stehen, sonst springt das Element unter dem Finger.
+  const [frozen, setFrozen] = useState<Bounds | null>(null)
+  const live = plotBounds(project, mode, view.lights)
+  const bounds = frozen ?? live
+  const vx = bounds.minX * PX_PER_M
+  const vy = bounds.minY * PX_PER_M
+  const vw = (bounds.maxX - bounds.minX) * PX_PER_M
+  const vh = (bounds.maxY - bounds.minY) * PX_PER_M
   const zp = useZoomPan(svgRef, { x: vx, y: vy, w: vw, h: vh }, () => onSelect(null))
   const vb = zp.viewBox
   // Gezoomt werden Knoten nicht größer, sondern es entsteht mehr Platz zwischen ihnen.
@@ -40,16 +79,33 @@ export function StagePlot({ selected, onSelect }: Props) {
 
   const bind = useDrag(
     svgRef,
-    (target, pos, session) => dispatch({ type: 'move', target, pos, coalesce: session }),
+    (target, pos, session) => {
+      if (!frozen) setFrozen(live)
+      dispatch({ type: 'move', target, pos, coalesce: session })
+    },
     (target) => onSelect(target),
+    () => setFrozen(null),
   )
 
   const boxById = new Map(project.boxes.map((b) => [b.id, b]))
   const bundled = (project.cableView ?? 'bundled') === 'bundled'
-  const trees = useMemo(() => (bundled ? routeProject(project, assignment) : null), [bundled, project, assignment])
+  // Licht: Kabel nur als durchsichtige Andeutung, wenn eingeblendet
+  const cablesInLighting = project.view?.sound.cables ?? DEFAULT_VIEW.sound.cables
+  const showCables = !lighting || cablesInLighting
+  const trees = useMemo(
+    () => (bundled && (!lighting || cablesInLighting) ? routeProject(project, assignment) : null),
+    [bundled, lighting, cablesInLighting, project, assignment],
+  )
+  const dmxProblems = useMemo(
+    () => new Set(dmxIssues(project.fixtures).filter((i) => i.level === 'error').flatMap((i) => i.fixtureIds)),
+    [project.fixtures],
+  )
   const deviceById = new Map(project.devices.map((d) => [d.id, d]))
   const isSelected = (kind: ElementRef['kind'], id: string) => selected?.kind === kind && selected.id === id
 
+  // Maßstab: im Lichtmodus am Rand des Ausschnitts, damit er nicht mit Traversen kollidiert
+  const scaleY = lighting ? vb.y + 12 * k : -5 * k
+  const scaleX = lighting ? vb.x + vb.w - 6 * k : -5 * k
   const W = stage.width * PX_PER_M
   const D = stage.depth * PX_PER_M
   const gridStep = stage.width > 24 || stage.depth > 24 ? 2 : 1
@@ -84,25 +140,44 @@ export function StagePlot({ selected, onSelect }: Props) {
 
         <g className="stage-scale" style={{ fontSize: 9 * k }}>
           {xs.map((m) => (
-            <text key={`lx${m}`} x={m * PX_PER_M} y={-5 * k} textAnchor="middle">
+            <text key={`lx${m}`} x={m * PX_PER_M} y={scaleY} textAnchor="middle">
               {m}
             </text>
           ))}
           {ys.map((m) => (
-            <text key={`ly${m}`} x={-5 * k} y={m * PX_PER_M} textAnchor="end" dominantBaseline="middle">
+            <text key={`ly${m}`} x={scaleX} y={m * PX_PER_M} textAnchor="end" dominantBaseline="middle">
               {m}
             </text>
           ))}
-          <text x={W + 5 * k} y={-5 * k}>
+          <text x={W + 5 * k} y={scaleY}>
             m
           </text>
         </g>
-        <text className="stage-audience" x={W / 2} y={D + PAD_BOTTOM * PX_PER_M - 10 * k} style={{ fontSize: 11 * k }}>
+        <defs>
+          <linearGradient id="beam-gradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" className="beam-stop-start" />
+            <stop offset="1" className="beam-stop-end" />
+          </linearGradient>
+        </defs>
+        <text className="stage-audience" x={W / 2} y={vy + vh - 10 * k} style={{ fontSize: 11 * k }}>
           PUBLIKUM · {fmt(stage.width)} × {fmt(stage.depth)} m
         </text>
 
+        {/* Tonmodus mit eingeblendetem Licht: Traversen und Lampen grau im Hintergrund */}
+        {!lighting && view.lights && (
+          <g className="ghost-layer" aria-hidden="true">
+            {project.trusses.map((t) => (
+              <TrussNode key={t.id} truss={t} k={k} selected={false} ghost />
+            ))}
+            {project.fixtures.map((f) => (
+              <GhostFixture key={f.id} fixture={f} k={k} />
+            ))}
+          </g>
+        )}
+
         {/* Verbindungen Gruppe/Output → Box: gebündelt oder als Luftlinie */}
-        {trees ? (
+        <g className={lighting ? 'ghost-cables' : undefined}>
+        {!showCables ? null : trees ? (
           <CableLines trees={trees} k={k} />
         ) : (
         <g className="links">
@@ -185,7 +260,48 @@ export function StagePlot({ selected, onSelect }: Props) {
           })}
         </g>
         )}
+        </g>
 
+        {lighting ? (
+          <>
+            {/* Ton-Elemente klein und grau, nicht anfassbar */}
+            <g className="ghost-layer" aria-hidden="true">
+              {view.sound.boxes && project.devices.map((d) => <GhostDevice key={d.id} device={d} k={k} />)}
+              {project.outputs
+                .filter((o) => (OFFSTAGE_OUTPUTS.includes(o.kind) ? view.sound.pa : view.sound.monitors))
+                .map((o) => (
+                  <GhostOutput key={o.id} output={o} k={k} />
+                ))}
+              {view.sound.instruments && project.groups.map((g) => <GhostGroup key={g.id} group={g} k={k} />)}
+              {view.sound.boxes && project.boxes.map((b) => <GhostBox key={b.id} box={b} k={k} />)}
+            </g>
+            {project.trusses
+              .slice()
+              .sort((a, b) => Number(isSelected('truss', a.id)) - Number(isSelected('truss', b.id)))
+              .map((t) => (
+                <TrussNode key={t.id} truss={t} k={k} selected={isSelected('truss', t.id)} bind={bind({ kind: 'truss', id: t.id }, t.pos)} />
+              ))}
+            <g className="beams" aria-hidden="true">
+              {project.fixtures.map((f) => (
+                <Beam key={f.id} fixture={f} k={k} />
+              ))}
+            </g>
+            {project.fixtures
+              .slice()
+              .sort((a, b) => Number(isSelected('fixture', a.id)) - Number(isSelected('fixture', b.id)))
+              .map((f) => (
+                <FixtureNode
+                  key={f.id}
+                  fixture={f}
+                  k={k}
+                  selected={isSelected('fixture', f.id)}
+                  problem={dmxProblems.has(f.id)}
+                  bind={bind({ kind: 'fixture', id: f.id }, f.pos)}
+                />
+              ))}
+          </>
+        ) : (
+          <>
         {/* Reihenfolge: Instrumente, darüber Boxen (Kapazität bleibt lesbar), ausgewähltes Element ganz oben. */}
         {[
           ...project.devices.map((d) => ({ kind: 'device' as const, el: d })),
@@ -242,6 +358,8 @@ export function StagePlot({ selected, onSelect }: Props) {
           )}
 
         {trees && <CableLabels trees={trees} k={k} />}
+          </>
+        )}
       </svg>
       <div className="zoom-controls" role="group" aria-label="Zoom">
         <button type="button" className="icon-btn" aria-label="Vergrößern" onClick={zp.zoomIn} disabled={zp.zoom >= ZOOM_LIMITS.max}>

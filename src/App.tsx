@@ -193,7 +193,7 @@ function Workspace() {
       </header>
       <main className="workspace">
         <section className="stage-panel" aria-label="Bühnenplan">
-          <StagePlot selected={selected} onSelect={select} />
+          <StagePlot mode={mode} selected={selected} onSelect={select} />
         </section>
         <aside className="side-panel" aria-label="Listen">
           <Warnings onSelect={select} />

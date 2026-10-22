@@ -259,3 +259,131 @@
   stroke-linejoin: round;
   stroke-linecap: round;
 }
+
+/* ---------- Licht ---------- */
+.fixture-node .body {
+  fill: var(--surface);
+  stroke: var(--text);
+  stroke-width: 1.6;
+  vector-effect: non-scaling-stroke;
+}
+
+.fixture-node .lens,
+.fixture-node .front {
+  fill: var(--beam);
+}
+
+.fixture-node .abbr {
+  fill: var(--text);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.fixture-node .label {
+  paint-order: stroke;
+  stroke: var(--stage-floor);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  font-variant-numeric: tabular-nums;
+}
+
+.fixture-node .fixture-number {
+  fill: var(--text);
+  font-weight: 800;
+}
+
+.fixture-node .fixture-address {
+  fill: var(--text-muted);
+  font-weight: 600;
+}
+
+.fixture-node.unaddressed .fixture-address {
+  fill: var(--warning);
+}
+
+.fixture-node.problem .body {
+  stroke: var(--danger);
+  stroke-dasharray: 3 2;
+}
+
+.fixture-node.problem .fixture-address {
+  fill: var(--danger);
+  font-weight: 800;
+}
+
+.beam {
+  pointer-events: none;
+}
+
+.beam-stop-start {
+  stop-color: var(--beam);
+  stop-opacity: 0.5;
+}
+
+.beam-stop-end {
+  stop-color: var(--beam);
+  stop-opacity: 0;
+}
+
+.truss-node .truss-body {
+  fill: color-mix(in srgb, var(--truss) 14%, transparent);
+  stroke: var(--truss);
+}
+
+.truss-node .truss-zig {
+  fill: none;
+  stroke: var(--truss);
+  opacity: 0.8;
+}
+
+.truss-node .truss-label {
+  fill: var(--text-muted);
+  font-weight: 700;
+  paint-order: stroke;
+  stroke: var(--stage-floor);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+/* Gegenpart im Hintergrund: klein, grau, nicht anfassbar */
+.ghost-layer,
+.ghost,
+.ghost-cables {
+  pointer-events: none;
+}
+
+.ghost-cables {
+  opacity: 0.18;
+}
+
+.ghost-body {
+  fill: color-mix(in srgb, var(--ghost) 22%, transparent);
+  stroke: var(--ghost);
+  stroke-width: 1.2;
+  vector-effect: non-scaling-stroke;
+}
+
+.ghost-front,
+.ghost-abbr,
+.ghost-label {
+  fill: var(--ghost);
+}
+
+.ghost-abbr,
+.ghost-label {
+  font-weight: 700;
+}
+
+.truss-node.ghost .truss-body,
+.truss-node.ghost .truss-zig {
+  stroke: var(--ghost);
+}
+
+.truss-node.ghost .truss-body {
+  fill: none;
+}
+
+.truss-node.ghost .truss-label {
+  fill: var(--ghost);
+}

@@ -165,7 +165,7 @@ export const FIXTURE_ORDER: FixtureKind[] = [
 ]
 
 /** Symbolgröße in Design-Pixeln (wird wie die übrigen Knoten mit k skaliert). */
-export const FIXTURE_SIZE = 18
+export const FIXTURE_SIZE = 22
 
 /** Lampen und Traversen dürfen bis zu so weit (m) neben, vor und hinter der Bühne stehen. */
 export const LIGHT_AREA_MARGIN = 8
@@ -321,4 +321,43 @@ export function createTruss(project: LightProject): Truss {
 
 function round(v: number): number {
   return Math.round(v * 100) / 100
+}
+
+/** Ausdehnung aller Lampen und Traversen in Metern (für den Plan-Ausschnitt); null ohne Licht. */
+export function lightExtent(project: Pick<Project, 'fixtures' | 'trusses'>): { minX: number; minY: number; maxX: number; maxY: number } | null {
+  const pts: Vec2[] = [...project.fixtures.map((f) => f.pos), ...project.trusses.flatMap((t) => trussEnds(t))]
+  if (pts.length === 0) return null
+  return {
+    minX: Math.min(...pts.map((p) => p.x)),
+    minY: Math.min(...pts.map((p) => p.y)),
+    maxX: Math.max(...pts.map((p) => p.x)),
+    maxY: Math.max(...pts.map((p) => p.y)),
+  }
+}
+
+/** Lichtkegel in Form-Koordinaten (Lampe bei 0,0, leuchtet bei Drehung 0 nach unten = +y). */
+export function beamPolygon(beamDeg: number, length: number, start: number): string {
+  const half = (Math.max(beamDeg, 12) / 2) * (Math.PI / 180)
+  const spread = Math.tan(half)
+  const r0 = start * spread * 0.6
+  const r1 = length * spread
+  const f = (v: number) => Math.round(v * 100) / 100
+  return `${f(-r0)},${f(start)} ${f(r0)},${f(start)} ${f(r1)},${f(length)} ${f(-r1)},${f(length)}`
+}
+
+/** Platz für die zweizeilige Beschriftung (Nummer, Adresse) auf der Rückseite der Lampe. */
+export function labelPlacement(rotation: number, s: number, k: number): { x: number; y: number; anchor: 'start' | 'middle' | 'end' } {
+  // Leuchtrichtung bei 0° = unten; im Uhrzeigersinn gedreht: 90° = links, 180° = oben, 270° = rechts
+  const quarter = Math.round((((rotation % 360) + 360) % 360) / 90) % 4
+  const edge = s * 0.62
+  switch (quarter) {
+    case 0:
+      return { x: 0, y: -edge - 14 * k, anchor: 'middle' } // Rückseite oben
+    case 2:
+      return { x: 0, y: edge + 10 * k, anchor: 'middle' } // Rückseite unten
+    case 1:
+      return { x: edge + 4 * k, y: -3 * k, anchor: 'start' } // Rückseite rechts
+    default:
+      return { x: -edge - 4 * k, y: -3 * k, anchor: 'end' } // Rückseite links
+  }
 }
