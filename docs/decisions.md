@@ -240,7 +240,9 @@ umgeschaltet wird; bei „Bewegung reduzieren“ wird sofort umgeschaltet.
 
 ## D31 – Lampen, Traversen und Richtung
 Lampen haben einen Typ aus einer festen Bibliothek (`model/lights.ts`) mit typischen Modi; die
-Kanalzahl ist je Lampe frei (eigener Modus). Leuchtrichtung wie bei Lautsprechern in Grad,
+Kanalzahl ist je Lampe frei (eigener Modus). Der Typ „Weißlicht / Halogen“ (Kürzel WL, für
+Stufenlinsen, PCs und Halogen-PARs) heißt intern weiter `fresnel`, damit gespeicherte Projekte
+gültig bleiben. Leuchtrichtung wie bei Lautsprechern in Grad,
 0° = zum Publikum; im Plan zeigt ein Lichtkegel die Richtung, Nummer und Adresse stehen auf der
 Rückseite. Neue Lampen vor der Bühne zeigen zur Bühne. Traversen sind gerade Stücke mit Länge
 und Richtung (0° = quer, 90° = längs). Eine Lampe näher als 40 cm an einer Traverse rastet

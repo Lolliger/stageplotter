@@ -79,8 +79,8 @@ export const FIXTURE_TYPES: Record<FixtureKind, FixtureType> = {
     ],
   },
   fresnel: {
-    label: 'Stufenlinse / PC',
-    abbr: 'FR',
+    label: 'Weißlicht / Halogen',
+    abbr: 'WL',
     shape: 'circle',
     beam: 50,
     modes: [
