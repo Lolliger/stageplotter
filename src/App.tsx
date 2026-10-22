@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react'
 import { AddInstrument } from './components/editors/AddInstrument'
 import { AddOutput } from './components/editors/AddOutput'
 import { DeviceEditor } from './components/editors/DeviceEditor'
@@ -15,6 +15,8 @@ import { SignalChain } from './components/lists/SignalChain'
 import { Warnings } from './components/lists/Warnings'
 import { StagePlot } from './components/stage/StagePlot'
 import { Toolbar } from './components/toolbar/Toolbar'
+import { ModeSwitch } from './components/ui/ModeSwitch'
+import { loadMode, saveMode, type PlotMode } from './state/mode'
 import { createStagebox } from './model/defaults'
 import { DEVICE_LABELS } from './model/devices'
 import type { ElementRef } from './model/types'
@@ -36,7 +38,19 @@ type Panel =
 function Workspace() {
   const { project, dispatch, undo, redo, canUndo, canRedo } = useProject()
   const [panel, setPanel] = useState<Panel>(null)
+  const [mode, setMode] = useState<PlotMode>(loadMode)
   const close = useCallback(() => setPanel(null), [])
+
+  // Farbschema und Verlauf hängen an html[data-mode] (siehe theme.css).
+  useLayoutEffect(() => {
+    document.documentElement.dataset.mode = mode
+    saveMode(mode)
+  }, [mode])
+
+  const switchMode = (next: PlotMode) => {
+    setPanel(null)
+    setMode(next)
+  }
 
   // Strg/Cmd+Z, Strg/Cmd+Umschalt+Z, Strg+Y – nicht während der Eingabe in Feldern.
   useEffect(() => {
@@ -139,6 +153,7 @@ function Workspace() {
         <h1>
           stageplot<small>{project.name}</small>
         </h1>
+        <ModeSwitch mode={mode} onChange={switchMode} />
         <Toolbar
           onAddInstrument={() => setPanel({ kind: 'addInstrument' })}
           onAddOutput={() => setPanel({ kind: 'addOutput' })}

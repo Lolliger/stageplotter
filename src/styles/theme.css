@@ -25,6 +25,16 @@
   --stage-grid-major: #d7dbe1;
   --stage-label: #7a8290;
 
+  /* Farbwellen beim Umschalten Ton/Licht (Farbstopps; Mittelpunkt setzt ui.css) */
+  --wipe-sound: #b9f6ee 0%, #33d9c8 22%, #0e7c86 55%, #0b3b40 100%;
+  --wipe-lighting: #fff3c4 0%, #f59e0b 18%, #ec4899 46%, #8b5cf6 74%, #1e1b4b 100%;
+  --mode-gradient: linear-gradient(90deg, #0e7c86, #33d9c8);
+
+  /* Licht im Plan */
+  --beam: #f59e0b;
+  --truss: #6b7280;
+  --ghost: #9aa2ae;
+
   --radius: 10px;
   --tap: 44px;
   --shadow: 0 1px 2px rgb(27 31 36 / 0.06), 0 4px 16px rgb(27 31 36 / 0.08);
@@ -54,6 +64,54 @@
     --stage-label: #6b7380;
 
     --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 16px rgb(0 0 0 / 0.4);
+
+    --truss: #8b93a1;
+    --ghost: #4b5360;
+  }
+}
+
+/* Lichtmodus (html[data-mode=lighting], gesetzt in App.tsx): warmer Akzent, Verlauf
+ * Amber → Magenta → Violett, im Dunkeln eine fast schwarze Bühne, auf der Lichtkegel wirken. */
+:root[data-mode='lighting'] {
+  --bg: #f4f0f3;
+  --surface: #ffffff;
+  --surface-2: #ece5ea;
+  --border: #ddd3da;
+  --text-muted: #6a5f69;
+  --accent: #b3246f;
+  --accent-text: #ffffff;
+  --mode-gradient: linear-gradient(90deg, #f59e0b, #ec4899 50%, #8b5cf6);
+
+  --stage-floor: #fbf9fa;
+  --stage-edge: #a798a3;
+  --stage-grid: #eee8ec;
+  --stage-grid-major: #ddd3da;
+  --stage-label: #8a7c87;
+
+  --beam: #f59e0b;
+  --truss: #6d5f6b;
+  --ghost: #b9adb6;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-mode='lighting'] {
+    --bg: #110e16;
+    --surface: #1a1520;
+    --surface-2: #241d2c;
+    --border: #33293d;
+    --text-muted: #998ba6;
+    --accent: #ffb547;
+    --accent-text: #2a1600;
+
+    --stage-floor: #0b090f;
+    --stage-edge: #5b4d68;
+    --stage-grid: #17121d;
+    --stage-grid-major: #241d2c;
+    --stage-label: #6f6280;
+
+    --beam: #ffb547;
+    --truss: #a99bb8;
+    --ghost: #3d3448;
   }
 }
 
