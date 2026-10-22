@@ -13,6 +13,7 @@ import { ProjectMenu } from './components/editors/ProjectMenu'
 import { ProjectSettings } from './components/editors/ProjectSettings'
 import { Sheet } from './components/editors/Sheet'
 import { StageboxEditor } from './components/editors/StageboxEditor'
+import { AddressList, DmxWarnings } from './components/lists/AddressList'
 import { InputList } from './components/lists/InputList'
 import { OutputList } from './components/lists/OutputList'
 import { SignalChain } from './components/lists/SignalChain'
@@ -246,15 +247,25 @@ function Workspace() {
           <StagePlot mode={mode} selected={selected} onSelect={select} />
         </section>
         <aside className="side-panel" aria-label="Listen">
-          <Warnings onSelect={select} />
-          <h2 className="panel-title">Inputliste</h2>
-          <InputList onSelect={select} />
-          <h2 className="panel-title">Outputliste</h2>
-          <OutputList onSelect={select} />
-          {project.devices.length > 0 && (
+          {mode === 'lighting' ? (
             <>
-              <h2 className="panel-title">PA-Signalweg</h2>
-              <SignalChain onSelect={select} />
+              <DmxWarnings onSelect={select} />
+              <h2 className="panel-title">Adressliste</h2>
+              <AddressList onSelect={select} />
+            </>
+          ) : (
+            <>
+              <Warnings onSelect={select} />
+              <h2 className="panel-title">Inputliste</h2>
+              <InputList onSelect={select} />
+              <h2 className="panel-title">Outputliste</h2>
+              <OutputList onSelect={select} />
+              {project.devices.length > 0 && (
+                <>
+                  <h2 className="panel-title">PA-Signalweg</h2>
+                  <SignalChain onSelect={select} />
+                </>
+              )}
             </>
           )}
         </aside>

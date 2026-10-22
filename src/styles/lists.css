@@ -203,3 +203,18 @@ button.warning-text {
   padding: 0 12px 8px 28px;
   font-size: 0.85rem;
 }
+
+.list-card-dmx {
+  border-top: 4px solid transparent;
+  background:
+    linear-gradient(var(--surface), var(--surface)) padding-box,
+    var(--mode-gradient) border-box;
+}
+
+.list-card-warning {
+  border-color: var(--warning);
+}
+
+.io-table tr.row-error td {
+  color: var(--danger);
+}
