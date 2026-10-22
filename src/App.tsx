@@ -130,7 +130,7 @@ function Workspace() {
   } else if (panel?.kind === 'project') {
     sheet = (
       <Sheet title="Projekt & Export" onClose={close}>
-        <ProjectMenu onDone={close} />
+        <ProjectMenu mode={mode} onDone={close} />
       </Sheet>
     )
   } else if (panel?.kind === 'settings') {

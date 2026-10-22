@@ -25,6 +25,21 @@ describe('JSON export/import', () => {
     expect(parseProjectFile(JSON.stringify(data))).toEqual({ ok: true, project: p })
   })
 
+  test('includes the DMX address list', () => {
+    const p = createDefaultProject()
+    p.trusses.push({ id: 't', name: 'FOH', pos: { x: 5, y: 8 }, length: 6, rotation: 0 })
+    p.fixtures.push(
+      { id: 'a', kind: 'spot', number: 1, name: 'Spot', pos: { x: 4, y: 8 }, channels: 14, mode: '14 Kanal', universe: 1, address: 1, trussId: 't' },
+      { id: 'b', kind: 'par', number: 2, name: 'PAR', pos: { x: 2, y: 2 }, channels: 8, universe: 1, color: 'L201' },
+    )
+    const { patch } = JSON.parse(serializeProject(p))
+    expect(patch.dmx.universes).toEqual([
+      { universe: 1, used: 14, fixtures: [{ range: '1.001–1.014', number: 1, name: 'Spot', type: 'Moving Head Spot', channels: 14, mode: '14 Kanal', place: 'FOH' }] },
+    ])
+    expect(patch.dmx.unaddressed).toEqual([{ range: '–', number: 2, name: 'PAR', type: 'LED-PAR', channels: 8, place: 'frei', color: 'L201' }])
+    expect(patch.warnings).toContain('Hinweis (DMX): #2 PAR hat noch keine DMX-Adresse.')
+  })
+
   test('reports broken or foreign files', () => {
     expect(parseProjectFile('{nope')).toEqual({ ok: false, error: 'Die Datei ist kein gültiges JSON.' })
     expect(parseProjectFile('{"app":"other"}')).toEqual({ ok: false, error: 'Die Datei stammt nicht aus stageplot.' })

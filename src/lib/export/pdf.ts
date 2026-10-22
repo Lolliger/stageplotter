@@ -1,15 +1,26 @@
 import { jsPDF } from 'jspdf'
 import autoTable, { type CellInput, type RowInput } from 'jspdf-autotable'
 import { svg2pdf } from 'svg2pdf.js'
-import type { Project } from '../../model/types'
+import { FIXTURE_TYPES } from '../../model/lights'
+import type { PlotMode, Project } from '../../model/types'
 import type { Assignment } from '../assign'
+import { DMX_SIZE, addressList, dmxIssues } from '../dmx'
 import { plotViewBox, renderPlotSvg } from './plotSvg'
 import { inputTables, outputTables, signalTables } from './tables'
 
 /**
- * PDF: Seite 1 (A4 quer) Bühnenplan als Vektorgrafik, danach (A4 hoch) Inputliste,
- * Outputliste, PA-Signalweg und Hinweise. Wird nur beim Export per dynamischem Import geladen.
+ * PDF, wahlweise Ton, Licht oder beides:
+ * - Ton: Bühnenplan (A4 quer) als Vektorgrafik, dann (A4 hoch) Inputliste, Outputliste,
+ *   PA-Signalweg und Hinweise
+ * - Licht: Lichtplot (A4 quer) mit Legende der Lampentypen, dann Adressliste je Universe und
+ *   DMX-Hinweise
+ * Wird nur beim Export per dynamischem Import geladen.
  */
+
+export interface PdfParts {
+  sound: boolean
+  light: boolean
+}
 
 const M = 12 // Rand in mm
 const DARK: [number, number, number] = [27, 31, 36] // AK foreground
@@ -48,12 +59,18 @@ function heading(doc: jsPDF, title: string, y: number): number {
   return y + 8
 }
 
-async function drawPlot(doc: jsPDF, project: Project, assignment: Assignment, area: { x: number; y: number; w: number; h: number }) {
-  const vb = plotViewBox(project)
+async function drawPlot(
+  doc: jsPDF,
+  project: Project,
+  assignment: Assignment,
+  area: { x: number; y: number; w: number; h: number },
+  mode: PlotMode,
+) {
+  const vb = plotViewBox(project, mode)
   const scale = Math.min(area.w / vb.w, area.h / vb.h) // mm pro SVG-Einheit
   // Knotenradius ca. 4,5 mm, unabhängig von der Bühnengröße
   const k = Math.min(3, Math.max(0.35, 4.5 / (17 * scale)))
-  const svgText = renderPlotSvg(project, assignment, k)
+  const svgText = renderPlotSvg(project, assignment, k, mode)
   const svg = new DOMParser().parseFromString(svgText, 'image/svg+xml').documentElement
   // Zielgröße kommt aus den svg2pdf-Optionen, nicht aus den Pixelmaßen des SVG.
   svg.removeAttribute('width')
@@ -73,30 +90,73 @@ async function drawPlot(doc: jsPDF, project: Project, assignment: Assignment, ar
   }
 }
 
-export async function buildPdf(project: Project, assignment: Assignment, date = new Date()): Promise<Blob> {
-  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
-  doc.setProperties({ title: `${project.name} – Stageplot`, creator: 'stageplot' })
+const tableBase = {
+  theme: 'grid' as const,
+  styles: { font: 'helvetica', fontSize: 9, cellPadding: 1.6, textColor: DARK, lineColor: [209, 213, 219] as [number, number, number], lineWidth: 0.2 },
+  headStyles: { fillColor: HEAD, textColor: DARK, fontStyle: 'bold' as const },
+  margin: { left: M, right: M, top: M, bottom: 16 },
+}
 
-  // ---------- Seite 1: Bühnenplan ----------
-  const page = pageSize(doc)
-  const totalIn = project.groups.reduce((n, g) => n + g.channels.length, 0)
+/** Kopfzeile einer Plan-Seite: Projektname und Eckdaten. */
+function planHeader(doc: jsPDF, project: Project, title: string, facts: string[], date: Date) {
   doc.setFont('helvetica', 'bold').setFontSize(16).setTextColor(...DARK)
   doc.text(project.name, M, M + 4)
-  doc.setFont('helvetica', 'normal').setFontSize(9).setTextColor(...MUTED)
-  const fmt = (m: number) => m.toLocaleString('de-DE')
-  doc.text(
+  const nameW = doc.getTextWidth(project.name)
+  doc.setFont('helvetica', 'normal').setFontSize(11).setTextColor(...MUTED)
+  doc.text(title, M + nameW + 4, M + 4)
+  doc.setFontSize(9)
+  doc.text([...facts, `Stand ${date.toLocaleDateString('de-DE')}`].join('  ·  '), M, M + 9.5)
+}
+
+const fmt = (m: number) => m.toLocaleString('de-DE')
+
+export async function buildPdf(
+  project: Project,
+  assignment: Assignment,
+  parts: PdfParts = { sound: true, light: false },
+  date = new Date(),
+): Promise<Blob> {
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
+  const what = parts.light && !parts.sound ? 'Lichtplot' : 'Stageplot'
+  doc.setProperties({ title: `${project.name} – ${what}`, creator: 'stageplot' })
+  if (parts.sound) await soundPages(doc, project, assignment, date)
+  if (parts.light) {
+    if (parts.sound) doc.addPage('a4', 'landscape')
+    await lightPages(doc, project, assignment, date)
+  }
+
+  // ---------- Fußzeile ----------
+  const pages = doc.getNumberOfPages()
+  for (let i = 1; i <= pages; i++) {
+    doc.setPage(i)
+    const { w, h } = pageSize(doc)
+    doc.setFont('helvetica', 'normal').setFontSize(8).setTextColor(...MUTED)
+    doc.text(project.name, M, h - 7)
+    doc.text('stageplot', w / 2, h - 7, { align: 'center' })
+    doc.text(`Seite ${i} / ${pages}`, w - M, h - 7, { align: 'right' })
+  }
+
+  return doc.output('blob')
+}
+
+async function soundPages(doc: jsPDF, project: Project, assignment: Assignment, date: Date) {
+  // ---------- Bühnenplan ----------
+  const page = pageSize(doc)
+  const totalIn = project.groups.reduce((n, g) => n + g.channels.length, 0)
+  planHeader(
+    doc,
+    project,
+    'Tonplot',
     [
       `Bühne ${fmt(project.stage.width)} × ${fmt(project.stage.depth)} m`,
       `${project.boxes.length} Stageboxen`,
       `${totalIn} Inputs`,
       `${project.outputs.length} Outputs`,
-      `Stand ${date.toLocaleDateString('de-DE')}`,
-    ].join('  ·  '),
-    M,
-    M + 9.5,
+    ],
+    date,
   )
 
-  const plotBottom = await drawPlot(doc, project, assignment, { x: M, y: M + 13, w: page.w - 2 * M, h: page.h - (M + 13) - M - 12 })
+  const plotBottom = await drawPlot(doc, project, assignment, { x: M, y: M + 13, w: page.w - 2 * M, h: page.h - (M + 13) - M - 12 }, 'sound')
 
   // Legende: Boxen mit Auslastung
   let lx = M
@@ -113,12 +173,6 @@ export async function buildPdf(project: Project, assignment: Assignment, date = 
 
   // ---------- Listen ----------
   doc.addPage('a4', 'portrait')
-  const tableBase = {
-    theme: 'grid' as const,
-    styles: { font: 'helvetica', fontSize: 9, cellPadding: 1.6, textColor: DARK, lineColor: [209, 213, 219] as [number, number, number], lineWidth: 0.2 },
-    headStyles: { fillColor: HEAD, textColor: DARK, fontStyle: 'bold' as const },
-    margin: { left: M, right: M, top: M, bottom: 16 },
-  }
 
   let y = heading(doc, 'Inputliste', M)
   const inputs = inputTables(project, assignment)
@@ -219,17 +273,106 @@ export async function buildPdf(project: Project, assignment: Assignment, date = 
       columnStyles: { 0: { cellWidth: 18 } },
     })
   }
+}
 
-  // ---------- Fußzeile ----------
-  const pages = doc.getNumberOfPages()
-  for (let i = 1; i <= pages; i++) {
-    doc.setPage(i)
-    const { w, h } = pageSize(doc)
-    doc.setFont('helvetica', 'normal').setFontSize(8).setTextColor(...MUTED)
-    doc.text(project.name, M, h - 7)
-    doc.text('stageplot', w / 2, h - 7, { align: 'center' })
-    doc.text(`Seite ${i} / ${pages}`, w - M, h - 7, { align: 'right' })
+
+async function lightPages(doc: jsPDF, project: Project, assignment: Assignment, date: Date) {
+  const page = pageSize(doc)
+  const universes = new Set(project.fixtures.filter((f) => f.address !== undefined).map((f) => f.universe))
+  const channels = project.fixtures.reduce((n, f) => n + Math.max(0, f.channels), 0)
+  planHeader(
+    doc,
+    project,
+    'Lichtplot',
+    [
+      `Bühne ${fmt(project.stage.width)} × ${fmt(project.stage.depth)} m`,
+      `${project.fixtures.length} Lampen`,
+      `${project.trusses.length} Traversen`,
+      `${channels} DMX-Kanäle`,
+      `${universes.size} ${universes.size === 1 ? 'Universe' : 'Universes'}`,
+    ],
+    date,
+  )
+  const plotBottom = await drawPlot(doc, project, assignment, { x: M, y: M + 13, w: page.w - 2 * M, h: page.h - (M + 13) - M - 12 }, 'lighting')
+
+  // Legende: Lampentypen mit Anzahl
+  const counts = new Map<string, number>()
+  for (const f of project.fixtures) {
+    const label = f.model ?? FIXTURE_TYPES[f.kind].label
+    counts.set(label, (counts.get(label) ?? 0) + 1)
+  }
+  let lx = M
+  const ly = Math.min(plotBottom + 4, page.h - M - 8)
+  doc.setFont('helvetica', 'bold').setFontSize(9).setTextColor(...DARK)
+  for (const [label, count] of counts) {
+    const t = `${count} × ${label}`
+    if (lx + doc.getTextWidth(t) > page.w - M) break
+    doc.text(t, lx, ly)
+    lx += doc.getTextWidth(t) + 8
   }
 
-  return doc.output('blob')
+  // ---------- Adressliste ----------
+  doc.addPage('a4', 'portrait')
+  let y = heading(doc, 'Adressliste', M)
+  const list = addressList(project.fixtures, project.trusses)
+  const problems = new Set(dmxIssues(project.fixtures).filter((i) => i.level === 'error').flatMap((i) => i.fixtureIds))
+  const head = ['Adresse', '#', 'Lampe', 'Typ / Modus', 'Ort', 'Farbe / Notiz']
+  const rows = (r: ReturnType<typeof addressList>['unaddressed']): RowInput[] =>
+    r.map(({ fixture: f, range, place }) => {
+      const cells: CellInput[] = [
+        range === '–' ? '-' : range.replace('–', '-'),
+        String(f.number),
+        f.name,
+        `${f.model ?? FIXTURE_TYPES[f.kind].label}\n${f.channels} Kan.${f.mode && f.mode !== `${f.channels} Kanal` ? ` · ${f.mode}` : ''}`,
+        place,
+        [f.color, f.note].filter(Boolean).join(' · '),
+      ]
+      return problems.has(f.id) ? cells.map((c) => ({ content: String(c), styles: { textColor: RED } })) : cells
+    })
+  for (const u of list.universes) {
+    autoTable(doc, {
+      ...tableBase,
+      startY: y,
+      head: [
+        [{ content: `Universe ${u.universe}  ·  ${u.used}/${DMX_SIZE} Kanäle`, colSpan: 6, styles: { fillColor: DARK, textColor: [255, 255, 255], fontSize: 10 } }],
+        head,
+      ],
+      body: rows(u.rows),
+      columnStyles: { 0: { fontStyle: 'bold', cellWidth: 24 }, 1: { cellWidth: 9, halign: 'right' } },
+    })
+    y = finalY(doc) + 6
+  }
+  if (list.unaddressed.length) {
+    autoTable(doc, {
+      ...tableBase,
+      startY: y,
+      head: [
+        [{ content: `Ohne Adresse  ·  ${list.unaddressed.length}`, colSpan: 6, styles: { fillColor: AMBER, textColor: [255, 255, 255], fontSize: 10 } }],
+        head,
+      ],
+      body: rows(list.unaddressed),
+      columnStyles: { 0: { cellWidth: 24 }, 1: { cellWidth: 9, halign: 'right' } },
+    })
+    y = finalY(doc) + 6
+  }
+  if (project.fixtures.length === 0) {
+    doc.setFont('helvetica', 'normal').setFontSize(10).setTextColor(...MUTED)
+    doc.text('Noch keine Lampen im Projekt.', M, y + 2)
+    y += 8
+  }
+
+  const issues = dmxIssues(project.fixtures)
+  if (issues.length) {
+    y = heading(doc, 'DMX-Hinweise', y + 2)
+    autoTable(doc, {
+      ...tableBase,
+      theme: 'plain',
+      startY: y,
+      body: issues.map((w): CellInput[] => [
+        { content: w.level === 'error' ? 'Fehler' : 'Hinweis', styles: { fontStyle: 'bold', textColor: w.level === 'error' ? RED : AMBER } },
+        pdfText(w.message.replace(/–/g, '-')),
+      ]),
+      columnStyles: { 0: { cellWidth: 18 } },
+    })
+  }
 }

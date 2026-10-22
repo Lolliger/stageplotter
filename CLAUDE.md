@@ -33,6 +33,9 @@ Vor jedem Commit: `npm run lint && npm test && npm run build` muss grün sein.
 - PDF-Bibliotheken nur per dynamischem `import()` laden, nie statisch im Hauptbundle.
 - Projektänderungen laufen über `dispatch` und damit durch die Undo-History; Drag-Bewegungen
   tragen einen `coalesce`-Schlüssel.
+- Ton- und Lichtplot sind ein Projekt; der Modus (`state/mode.ts`) ist reine Ansicht und wird
+  nicht im Projekt gespeichert, die Sichtbarkeit des Gegenparts (`project.view`) schon.
+  DMX-Logik in `src/lib/dmx.ts`, Lampen/Traversen in `src/model/lights.ts`.
 
 ## Konventionen
 

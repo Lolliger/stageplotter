@@ -130,6 +130,9 @@ export interface Device {
   power?: { watts: number; ohms: number }
 }
 
+/** Ton- oder Lichtplot (Ansicht, nicht im Projekt gespeichert). */
+export type PlotMode = 'sound' | 'lighting'
+
 // ---------- Licht ----------
 
 /** Lampentyp aus der Bibliothek (model/lights.ts). */

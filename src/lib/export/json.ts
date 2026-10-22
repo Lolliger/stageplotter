@@ -1,15 +1,33 @@
 import type { Project } from '../../model/types'
 import { assign, type Assignment } from '../assign'
 import { parseProject, type ParseResult } from '../schema'
+import { FIXTURE_TYPES } from '../../model/lights'
+import { addressList, dmxIssues, type AddressRow } from '../dmx'
 import { inputTables, outputTables, signalTables } from './tables'
 
+function dmxRow({ fixture: f, range, place }: AddressRow) {
+  return {
+    range,
+    number: f.number,
+    name: f.name,
+    type: f.model ?? FIXTURE_TYPES[f.kind].label,
+    channels: f.channels,
+    ...(f.mode ? { mode: f.mode } : {}),
+    place,
+    ...(f.color ? { color: f.color } : {}),
+    ...(f.note ? { note: f.note } : {}),
+  }
+}
+
 /**
- * Abgeleiteter Patch zum Nachlesen in der Datei: Ports, Mikros, Abstände, Signalweg, Hinweise.
+ * Abgeleiteter Patch zum Nachlesen in der Datei: Ports, Mikros, Abstände, Signalweg, DMX-Adressliste,
+ * Hinweise.
  * Wird beim Import ignoriert und aus dem Projekt neu berechnet (siehe D29).
  */
 export function patchSummary(project: Project, assignment: Assignment = assign(project)) {
   const inputs = inputTables(project, assignment)
   const outputs = outputTables(project, assignment)
+  const dmx = addressList(project.fixtures, project.trusses)
   return {
     note: 'Nur zur Info: Ports, Abstände und Signalweg werden beim Import aus dem Projekt neu berechnet.',
     inputs: inputs.boxes.flatMap((t) =>
@@ -43,7 +61,14 @@ export function patchSummary(project: Project, assignment: Assignment = assign(p
       ...(t.feeds.length ? { feeds: t.feeds } : {}),
       ports: t.rows.map((r) => ({ port: r.port, ...(r.name ? { name: r.name } : {}), from: r.from, detail: r.detail, to: r.to })),
     })),
-    warnings: assignment.warnings.map((w) => `${w.level === 'error' ? 'Fehler' : 'Hinweis'}: ${w.message}`),
+    dmx: {
+      universes: dmx.universes.map((u) => ({ universe: u.universe, used: u.used, fixtures: u.rows.map(dmxRow) })),
+      unaddressed: dmx.unaddressed.map(dmxRow),
+    },
+    warnings: [
+      ...assignment.warnings.map((w) => `${w.level === 'error' ? 'Fehler' : 'Hinweis'}: ${w.message}`),
+      ...dmxIssues(project.fixtures).map((w) => `${w.level === 'error' ? 'Fehler' : 'Hinweis'} (DMX): ${w.message}`),
+    ],
   }
 }
 

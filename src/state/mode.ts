@@ -1,6 +1,8 @@
-/** Ton- oder Lichtplot. Ansichtssache: wird im Browser gemerkt, nicht im Projekt gespeichert. */
-export type PlotMode = 'sound' | 'lighting'
+import type { PlotMode } from '../model/types'
 
+export type { PlotMode }
+
+/** Zuletzt gewählter Modus; wird im Browser gemerkt, nicht im Projekt gespeichert. */
 const KEY = 'stageplot.mode'
 
 export function loadMode(): PlotMode {

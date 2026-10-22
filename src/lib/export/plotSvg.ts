@@ -1,8 +1,18 @@
 import { PX_PER_M } from '../../model/defaults'
-import { AMP_SHAPE, DEVICE_SHAPE, OUTPUT_SHAPES, frontArrowPoints } from '../../model/shapes'
-import type { InstrumentType, Project, Vec2 } from '../../model/types'
+import {
+  FIXTURE_SIZE,
+  FIXTURE_TYPES,
+  TRUSS_WIDTH,
+  beamPolygon,
+  labelPlacement,
+  lightExtent,
+  viewSettings,
+} from '../../model/lights'
+import { AMP_SHAPE, DEVICE_SHAPE, OFFSTAGE_OUTPUTS, OUTPUT_SHAPES, frontArrowPoints } from '../../model/shapes'
+import type { Fixture, InstrumentType, PlotMode, Project, Truss, Vec2 } from '../../model/types'
 import type { Assignment } from '../assign'
 import { deviceColor, routeProject, trunkLabels } from '../cables'
+import { dmxIssues, formatAddress } from '../dmx'
 import { DEVICE_ABBR } from '../../model/devices'
 
 /**
@@ -24,6 +34,11 @@ const C = {
   boxText: '#0b0d12',
   pill: '#ffffff',
   pillBorder: '#d1d5db',
+  warning: '#8a5b12',
+  beam: '#f59e0b',
+  truss: '#6b7280',
+  ghost: '#aab1bc',
+  ghostFill: '#f1f3f5',
 }
 
 const TYPE_ABBR: Record<InstrumentType, string> = {
@@ -40,14 +55,30 @@ const TYPE_ABBR: Record<InstrumentType, string> = {
  * Enger Ausschnitt für den Druck: Bühne plus Platz für Maßstab und Publikumszeile, erweitert um
  * Elemente, die über den Rand ragen (z. B. Stageboxen neben der Bühne). In Metern berechnet.
  */
-export function plotViewBox(project: Pick<Project, 'stage' | 'boxes' | 'groups' | 'outputs' | 'devices'>) {
+export function plotViewBox(
+  project: Pick<Project, 'stage' | 'boxes' | 'groups' | 'outputs' | 'devices' | 'fixtures' | 'trusses' | 'view'>,
+  mode: PlotMode = 'sound',
+) {
   const { width, depth } = project.stage
-  const elements = [...project.boxes, ...project.groups, ...project.outputs, ...project.devices].map((e) => e.pos)
-  const minX = Math.min(-0.6, ...elements.map((p) => p.x - 1))
-  const maxX = Math.max(width + 0.4, ...elements.map((p) => p.x + 1))
-  const minY = Math.min(-0.6, ...elements.map((p) => p.y - 0.9))
+  const view = viewSettings(project)
+  const sound =
+    mode === 'sound'
+      ? [...project.boxes, ...project.groups, ...project.outputs, ...project.devices]
+      : [
+          ...(view.sound.boxes ? [...project.boxes, ...project.devices] : []),
+          ...(view.sound.instruments ? project.groups : []),
+          ...project.outputs.filter((o) => (OFFSTAGE_OUTPUTS.includes(o.kind) ? view.sound.pa : view.sound.monitors)),
+        ]
+  const elements = sound.map((e) => e.pos)
+  const lights = mode === 'lighting' || view.lights ? lightExtent(project) : null
+  // Lampen: Platz für Beschriftung (Nummer/Adresse) und Traversen-Namen daneben
+  const lx = lights ? [lights.minX - 1.6, lights.maxX + 1.6] : []
+  const ly = lights ? [lights.minY - 1.1, lights.maxY + 1.2] : []
+  const minX = Math.min(-0.6, ...elements.map((p) => p.x - 1), ...lx)
+  const maxX = Math.max(width + 0.4, ...elements.map((p) => p.x + 1), ...lx)
+  const minY = Math.min(-0.6, ...elements.map((p) => p.y - 0.9), ...ly)
   // Platz unter dem untersten Element (inkl. Beschriftung) für die Publikumszeile
-  const maxY = Math.max(depth + 0.3, ...elements.map((p) => p.y + 0.95)) + 0.45
+  const maxY = Math.max(depth + 0.3, ...elements.map((p) => p.y + 0.95), ...ly) + 0.45
   return {
     x: minX * PX_PER_M,
     y: minY * PX_PER_M,
@@ -109,25 +140,80 @@ function pinMark(x: number, y: number, k: number): string {
   )
 }
 
-export function renderPlotSvg(project: Project, assignment: Assignment, k: number): string {
+/** Symbol eines Lampentyps (wie FixtureShape in components/stage/lightNodes.tsx). */
+function fixtureShape(kind: Fixture['kind'], s: number, a: Attrs): string {
+  const h = s / 2
+  switch (FIXTURE_TYPES[kind].shape) {
+    case 'circle':
+      return el('circle', { r: h, ...a })
+    case 'square':
+      return el('rect', { x: -h, y: -h, width: s, height: s, rx: s * 0.22, ...a })
+    case 'rect':
+      return el('rect', { x: -h * 0.62, y: -h * 1.15, width: s * 0.62, height: s * 1.15, rx: s * 0.1, ...a })
+    case 'hex': {
+      const pts = Array.from({ length: 6 }, (_, i) => `${n(Math.cos((Math.PI / 3) * i) * h)},${n(Math.sin((Math.PI / 3) * i) * h)}`).join(' ')
+      return el('polygon', { points: pts, ...a })
+    }
+    case 'diamond':
+      return el('polygon', { points: `0,${n(-h)} ${n(h)},0 0,${n(h)} ${n(-h)},0`, ...a })
+  }
+}
+
+/** Traverse als Leiter; `ghost` = grau im Hintergrund (Tonplot). */
+function trussSvg(t: Truss, k: number, ghost: boolean): string {
+  const P = (m: number) => m * PX_PER_M
+  const len = P(t.length)
+  const th = Math.max(P(TRUSS_WIDTH), 7 * k)
+  const color = ghost ? C.ghost : C.truss
+  const segs = Math.max(1, Math.round(t.length / 0.5))
+  const step = len / segs
+  const zig = Array.from({ length: segs }, (_, i) => {
+    const x0 = -len / 2 + i * step
+    return `M ${n(x0)} ${n(i % 2 ? th / 2 : -th / 2)} L ${n(x0 + step)} ${n(i % 2 ? -th / 2 : th / 2)}`
+  }).join(' ')
+  const rad = ((t.rotation ?? 0) * Math.PI) / 180
+  const ax = Math.cos(rad)
+  const ay = Math.sin(rad)
+  const gap = len / 2 + 6 * k
+  const flat = Math.abs(ax) >= 0.5
+  const label = flat
+    ? text(-ax * gap, -ay * gap, 9.5 * k, t.name, { fill: ghost ? C.ghost : C.muted, 'font-weight': 'bold', 'text-anchor': ax > 0 ? 'end' : 'start' })
+    : text(-ax * gap, -ay * gap + (ay > 0 ? -4 * k : 4 * k), 9.5 * k, t.name, { fill: ghost ? C.ghost : C.muted, 'font-weight': 'bold' })
+  return el(
+    'g',
+    { transform: `translate(${n(P(t.pos.x))} ${n(P(t.pos.y))})` },
+    el(
+      'g',
+      { transform: `rotate(${t.rotation ?? 0})` },
+      el('rect', { x: -len / 2, y: -th / 2, width: len, height: th, fill: ghost ? 'none' : '#f3f4f6', stroke: color, 'stroke-width': 1.4 * k }) +
+        el('path', { d: zig, fill: 'none', stroke: color, 'stroke-width': 0.9 * k }),
+    ) + label,
+  )
+}
+
+export function renderPlotSvg(project: Project, assignment: Assignment, k: number, mode: PlotMode = 'sound'): string {
   const { stage } = project
-  const vb = plotViewBox(project)
+  const vb = plotViewBox(project, mode)
+  const view = viewSettings(project)
+  const lighting = mode === 'lighting'
   const P = (m: number) => m * PX_PER_M
   const W = P(stage.width)
   const D = P(stage.depth)
   const boxById = new Map(project.boxes.map((b) => [b.id, b]))
   const parts: string[] = []
 
-  // Bühne, Raster, Maßstab
+  // Bühne, Raster, Maßstab (im Lichtplot am Rand, damit er nicht mit Traversen kollidiert)
+  const scaleY = lighting ? vb.y + 8 * k : -8 * k
+  const scaleX = lighting ? vb.x + vb.w - 8 * k : -8 * k
   parts.push(el('rect', { x: 0, y: 0, width: W, height: D, fill: C.floor }))
   const step = stage.width > 24 || stage.depth > 24 ? 2 : 1
   for (let m = 0; m <= stage.width + 1e-9; m += step) {
     parts.push(el('line', { x1: P(m), y1: 0, x2: P(m), y2: D, stroke: m % 5 === 0 ? C.gridMajor : C.grid, 'stroke-width': 0.6 * k }))
-    parts.push(text(P(m), -8 * k, 8 * k, String(m), { fill: C.label }))
+    parts.push(text(P(m), scaleY, 8 * k, String(m), { fill: C.label }))
   }
   for (let m = 0; m <= stage.depth + 1e-9; m += step) {
     parts.push(el('line', { x1: 0, y1: P(m), x2: W, y2: P(m), stroke: m % 5 === 0 ? C.gridMajor : C.grid, 'stroke-width': 0.6 * k }))
-    parts.push(text(-8 * k, P(m), 8 * k, String(m), { fill: C.label }))
+    parts.push(text(scaleX, P(m), 8 * k, String(m), { fill: C.label }))
   }
   parts.push(el('rect', { x: 0, y: 0, width: W, height: D, fill: 'none', stroke: C.edge, 'stroke-width': 1.2 * k }))
   parts.push(el('line', { x1: 0, y1: D, x2: W, y2: D, stroke: C.edge, 'stroke-width': 4 * k }))
@@ -135,9 +221,26 @@ export function renderPlotSvg(project: Project, assignment: Assignment, k: numbe
   // Publikumszeile ganz unten, unter PA und Subs vor der Bühne
   parts.push(text(W / 2, vb.y + vb.h - 9 * k, 10 * k, `PUBLIKUM · ${size}`, { fill: C.label, 'letter-spacing': 1 * k }))
 
+  // Tonplot mit eingeblendetem Licht: Traversen und Lampen grau im Hintergrund
+  if (!lighting && view.lights) {
+    for (const t of project.trusses) parts.push(trussSvg(t, k, true))
+    for (const f of project.fixtures)
+      parts.push(
+        el(
+          'g',
+          { transform: `translate(${n(P(f.pos.x))} ${n(P(f.pos.y))}) rotate(${f.rotation ?? 0})` },
+          fixtureShape(f.kind, FIXTURE_SIZE * k * 0.62, { fill: C.ghostFill, stroke: C.ghost, 'stroke-width': 0.8 * k }),
+        ),
+      )
+  }
+
   // Kabel (Kabelanzahlen werden zuletzt gezeichnet, damit sie über den Knoten liegen)
   const cableLabels: string[] = []
-  if ((project.cableView ?? 'bundled') === 'bundled') {
+  const cableStart = parts.length
+  const showCables = !lighting || view.sound.cables
+  if (!showCables) {
+    // Lichtplot ohne Kabel
+  } else if ((project.cableView ?? 'bundled') === 'bundled') {
     for (const tree of routeProject(project, assignment)) {
       const { route } = tree
       if (route.total === 0) continue
@@ -229,6 +332,16 @@ export function renderPlotSvg(project: Project, assignment: Assignment, k: numbe
       const from = source ? deviceById.get(source.deviceId) : undefined
       if (from) parts.push(line(pos, from.pos, deviceColor(project, assignment, from.id) ?? C.muted, `${n(5 * k)} ${n(3 * k)}`))
     }
+  }
+
+  if (lighting) {
+    // Kabel nur als blasse Andeutung, ohne Zahlen
+    const cables = parts.splice(cableStart)
+    if (cables.length) parts.push(el('g', { opacity: 0.18 }, cables.join('')))
+    cableLabels.length = 0
+    parts.push(...ghostSound(project, view, k), ...lightsSvg(project, k))
+    const body = parts.join('')
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${n(vb.x)} ${n(vb.y)} ${n(vb.w)} ${n(vb.h)}" width="${n(vb.w)}" height="${n(vb.h)}">${body}</svg>`
   }
 
   // Geräte (Weiche, Endstufe)
@@ -350,4 +463,116 @@ export function renderPlotSvg(project: Project, assignment: Assignment, k: numbe
 
   const body = parts.join('') + cableLabels.join('')
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${n(vb.x)} ${n(vb.y)} ${n(vb.w)} ${n(vb.h)}" width="${n(vb.w)}" height="${n(vb.h)}">${body}</svg>`
+}
+
+/** Ton-Elemente klein und grau für den Lichtplot (wie components/stage/ghost.tsx). */
+function ghostSound(project: Project, view: ReturnType<typeof viewSettings>, k: number): string[] {
+  const P = (m: number) => m * PX_PER_M
+  const g = 0.62
+  const body: Attrs = { fill: C.ghostFill, stroke: C.ghost, 'stroke-width': 0.8 * k }
+  const label = (y: number, t: string) => text(0, y, 8 * k, t, { fill: C.ghost, 'font-weight': 'bold' })
+  const at = (pos: Vec2, inner: string) => el('g', { transform: `translate(${n(P(pos.x))} ${n(P(pos.y))})` }, inner)
+  const out: string[] = []
+  if (view.sound.boxes)
+    for (const d of project.devices) {
+      const w = DEVICE_SHAPE.w * k * g
+      const h = DEVICE_SHAPE.h * k * g
+      out.push(at(d.pos, el('rect', { x: -w / 2, y: -h / 2, width: w, height: h, rx: 2 * k, ...body }) + label(h / 2 + 8 * k, d.name)))
+    }
+  for (const o of project.outputs) {
+    if (!(OFFSTAGE_OUTPUTS.includes(o.kind) ? view.sound.pa : view.sound.monitors)) continue
+    const spec = OUTPUT_SHAPES[o.kind]
+    const kk = k * g
+    const w = spec.w * kk
+    const h = spec.h * kk
+    const shape =
+      spec.shape === 'trapezoid'
+        ? el('path', { d: `M ${n(-w / 2)} ${n(h / 2)} L ${n(w / 2)} ${n(h / 2)} L ${n(w / 3)} ${n(-h / 2)} L ${n(-w / 3)} ${n(-h / 2)} Z`, ...body })
+        : el('rect', { x: -w / 2, y: -h / 2, width: w, height: h, rx: spec.rx * kk, ...body })
+    const arrow = frontArrowPoints(spec, kk)
+    out.push(
+      at(
+        o.pos,
+        el('g', { transform: `rotate(${o.rotation ?? 0})` }, shape + (arrow ? el('polygon', { points: arrow, fill: C.ghost }) : '')) +
+          label(h / 2 + 8 * k, o.name),
+      ),
+    )
+  }
+  if (view.sound.instruments)
+    for (const gr of project.groups) {
+      const amp = gr.form === 'amp'
+      const r = 17 * k * g
+      const shape = amp
+        ? el(
+            'g',
+            { transform: `rotate(${gr.rotation ?? 0})` },
+            el('rect', { x: (-AMP_SHAPE.w / 2) * k * g, y: (-AMP_SHAPE.h / 2) * k * g, width: AMP_SHAPE.w * k * g, height: AMP_SHAPE.h * k * g, rx: 2 * k, ...body }),
+          )
+        : el('circle', { r, ...body })
+      out.push(at(gr.pos, shape + label((amp ? (AMP_SHAPE.h / 2) * k * g : r) + 8 * k, gr.name)))
+    }
+  if (view.sound.boxes)
+    for (const b of project.boxes) {
+      const s = 30 * k * g
+      out.push(at(b.pos, el('rect', { x: -s / 2, y: -s / 2, width: s, height: s, rx: 3 * k, ...body }) + text(0, 0, 9 * k, b.name, { fill: C.ghost, 'font-weight': 'bold' })))
+    }
+  return out
+}
+
+/** Traversen, Lichtkegel und Lampen mit Nummer und Adresse (wie components/stage/lightNodes.tsx). */
+function lightsSvg(project: Project, k: number): string[] {
+  const P = (m: number) => m * PX_PER_M
+  const problems = new Set(dmxIssues(project.fixtures).filter((i) => i.level === 'error').flatMap((i) => i.fixtureIds))
+  const out: string[] = project.trusses.map((t) => trussSvg(t, k, false))
+  const s = FIXTURE_SIZE * k
+  for (const f of project.fixtures) {
+    const beam = FIXTURE_TYPES[f.kind].beam
+    if (beam <= 0) continue
+    const start = s * 0.5
+    out.push(
+      el('polygon', {
+        transform: `translate(${n(P(f.pos.x))} ${n(P(f.pos.y))}) rotate(${f.rotation ?? 0})`,
+        points: beamPolygon(beam, Math.max(1.6 * PX_PER_M, start + 24 * k), start),
+        fill: C.beam,
+        'fill-opacity': 0.22,
+      }),
+    )
+  }
+  for (const f of project.fixtures) {
+    const type = FIXTURE_TYPES[f.kind]
+    const problem = problems.has(f.id)
+    const rot = f.rotation ?? 0
+    const lbl = labelPlacement(rot, s, k)
+    const address = f.address === undefined ? '-' : formatAddress(f.universe, f.address)
+    const anchor = lbl.anchor
+    const front =
+      type.beam > 0 ? el('polygon', { points: `${n(-3.5 * k)},${n(s * 0.62)} ${n(3.5 * k)},${n(s * 0.62)} 0,${n(s * 0.62 + 5 * k)}`, fill: C.beam }) : ''
+    const lens = type.shape === 'square' ? el('circle', { cy: (s / 2) * 0.62, r: (s / 2) * 0.22, fill: C.beam }) : ''
+    out.push(
+      el(
+        'g',
+        { transform: `translate(${n(P(f.pos.x))} ${n(P(f.pos.y))})` },
+        el(
+          'g',
+          { transform: `rotate(${rot})` },
+          fixtureShape(f.kind, s, {
+            fill: '#ffffff',
+            stroke: problem ? C.danger : C.text,
+            'stroke-width': 1.3 * k,
+            'stroke-dasharray': problem ? `${n(3 * k)} ${n(2 * k)}` : undefined,
+          }) +
+            lens +
+            front,
+        ) +
+          text(0, 0, (type.abbr.length > 2 ? 6 : 7) * k, type.abbr, { fill: C.text, 'font-weight': 'bold' }) +
+          text(lbl.x, lbl.y, 9.5 * k, `#${f.number}`, { fill: C.text, 'font-weight': 'bold', 'text-anchor': anchor }) +
+          text(lbl.x, lbl.y + 10 * k, 8.5 * k, address, {
+            fill: problem ? C.danger : f.address === undefined ? C.warning : C.muted,
+            'font-weight': 'bold',
+            'text-anchor': anchor,
+          }),
+      ),
+    )
+  }
+  return out
 }

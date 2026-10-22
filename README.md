@@ -2,7 +2,8 @@
 
 Mobilfreundlicher Stageplot-Editor für Veranstaltungstechnik. Instrumente auf einem Bühnenplan
 platzieren – das Tool ordnet jedes Instrument automatisch der nächstgelegenen Stagebox zu und
-erzeugt daraus Inputliste, Outputliste und Patchplan. Läuft komplett im Browser, auch offline.
+erzeugt daraus Inputliste, Outputliste und Patchplan. Per Schalter wird daraus ein Lichtplot mit
+Lampen, Traversen und DMX-Adressliste. Läuft komplett im Browser, auch offline.
 
 ## Features
 
@@ -26,8 +27,13 @@ erzeugt daraus Inputliste, Outputliste und Patchplan. Läuft komplett im Browser
 - **Gebündelte Kabelwege**: rechtwinklige Strippen je Box, ohne Umweg zusammengelegt, Dicke und
   Anzahl je Bündel (alternativ Luftlinie)
 - **Listen** je Box: Port, Quelle, Abnahme, Abstand; rote Warnungen mit konkretem Hinweis, was fehlt
-- **Export**: PDF (Bühnenplan als Vektorgrafik + Input-, Outputliste und PA-Signalweg), JSON-Projektdatei;
-  Import mit Prüfung
+- **Lichtplot** (Schalter „Ton | Licht“, eigene Optik): Lampen aus einer Bibliothek (PAR, Moving
+  Heads, Profiler, Blinder, Strobe, LED-Bar, Nebel …) mit Nummer, Modus/Kanälen, Universe,
+  Adresse, Leuchtrichtung, Farbe; Traversen mit Länge und Richtung, Lampen rasten ein und wandern
+  mit; auch neben, vor und hinter der Bühne. Auto-Adressierung, Adressliste je Universe,
+  Warnungen bei Überschneidungen. Je Modus einstellbar, was vom anderen Gewerk grau zu sehen ist
+- **Export**: PDF Ton, Licht oder komplett (Pläne als Vektorgrafik, Input-, Outputliste,
+  PA-Signalweg, DMX-Adressliste), JSON-Projektdatei mit Patch und Adressliste; Import mit Prüfung
 - **Rückgängig/Wiederholen**, automatische Speicherung im Browser
 - **Offline-fähig** und als App auf dem Home-Bildschirm installierbar
 - Für Handy, iPad und Desktop, Dark/Light Mode automatisch
@@ -39,7 +45,8 @@ erzeugt daraus Inputliste, Outputliste und Patchplan. Läuft komplett im Browser
 | Element hinzufügen | Toolbar: Instrument, Output, Stagebox |
 | Verschieben | Element ziehen |
 | Bearbeiten, Pin, Löschen | Element antippen |
-| Bühnengröße, Kabelansicht, Raster | Toolbar: Bühne |
+| Bühnengröße, Kabelansicht, Raster, Sichtbarkeit | Toolbar: Bühne |
+| Lichtplot | Schalter „Ton \| Licht“ oben, dann Lampe, Traverse, Adressen |
 | PDF / JSON / Neues Projekt | Teilen-Symbol oben rechts |
 | Zoomen | `+` / `−` am Plan, Pinch, Mausrad (Handy: Strg/Cmd + Mausrad) |
 | Rückgängig | Pfeile oben rechts, Strg/Cmd+Z |
@@ -62,8 +69,8 @@ Stack: Vite, React, TypeScript (strict), Vitest; PDF mit jsPDF, svg2pdf.js und j
 
 ```
 src/
-  model/       Datenmodell, Standardwerte, Vorlagen, Drum-Konfiguration
-  lib/         reine Logik: assign (Zuordnung), cables (Kabelbündel), geometry, viewport,
+  model/       Datenmodell, Standardwerte, Vorlagen, Drum-Konfiguration, Geräte, Lampen
+  lib/         reine Logik: assign (Zuordnung), cables (Kabelbündel), dmx (Adressen), geometry, viewport,
                schema (Import/Validierung), storage, export/ (JSON, PDF, Druck-SVG, Tabellen)
   state/       Reducer, Undo/Redo-History, Provider
   components/  stage/ (SVG-Plan), lists/, editors/, toolbar/, ui/

@@ -225,3 +225,39 @@ Im Reiter der AK-Seite läuft der Editor im iframe; Safari ignoriert dort Downlo
 Download-Link öffnet im iframe notfalls einen neuen Tab statt den Editor wegzunavigieren, und das
 Projekt-Menü bietet „JSON in Zwischenablage kopieren“ sowie (nur eingebettet) „Im eigenen Tab
 öffnen“. Der eigene Tab läuft auf derselben Domain und sieht deshalb dasselbe gespeicherte Projekt.
+
+## D30 – Lichtplot als zweiter Modus desselben Projekts
+Ton und Licht sind ein Projekt (eine Datei, eine Bühne, ein Undo-Verlauf). Der Schalter „Ton |
+Licht“ wechselt nur die Ansicht: Werkzeuge, Seitenleiste, Plan und Farbschema. Der Modus ist
+Ansichtssache und wird pro Browser gemerkt (`state/mode.ts`), nicht im Projekt. Was vom anderen
+Gewerk zu sehen ist, gehört dagegen zum Projekt (`project.view`), weil es auch das PDF bestimmt:
+Standard im Lichtmodus Instrumente und PA/Subs, im Tonmodus kein Licht. Eingeblendetes ist klein,
+grau und nicht anfassbar, damit man im Lichtplot nicht versehentlich den Tonplot verschiebt;
+Kabel erscheinen im Licht höchstens als blasse Andeutung ohne Zahlen.
+Optik: warmer Akzent und Verlauf Amber → Magenta → Violett, im Dunkeln eine fast schwarze Bühne.
+Beim Umschalten läuft eine Farbwelle vom Schalter aus über die Seite (~0,4 s), unter der
+umgeschaltet wird; bei „Bewegung reduzieren“ wird sofort umgeschaltet.
+
+## D31 – Lampen, Traversen und Richtung
+Lampen haben einen Typ aus einer festen Bibliothek (`model/lights.ts`) mit typischen Modi; die
+Kanalzahl ist je Lampe frei (eigener Modus). Leuchtrichtung wie bei Lautsprechern in Grad,
+0° = zum Publikum; im Plan zeigt ein Lichtkegel die Richtung, Nummer und Adresse stehen auf der
+Rückseite. Neue Lampen vor der Bühne zeigen zur Bühne. Traversen sind gerade Stücke mit Länge
+und Richtung (0° = quer, 90° = längs). Eine Lampe näher als 40 cm an einer Traverse rastet
+darauf ein und merkt sich die Traverse; verschiebt, dreht oder kürzt man die Traverse, wandern
+ihre Lampen mit (gleiche Lage entlang der Traverse, Drehung um denselben Winkel). Löscht man
+eine Traverse, bleiben die Lampen frei stehen. Lampen und Traversen dürfen bis 8 m neben, vor
+und hinter der Bühne stehen; der Plan-Ausschnitt wächst mit, steht aber während eines Drags
+still. Keine Hängehöhe und keine DMX-Kabelwege (nur Adressen).
+
+## D32 – DMX-Adressen
+Adressen als `Universe.Adresse` mit drei Stellen (`1.001`), Bereich aus Startadresse und
+Kanalzahl. Hinweise: Überschneidungen und Bereiche über 512 sind Fehler (rot im Plan und in der
+Liste), fehlende Adressen und doppelte Lampennummern Warnungen. Auto-Adressierung geht Traverse
+für Traverse von hinten nach vorne, auf jeder Traverse vom Anfang zum Ende, danach freie Lampen;
+wahlweise nur Lampen ohne Adresse (vorhandene bleiben, Lücken werden genutzt) oder alle neu,
+optional mit neuen Lampennummern in derselben Reihenfolge. Eine Lampe wird nie auf zwei
+Universes verteilt. Die Adressliste steht in der Seitenleiste, im PDF „Licht“ und im
+`patch.dmx` der JSON-Datei (wie D29 nur zum Nachlesen).
+PDF: „Ton“, „Licht“ oder „komplett“; der Lichtplot ist eine eigene Seite mit Legende der
+Lampentypen, danach die Adressliste je Universe und die DMX-Hinweise.

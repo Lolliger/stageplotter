@@ -2,34 +2,45 @@ import { useRef, useState } from 'react'
 import { exportFileName, saveFile } from '../../lib/export/files'
 import { parseProjectFile, serializeProject } from '../../lib/export/json'
 import { createDefaultProject } from '../../model/defaults'
-import type { Project } from '../../model/types'
+import type { PlotMode, Project } from '../../model/types'
 import { useProject } from '../../state/useProject'
 import { ConfirmButton } from '../ui/ConfirmButton'
 
-export function ProjectMenu({ onDone }: { onDone: () => void }) {
+type PdfKind = 'sound' | 'light' | 'all'
+
+const PDF_CHOICES: { kind: PdfKind; label: string; meta: string }[] = [
+  { kind: 'sound', label: 'PDF Ton', meta: 'Bühnenplan, Input-, Outputliste und PA-Signalweg' },
+  { kind: 'light', label: 'PDF Licht', meta: 'Lichtplot mit Lampentypen und DMX-Adressliste' },
+  { kind: 'all', label: 'PDF komplett', meta: 'Ton und Licht in einer Datei' },
+]
+
+export function ProjectMenu({ mode, onDone }: { mode: PlotMode; onDone: () => void }) {
   const { project, dispatch, assignment } = useProject()
   const fileInput = useRef<HTMLInputElement>(null)
   const [pending, setPending] = useState<Project | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [pdfBusy, setPdfBusy] = useState(false)
+  const [pdfBusy, setPdfBusy] = useState<PdfKind | null>(null)
   const [copied, setCopied] = useState(false)
   // Im iframe (Reiter der AK-Seite) blockieren manche Browser (Safari) Downloads.
   const embedded = typeof window !== 'undefined' && window.self !== window.top
 
-  const exportPdf = async () => {
+  const exportPdf = async (kind: PdfKind) => {
     setError(null)
-    setPdfBusy(true)
+    setPdfBusy(kind)
     try {
       // PDF-Bibliotheken erst bei Bedarf laden (eigener Chunk).
       const { buildPdf } = await import('../../lib/export/pdf')
-      const blob = await buildPdf(project, assignment)
-      await saveFile(blob, exportFileName(project.name, 'pdf'))
+      const blob = await buildPdf(project, assignment, { sound: kind !== 'light', light: kind !== 'sound' })
+      const suffix = kind === 'light' ? ' Licht' : kind === 'sound' ? ' Ton' : ''
+      await saveFile(blob, exportFileName(project.name + suffix, 'pdf'))
     } catch (e) {
       setError(`PDF konnte nicht erstellt werden: ${e instanceof Error ? e.message : String(e)}`)
     } finally {
-      setPdfBusy(false)
+      setPdfBusy(null)
     }
   }
+  // Der aktuelle Modus steht vorne
+  const pdfChoices = mode === 'lighting' ? [PDF_CHOICES[1], PDF_CHOICES[0], PDF_CHOICES[2]] : PDF_CHOICES
 
   const exportJson = () => {
     const blob = new Blob([serializeProject(project, new Date(), assignment)], { type: 'application/json' })
@@ -60,13 +71,15 @@ export function ProjectMenu({ onDone }: { onDone: () => void }) {
       <section className="menu-section">
         <h3>Exportieren</h3>
         <div className="menu-grid">
-          <button type="button" className="template-btn" onClick={() => void exportPdf()} disabled={pdfBusy}>
-            <span className="template-label">{pdfBusy ? 'PDF wird erstellt …' : 'PDF'}</span>
-            <span className="template-meta">Bühnenplan, Input-, Outputliste und PA-Signalweg zum Drucken oder Mailen</span>
-          </button>
+          {pdfChoices.map((c) => (
+            <button key={c.kind} type="button" className="template-btn" onClick={() => void exportPdf(c.kind)} disabled={pdfBusy !== null}>
+              <span className="template-label">{pdfBusy === c.kind ? 'PDF wird erstellt …' : c.label}</span>
+              <span className="template-meta">{c.meta}</span>
+            </button>
+          ))}
           <button type="button" className="template-btn" onClick={exportJson}>
             <span className="template-label">Projektdatei (JSON)</span>
-            <span className="template-meta">Zum Sichern, Weitergeben oder auf anderem Gerät öffnen – mit Patch, Mikros und Signalweg</span>
+            <span className="template-meta">Zum Sichern, Weitergeben oder auf anderem Gerät öffnen – mit Patch, Mikros, Signalweg und DMX-Adressen</span>
           </button>
         </div>
         <div className="menu-row">
