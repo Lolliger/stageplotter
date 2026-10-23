@@ -263,3 +263,21 @@ Universes verteilt. Die Adressliste steht in der Seitenleiste, im PDF „Licht�
 `patch.dmx` der JSON-Datei (wie D29 nur zum Nachlesen).
 PDF: „Ton“, „Licht“ oder „komplett“; der Lichtplot ist eine eigene Seite mit Legende der
 Lampentypen, danach die Adressliste je Universe und die DMX-Hinweise.
+
+## D33 – Mehrere Plots und Plot pro Event
+**Meine Plots:** Im Browser liegen beliebig viele Plots, jeder unter eigenem Schlüssel
+(`stageplot.project.<id>`), dazu eine Liste mit Name und Änderungszeit (`stageplot.projects`)
+und der zuletzt geöffnete (`stageplot.current`). Das frühere Einzelprojekt (`stageplot.project`)
+wird beim ersten Start in die Liste übernommen. „Neuer Plot“ und Import legen einen neuen Plot an,
+statt den offenen zu ersetzen; Wechseln beginnt einen neuen Undo-Verlauf. Logik in
+`lib/library.ts` (Speicher injiziert, testbar).
+**Plot zum Event:** Mit `?event=<uuid>` lädt und speichert der Editor den Plot über die
+AK-Technik-App (`/api/stageplot/events/<id>`, gleiche Domain, Login-Cookie geht mit). Gespeichert
+wird automatisch eine Sekunde nach der letzten Änderung, immer nur eine Anfrage gleichzeitig
+(`EventSaver` in `lib/remote.ts`). Jede Speicherung trägt die Revision, auf der sie beruht. Hat
+inzwischen jemand anderes gespeichert, antwortet der Server mit 409 und dessen Stand; der Editor
+fragt dann: „Stand von X laden“ oder „Meinen Stand speichern“ (überschreibt). Kein Live-
+Mitbearbeiten. Zuschauer-Accounts können ansehen und exportieren, Änderungen werden nicht
+gespeichert. Der Event-Plot landet nicht im localStorage; „Kopie unter Meine Plots speichern“
+und „Aus Meine Plots übernehmen“ verbinden beides. Der Service Worker cacht nur noch Dateien
+unterhalb des App-Ordners, damit die API nie aus dem Cache antwortet.

@@ -960,3 +960,50 @@ button.chip {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
+
+/* Meine Plots / Plot zum Event (D33) */
+.template-btn.is-current {
+  border-color: var(--accent);
+}
+
+.app-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 32px 16px;
+}
+
+.sync-label {
+  margin-left: 8px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.sync-label.is-error {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.sync-banner {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--warning-bg);
+  color: var(--text);
+}
+
+.sync-banner.is-error {
+  background: var(--danger-bg);
+}
+
+.sync-banner p {
+  margin: 0;
+  font-size: 0.9rem;
+}

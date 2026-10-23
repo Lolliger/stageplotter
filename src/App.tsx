@@ -21,12 +21,13 @@ import { Warnings } from './components/lists/Warnings'
 import { StagePlot } from './components/stage/StagePlot'
 import { Toolbar } from './components/toolbar/Toolbar'
 import { ModeSwitch } from './components/ui/ModeSwitch'
+import { SyncBanner, SyncLabel } from './components/ui/SyncStatus'
 import { loadMode, saveMode, type PlotMode } from './state/mode'
 import { createStagebox } from './model/defaults'
 import { createTruss } from './model/lights'
 import { DEVICE_LABELS } from './model/devices'
 import type { ElementRef } from './model/types'
-import { ProjectProvider } from './state/ProjectProvider'
+import { WorkspaceProvider } from './state/WorkspaceProvider'
 import { useProject } from './state/useProject'
 import './styles/layout.css'
 import './styles/lists.css'
@@ -199,6 +200,7 @@ function Workspace() {
       <header className="topbar">
         <h1>
           stageplot<small>{project.name}</small>
+          <SyncLabel />
         </h1>
         <ModeSwitch mode={mode} onChange={switchMode} />
         <Toolbar
@@ -242,6 +244,7 @@ function Workspace() {
           </button>
         </div>
       </header>
+      <SyncBanner />
       <main className="workspace">
         <section className="stage-panel" aria-label="Bühnenplan">
           <StagePlot mode={mode} selected={selected} onSelect={select} />
@@ -277,8 +280,8 @@ function Workspace() {
 
 export default function App() {
   return (
-    <ProjectProvider>
+    <WorkspaceProvider>
       <Workspace />
-    </ProjectProvider>
+    </WorkspaceProvider>
   )
 }
