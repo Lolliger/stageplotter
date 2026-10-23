@@ -1,17 +1,20 @@
-import { useEffect, useMemo, useReducer, type ReactNode } from 'react'
+import { useEffect, useMemo, useReducer, useRef, type ReactNode } from 'react'
 import { assign } from '../lib/assign'
-import { loadProject, saveProject } from '../lib/storage'
-import { createDefaultProject } from '../model/defaults'
 import type { Project } from '../model/types'
 import { ProjectContext, type ProjectStore } from './context'
 import { historyReducer, initHistory } from './history'
 
-const SAVE_DELAY = 300
+interface Props {
+  initial: Project
+  /** Speichert den Stand (lokal oder beim Event, siehe WorkspaceProvider). */
+  onPersist: (project: Project) => void
+  /** Wartezeit nach der letzten Änderung, damit Drag nicht bei jedem Pixel speichert. */
+  saveDelay?: number
+  children: ReactNode
+}
 
-export function ProjectProvider({ initial, children }: { initial?: Project; children: ReactNode }) {
-  const [history, dispatch] = useReducer(historyReducer, initial, (p) =>
-    initHistory(p ?? loadProject() ?? createDefaultProject()),
-  )
+export function ProjectProvider({ initial, onPersist, saveDelay = 300, children }: Props) {
+  const [history, dispatch] = useReducer(historyReducer, initial, initHistory)
   const project = history.present
   const assignment = useMemo(() => assign(project), [project])
   const canUndo = history.past.length > 0
@@ -29,23 +32,41 @@ export function ProjectProvider({ initial, children }: { initial?: Project; chil
     [project, assignment, canUndo, canRedo],
   )
 
-  // Debounced speichern, damit Drag nicht bei jedem Pixel schreibt.
+  const persist = useRef(onPersist)
+  const latest = useRef(project)
+  const dirty = useRef(false)
   useEffect(() => {
-    const t = setTimeout(() => saveProject(project), SAVE_DELAY)
-    return () => clearTimeout(t)
-  }, [project])
+    persist.current = onPersist
+  }, [onPersist])
 
-  // Beim Verlassen/Wegwechseln sofort sichern (iOS beendet Tabs ohne Vorwarnung).
   useEffect(() => {
-    const flush = () => saveProject(project)
+    latest.current = project
+    if (project === initial) return
+    dirty.current = true
+    const t = setTimeout(() => {
+      dirty.current = false
+      persist.current(project)
+    }, saveDelay)
+    return () => clearTimeout(t)
+  }, [project, initial, saveDelay])
+
+  // Beim Verlassen, Wegwechseln und beim Wechsel auf ein anderes Projekt sofort sichern
+  // (iOS beendet Tabs ohne Vorwarnung).
+  useEffect(() => {
+    const flush = () => {
+      if (!dirty.current) return
+      dirty.current = false
+      persist.current(latest.current)
+    }
     const onVisibility = () => document.visibilityState === 'hidden' && flush()
     window.addEventListener('pagehide', flush)
     document.addEventListener('visibilitychange', onVisibility)
     return () => {
       window.removeEventListener('pagehide', flush)
       document.removeEventListener('visibilitychange', onVisibility)
+      flush()
     }
-  }, [project])
+  }, [])
 
   return <ProjectContext.Provider value={store}>{children}</ProjectContext.Provider>
 }

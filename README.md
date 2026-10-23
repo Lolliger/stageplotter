@@ -63,7 +63,8 @@ npm run preview  # Build lokal ansehen (inkl. Service Worker)
 ```
 
 Stack: Vite, React, TypeScript (strict), Vitest; PDF mit jsPDF, svg2pdf.js und jspdf-autotable
-(nur beim Export nachgeladen). Kein Backend.
+(nur beim Export nachgeladen). Kein eigenes Backend: Plots liegen im Browser („Meine Plots“), in
+der AK-Technik-App mit `?event=<id>` beim Event (siehe docs/decisions.md, D33).
 
 ### Struktur
 
@@ -71,7 +72,7 @@ Stack: Vite, React, TypeScript (strict), Vitest; PDF mit jsPDF, svg2pdf.js und j
 src/
   model/       Datenmodell, Standardwerte, Vorlagen, Drum-Konfiguration, Geräte, Lampen
   lib/         reine Logik: assign (Zuordnung), cables (Kabelbündel), dmx (Adressen), geometry, viewport,
-               schema (Import/Validierung), storage, export/ (JSON, PDF, Druck-SVG, Tabellen)
+               schema (Import/Validierung), library (Meine Plots), remote (Plot zum Event), export/ (JSON, PDF, Druck-SVG, Tabellen)
   state/       Reducer, Undo/Redo-History, Provider
   components/  stage/ (SVG-Plan), lists/, editors/, toolbar/, ui/
   styles/      Theme (Dark/Light), Layout
