@@ -30,6 +30,8 @@ Vor jedem Commit: `npm run lint && npm test && npm run build` muss grün sein.
 - Bildschirm-Plan (`components/stage`) und Druck-SVG (`lib/export/plotSvg.ts`) zeichnen dieselben
   Elemente – Änderungen an der Darstellung in beiden nachziehen.
 - Neue Projektfelder immer auch in `src/lib/schema.ts` (Import/localStorage) ergänzen.
+- Speichern läuft über `WorkspaceProvider`: lokal mehrere Plots (`lib/library.ts`), mit
+  `?event=<uuid>` beim Event in der AK-Technik-App (`lib/remote.ts`, D33).
 - PDF-Bibliotheken nur per dynamischem `import()` laden, nie statisch im Hauptbundle.
 - Projektänderungen laufen über `dispatch` und damit durch die Undo-History; Drag-Bewegungen
   tragen einen `coalesce`-Schlüssel.

@@ -35,7 +35,9 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const { request } = event
-  if (request.method !== 'GET' || new URL(request.url).origin !== self.location.origin) return
+  // Nur Dateien der App selbst. Alles andere (z. B. /api/stageplot/… der AK-Technik-App auf
+  // derselben Domain) geht ungecacht ans Netz, sonst käme ein veralteter Plot aus dem Cache.
+  if (request.method !== 'GET' || !request.url.startsWith(APP_ROOT)) return
 
   // Seitenaufrufe: erst Netz (aktuelle Version), offline die zwischengespeicherte App.
   if (request.mode === 'navigate') {
