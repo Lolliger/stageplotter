@@ -13,12 +13,18 @@
   width: 100%;
 }
 
-/* Handy: Leiste unter dem Plan, damit nichts am Bühnenrand verdeckt wird. */
+/* Handy: Kapsel unter dem Plan (rechts), damit nichts am Bühnenrand verdeckt
+   wird. Gleiche Fläche wie die schwebende Variante, nur waagrecht. */
 .zoom-controls {
   display: flex;
-  justify-content: flex-end;
   gap: 4px;
-  padding-top: 2px;
+  width: fit-content;
+  margin: 6px 0 0 auto;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  box-shadow: var(--shadow);
 }
 
 /* Breite Layouts: schwebend in der Ecke, dort ist Platz. */
@@ -28,11 +34,7 @@
     right: 6px;
     bottom: 6px;
     flex-direction: column;
-    padding: 3px;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    background: color-mix(in srgb, var(--surface) 88%, transparent);
-    box-shadow: var(--shadow);
+    margin: 0;
   }
 }
 

@@ -35,6 +35,23 @@
   margin-left: 6px;
 }
 
+/* Handy: Projektname als zweite Zeile unter dem Titel (wie ein Untertitel in
+   der iOS-Navigationsleiste), statt beides in einer Zeile abzuschneiden. */
+@media (max-width: 899px) {
+  .topbar h1 {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+  }
+
+  .topbar h1 small {
+    margin-left: 0;
+    font-size: 0.72rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
 .workspace {
   flex: 1;
   display: flex;
