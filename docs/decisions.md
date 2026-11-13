@@ -281,3 +281,10 @@ Mitbearbeiten. Zuschauer-Accounts können ansehen und exportieren, Änderungen w
 gespeichert. Der Event-Plot landet nicht im localStorage; „Kopie unter Meine Plots speichern“
 und „Aus Meine Plots übernehmen“ verbinden beides. Der Service Worker cacht nur noch Dateien
 unterhalb des App-Ordners, damit die API nie aus dem Cache antwortet.
+
+## D34 – Ruhigere Oberfläche am Handy
+
+Am Handy stand der Projektname neben dem Titel und beides wurde abgeschnitten („stageplo…“);
+jetzt steht er als kleine zweite Zeile darunter. Die Zoom-Knöpfe unter dem Plan sitzen in
+derselben Kapsel wie die schwebende Variante am Desktop, statt lose rechts zu hängen. Leere
+Listen zeigen einen ruhigen Hinweis ohne gestrichelten Kasten.

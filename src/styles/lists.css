@@ -180,11 +180,11 @@ button.warning-text {
   font-style: italic;
 }
 
+/* Leere Liste: ruhiger Hinweis ohne gestrichelten Kasten. */
 .empty {
-  padding: 16px;
+  padding: 20px 16px;
   text-align: center;
-  border: 1px dashed var(--border);
-  border-radius: var(--radius);
+  color: var(--text-muted);
 }
 
 .empty p {
