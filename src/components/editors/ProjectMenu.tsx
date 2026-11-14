@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { exportFileName, saveFile } from '../../lib/export/files'
 import { parseProjectFile, serializeProject } from '../../lib/export/json'
+import { consoleCsv } from '../../lib/export/console'
 import { createDefaultProject } from '../../model/defaults'
 import type { PlotMode, Project } from '../../model/types'
 import type { ProjectMeta } from '../../lib/library'
@@ -50,6 +51,11 @@ export function ProjectMenu({ mode, onDone }: { mode: PlotMode; onDone: () => vo
     void saveFile(blob, exportFileName(project.name, 'json'))
   }
 
+  const exportConsole = () => {
+    const blob = new Blob([consoleCsv(project, assignment)], { type: 'text/csv;charset=utf-8' })
+    void saveFile(blob, exportFileName(project.name, 'csv'))
+  }
+
   const copyJson = async () => {
     setError(null)
     try {
@@ -93,6 +99,10 @@ export function ProjectMenu({ mode, onDone }: { mode: PlotMode; onDone: () => vo
               <span className="template-meta">{c.meta}</span>
             </button>
           ))}
+          <button type="button" className="template-btn" onClick={exportConsole}>
+            <span className="template-label">Kanalliste fürs Pult (CSV)</span>
+            <span className="template-meta">Kanäle in der Reihenfolge der Stagebox-Eingänge, mit Kurznamen in 8 Zeichen fürs SQ – zum Abtippen am Pult oder in MixPad</span>
+          </button>
           <button type="button" className="template-btn" onClick={exportJson}>
             <span className="template-label">Projektdatei (JSON)</span>
             <span className="template-meta">Zum Sichern, Weitergeben oder auf anderem Gerät öffnen – mit Patch, Mikros, Signalweg und DMX-Adressen</span>
