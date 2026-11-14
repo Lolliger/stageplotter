@@ -288,3 +288,13 @@ Am Handy stand der Projektname neben dem Titel und beides wurde abgeschnitten (�
 jetzt steht er als kleine zweite Zeile darunter. Die Zoom-Knöpfe unter dem Plan sitzen in
 derselben Kapsel wie die schwebende Variante am Desktop, statt lose rechts zu hängen. Leere
 Listen zeigen einen ruhigen Hinweis ohne gestrichelten Kasten.
+
+## D35 – Kanalliste fürs Pult statt Direktübertragung
+
+Gewünscht war, die Kanalnamen direkt ins Allen & Heath SQ-5 zu laden. Das SQ liest keine
+Namenslisten von USB (CSV-Import gibt es nur bei Avantis/dLive), und der Netzwerkweg (MIDI über
+TCP, Port 51325) ist aus einem Browser nicht erreichbar. Deshalb exportiert der Editor eine
+Kanalliste als CSV: Kanäle in der Reihenfolge der Stagebox-Eingänge, dazu ein eindeutiger
+Kurzname in 8 Zeichen (`lib/export/console.ts`) zum Abtippen am Pult oder in MixPad. Dante-Labels
+ließen sich nur über eine Preset-Datei von Dante Controller setzen, deren Aufbau vom jeweiligen
+Netz abhängt; das bleibt außen vor.
