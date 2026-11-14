@@ -1,3 +1,5 @@
+@import './ak-tokens.css';
+
 /* Farben und Grundwerte. Alle Komponenten nutzen nur diese Variablen.
  * Palette der AK-Technik-App (Repo Lolliger/aktapp, app/globals.css), damit der Editor im
  * AK-Reiter wie ein Teil der Seite wirkt: Petrol als Akzent, kühle Grautöne, Status-Farben
@@ -13,11 +15,13 @@
   --text-muted: #5b6472;
   --accent: #0e7c86;
   --accent-text: #ffffff;
-  --danger: #a3352a;
-  --danger-bg: #fbe7e5;
-  --warning: #8a5b12;
-  --warning-bg: #fbf1de;
-  --ok: #1c6b41;
+  /* Status-Farben, Schrift und Tippgröße aus dem gemeinsamen Design-Paket der AK-App
+   * (ak-tokens.css, wechselt selbst zwischen hell und dunkel). */
+  --danger: var(--ak-brk-fg);
+  --danger-bg: var(--ak-brk-bg);
+  --warning: var(--ak-loan-fg);
+  --warning-bg: var(--ak-loan-bg);
+  --ok: var(--ak-ok-fg);
 
   --stage-floor: #ffffff;
   --stage-edge: #9aa2ae;
@@ -36,9 +40,9 @@
   --ghost: #9aa2ae;
 
   --radius: 10px;
-  --tap: 44px;
+  --tap: var(--ak-tap);
   --shadow: 0 1px 2px rgb(27 31 36 / 0.06), 0 4px 16px rgb(27 31 36 / 0.08);
-  --font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font: var(--ak-font-sans);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -51,11 +55,6 @@
     --text-muted: #8b93a1;
     --accent: #33d9c8;
     --accent-text: #08201e;
-    --danger: #f2897a;
-    --danger-bg: #3a1613;
-    --warning: #f2c064;
-    --warning-bg: #3a2c10;
-    --ok: #6fe3a0;
 
     --stage-floor: #181b21;
     --stage-edge: #5d6572;

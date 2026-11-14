@@ -298,3 +298,12 @@ Kanalliste als CSV: Kanäle in der Reihenfolge der Stagebox-Eingänge, dazu ein 
 Kurzname in 8 Zeichen (`lib/export/console.ts`) zum Abtippen am Pult oder in MixPad. Dante-Labels
 ließen sich nur über eine Preset-Datei von Dante Controller setzen, deren Aufbau vom jeweiligen
 Netz abhängt; das bleibt außen vor.
+
+## D36 – Gemeinsames Design-Paket der AK-Projekte
+
+`src/styles/ak-tokens.css` ist eine wortgleiche Kopie aus der AK-App (dort aus `app/globals.css`
+erzeugt, `npm run sync:design`) und wird hier nicht von Hand geändert; ein Test prüft die
+Übereinstimmung, wenn die AK-App daneben liegt. Der Editor bezieht daraus Schrift, Tippgröße und
+die Status-Farben (Fehler, Warnung, OK). Flächen, Petrol-Akzent und die Farben des Lichtmodus
+bleiben eigene Werte in `theme.css`, weil sie den Editor und seine zwei Modi ausmachen. Das
+Druck-SVG behält feste Farben (D20).

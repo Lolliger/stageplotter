@@ -1,0 +1,63 @@
+/* Erzeugt aus der aktapp (app/globals.css) mit `npm run sync:design`.
+   Nicht von Hand ändern: Änderungen gehören in die aktapp, danach neu erzeugen. */
+:root {
+  --ak-background: #f2f2f7;
+  --ak-surface: #ffffff;
+  --ak-surface-2: #e5e5ea;
+  --ak-foreground: #000000;
+  --ak-muted: #6e6e73;
+  --ak-line: #c6c6c8;
+  --ak-accent: #007aff;
+  --ak-accent-ink: #ffffff;
+  --ak-ok-bg: #e2f7e7;
+  --ak-ok-fg: #248a3d;
+  --ak-ok-dot: #34c759;
+  --ak-use-bg: #e0eeff;
+  --ak-use-fg: #0040dd;
+  --ak-use-dot: #007aff;
+  --ak-loan-bg: #fff1dc;
+  --ak-loan-fg: #c93400;
+  --ak-loan-dot: #ff9500;
+  --ak-brk-bg: #ffe5e3;
+  --ak-brk-fg: #d70015;
+  --ak-brk-dot: #ff3b30;
+  --ak-danger: #d70015;
+  --ak-danger-ink: #ffffff;
+
+  --ak-font-sans: -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --ak-font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  /* Kritisch gedämpfte Feder (Response 0,4 s) für Ein- und Ausblenden. */
+  --ak-ease-spring: linear(0, 0.0575, 0.1802, 0.3206, 0.4549, 0.5727, 0.6709, 0.7499, 0.812, 0.86, 0.8965, 0.9239, 0.9444, 0.9596, 0.9707, 0.9789, 0.9848, 0.9891, 0.9922, 0.9944, 0.996, 0.9972, 0.998, 0.9986, 1);
+  --ak-spring-duration: 0.59s;
+  /* Mindestgröße für Tippflächen und die Rundungen von Karten und Feldern. */
+  --ak-tap: 44px;
+  --ak-radius-card: 24px;
+  --ak-radius-field: 12px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ak-background: #000000;
+    --ak-surface: #1c1c1e;
+    --ak-surface-2: #2c2c2e;
+    --ak-foreground: #ffffff;
+    --ak-muted: #98989d;
+    --ak-line: #38383a;
+    --ak-accent: #0a84ff;
+    --ak-accent-ink: #ffffff;
+    --ak-ok-bg: #0e2a16;
+    --ak-ok-fg: #30d158;
+    --ak-ok-dot: #30d158;
+    --ak-use-bg: #0a2342;
+    --ak-use-fg: #409cff;
+    --ak-use-dot: #0a84ff;
+    --ak-loan-bg: #3a2600;
+    --ak-loan-fg: #ffb340;
+    --ak-loan-dot: #ff9f0a;
+    --ak-brk-bg: #3d0f0d;
+    --ak-brk-fg: #ff6961;
+    --ak-brk-dot: #ff453a;
+    --ak-danger: #d70015;
+    --ak-danger-ink: #ffffff;
+  }
+}
