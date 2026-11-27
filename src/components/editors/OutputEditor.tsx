@@ -22,6 +22,13 @@ export function OutputEditor({ output, onDone }: { output: OutputElement; onDone
   return (
     <div className="editor">
       <TextField label="Name" value={output.name} onChange={(name) => update({ name })} />
+      <TextField
+        label="Notiz"
+        value={output.note ?? ''}
+        placeholder="z. B. Shure PSM, passiv 4 Tops"
+        allowEmpty
+        onChange={(note) => update({ note })}
+      />
       <Segmented
         label="Art"
         value={output.kind}

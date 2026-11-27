@@ -18,6 +18,8 @@ export interface Channel {
   name: string
   /** Abnahme: Mikrofontyp oder "DI". Freitext. */
   pickup: string
+  /** Stativ bzw. Befestigung, z. B. "Galgen klein", "Clip". Freitext. */
+  stand?: string
   note?: string
   /** Fester Platz aus einem Konfigurator (z. B. "kick-in", "tom-2"). Manuelle Kanäle haben keinen. */
   slot?: string
@@ -76,6 +78,8 @@ export interface OutputElement {
   pinnedBoxId?: string
   /** Drehung in Grad im Uhrzeigersinn; 0 = Grundausrichtung der Form (siehe model/shapes.ts). */
   rotation?: number
+  /** Freitext, z. B. Gerät oder Mix („Shure PSM“, „passiv, 4 Tops“). */
+  note?: string
   /** Gespeist von einem Geräte-Ausgang (Weiche/Endstufe) statt direkt von der Stagebox. */
   source?: SignalSource
 }

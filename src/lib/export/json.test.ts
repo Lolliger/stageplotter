@@ -25,6 +25,17 @@ describe('JSON export/import', () => {
     expect(parseProjectFile(JSON.stringify(data))).toEqual({ ok: true, project: p })
   })
 
+  test('patch carries stand and output note when set', () => {
+    const p = createDefaultProject()
+    p.groups.push(createDrumGroup(DRUM_PRESETS.standard.config, { x: 3, y: 2 }))
+    p.groups[0].channels[0].stand = 'Galgen sehr klein'
+    p.outputs.push({ id: 'w', kind: 'iem', name: 'IEM 1', pos: { x: 5, y: 5 }, note: 'Shure PSM' })
+    const { patch } = JSON.parse(serializeProject(p))
+    expect(patch.inputs.find((r: { channel: string }) => r.channel === 'Kick In')).toMatchObject({ stand: 'Galgen sehr klein' })
+    expect(patch.inputs.filter((r: { stand?: string }) => r.stand)).toHaveLength(1)
+    expect(patch.outputs).toEqual([expect.objectContaining({ target: 'IEM 1', note: 'Shure PSM' })])
+  })
+
   test('includes the DMX address list', () => {
     const p = createDefaultProject()
     p.trusses.push({ id: 't', name: 'FOH', pos: { x: 5, y: 8 }, length: 6, rotation: 0 })

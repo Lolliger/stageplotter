@@ -10,7 +10,8 @@ describe('parseProject', () => {
     p.groups.push({ ...createDrumGroup(DRUM_PRESETS.full.config, { x: 2, y: 2 }), pinnedBoxId: p.boxes[0].id })
     p.groups.push(createGroupFromTemplate(getTemplate('keys-stereo')!, { x: 4, y: 2 }))
     p.groups[0].channels[0].note = '48V'
-    p.outputs.push({ id: 'o1', kind: 'iem', name: 'IEM Vox', pos: { x: 5, y: 5 } })
+    p.groups[0].channels[0].stand = 'Galgen klein'
+    p.outputs.push({ id: 'o1', kind: 'iem', name: 'IEM Vox', pos: { x: 5, y: 5 }, note: 'Shure PSM' })
     p.outputs.push({ id: 'o2', kind: 'pa', name: 'PA L', pos: { x: -0.6, y: 5.5 }, rotation: 15 })
     p.outputs.push({ id: 'o3', kind: 'sub', name: 'Sub 1', pos: { x: 5, y: 6.6 } })
     p.groups.push(createGroupFromTemplate(getTemplate('bass-amp')!, { x: 7, y: 2 }))

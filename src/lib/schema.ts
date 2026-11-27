@@ -81,6 +81,7 @@ function capacity(v: unknown, fallback: number, where: string): number {
 function channel(v: unknown, where: string): Channel {
   const o = obj(v, where)
   const c: Channel = { id: id(o.id), name: str(o.name, 'Kanal'), pickup: typeof o.pickup === 'string' ? o.pickup : '' }
+  if (typeof o.stand === 'string' && o.stand !== '') c.stand = o.stand
   if (typeof o.note === 'string' && o.note !== '') c.note = o.note
   if (typeof o.slot === 'string' && o.slot !== '') c.slot = o.slot
   return c
@@ -191,6 +192,7 @@ export function parseProject(data: unknown): ParseResult {
         ...pin(e.pinnedBoxId),
         ...rotation(e.rotation),
         ...source(e.source),
+        ...(typeof e.note === 'string' && e.note !== '' ? { note: e.note } : {}),
       }
     })
 
