@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { newId } from '../../lib/id'
-import { PICKUP_SUGGESTIONS } from '../../model/templates'
+import { PICKUP_SUGGESTIONS, STAND_SUGGESTIONS } from '../../model/templates'
 import type { Channel } from '../../model/types'
 import { TextField } from '../ui/TextField'
 
@@ -19,6 +19,7 @@ export function ChannelEditor({ channels, groupName, onChange }: Props) {
       channels.map((c) => {
         if (c.id !== id) return c
         const next = { ...c, ...patch }
+        if (!next.stand) delete next.stand
         if (!next.note) delete next.note
         return next
       }),
@@ -47,6 +48,11 @@ export function ChannelEditor({ channels, groupName, onChange }: Props) {
           <option key={p} value={p} />
         ))}
       </datalist>
+      <datalist id="stand-suggestions">
+        {STAND_SUGGESTIONS.map((s) => (
+          <option key={s} value={s} />
+        ))}
+      </datalist>
       <ol className="channel-list editable">
         {channels.map((c, i) => {
           const open = openId === c.id
@@ -61,7 +67,7 @@ export function ChannelEditor({ channels, groupName, onChange }: Props) {
                 <span className="channel-index">{i + 1}</span>
                 <span className="channel-name">
                   {c.name}
-                  {c.note && <small className="channel-note">{c.note}</small>}
+                  {(c.stand || c.note) && <small className="channel-note">{[c.stand, c.note].filter(Boolean).join(' · ')}</small>}
                 </span>
                 <span className="channel-pickup">{c.pickup || '–'}</span>
                 <span className="chevron" aria-hidden="true">
@@ -82,9 +88,17 @@ export function ChannelEditor({ channels, groupName, onChange }: Props) {
                     />
                   </div>
                   <TextField
+                    label="Stativ"
+                    value={c.stand ?? ''}
+                    list="stand-suggestions"
+                    placeholder="z. B. Galgen klein, Clip"
+                    allowEmpty
+                    onChange={(stand) => update(c.id, { stand })}
+                  />
+                  <TextField
                     label="Notiz"
                     value={c.note ?? ''}
-                    placeholder="z. B. 48V, Clip, Stativ klein"
+                    placeholder="z. B. 48V, Kabel 10 m"
                     allowEmpty
                     onChange={(note) => update(c.id, { note })}
                   />

@@ -19,6 +19,8 @@ export function OutputList({ onSelect }: { onSelect: (target: ElementRef) => voi
   }
 
   const unpatched = assignment.unpatchedOutputs
+  const noteOf = (outputId: string, inputIndex?: number) =>
+    inputIndex === undefined ? project.outputs.find((x) => x.id === outputId)?.note : undefined
   const boxes = project.boxes.filter((b) => (assignment.outputs[b.id] ?? []).length > 0 || assignment.usage[b.id]?.outputsMissing)
 
   return (
@@ -59,6 +61,7 @@ export function OutputList({ onSelect }: { onSelect: (target: ElementRef) => voi
                     <td className="port">{p.label}</td>
                     <td>
                       <span className="src">{p.name}</span>
+                      {noteOf(p.outputId, p.inputIndex) && <span className="src-note">{noteOf(p.outputId, p.inputIndex)}</span>}
                     </td>
                     <td>{targetKindLabel(p.kind)}</td>
                     <td className="num">{fmtM(p.distance)}</td>
@@ -88,6 +91,7 @@ export function OutputList({ onSelect }: { onSelect: (target: ElementRef) => voi
                     <td className="port">–</td>
                     <td>
                       <span className="src">{target.name}</span>
+                      {noteOf(u.outputId, u.inputIndex) && <span className="src-note">{noteOf(u.outputId, u.inputIndex)}</span>}
                     </td>
                     <td>{target.kind}</td>
                   </tr>

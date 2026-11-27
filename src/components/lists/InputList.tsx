@@ -62,7 +62,10 @@ export function InputList({ onSelect }: { onSelect: (target: ElementRef) => void
                         {p.channelName !== p.groupName && <span className="src-group">{p.groupName}</span>}
                         {p.note && <span className="src-note">{p.note}</span>}
                       </td>
-                      <td>{p.pickup}</td>
+                      <td>
+                        {p.pickup}
+                        {p.stand && <span className="src-note">{p.stand}</span>}
+                      </td>
                       <td className="num">{fmtM(p.distance)}</td>
                     </tr>
                   ))}
@@ -91,7 +94,10 @@ export function InputList({ onSelect }: { onSelect: (target: ElementRef) => void
                       <span className="src">{channel.name}</span>
                       {channel.name !== group.name && <span className="src-group">{group.name}</span>}
                     </td>
-                    <td>{channel.pickup}</td>
+                    <td>
+                      {channel.pickup}
+                      {channel.stand && <span className="src-note">{channel.stand}</span>}
+                    </td>
                   </tr>
                 )
               })}

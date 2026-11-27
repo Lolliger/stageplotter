@@ -297,6 +297,7 @@ export function projectReducer(state: Project, action: Action): Project {
         ...state,
         outputs: updateById(state.outputs, action.id, (o) => {
           const next = withRotation(dropEmptyPin(dropEmptySource({ ...o, ...action.patch })))
+          if (!next.note) delete next.note
           return { ...next, pos: placeOutput(next, next.pos, state.stage) }
         }),
       }

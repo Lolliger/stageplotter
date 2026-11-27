@@ -179,17 +179,17 @@ async function soundPages(doc: jsPDF, project: Project, assignment: Assignment, 
   for (const t of inputs.boxes) {
     const title = `Stagebox ${t.box.name}  ·  ${t.usage}${t.missing ? `  ·  ${t.missing} fehlen` : ''}`
     const body: RowInput[] = t.rows.length
-      ? t.rows.map((r, i) => [r.port, r.channel, t.pinned.has(i) ? `${r.group} (fest)` : r.group, r.pickup, r.note, r.distance])
-      : [[{ content: 'Keine Kanäle zugeordnet', colSpan: 6, styles: { textColor: MUTED } }]]
+      ? t.rows.map((r, i) => [r.port, r.channel, t.pinned.has(i) ? `${r.group} (fest)` : r.group, r.pickup, r.stand, r.note, r.distance])
+      : [[{ content: 'Keine Kanäle zugeordnet', colSpan: 7, styles: { textColor: MUTED } }]]
     autoTable(doc, {
       ...tableBase,
       startY: y,
       head: [
-        [{ content: title, colSpan: 6, styles: { fillColor: rgb(t.box.color), textColor: [11, 13, 18], fontSize: 10 } }],
-        ['Port', 'Kanal', 'Instrument', 'Abnahme', 'Notiz', 'Abstand'],
+        [{ content: title, colSpan: 7, styles: { fillColor: rgb(t.box.color), textColor: [11, 13, 18], fontSize: 10 } }],
+        ['Port', 'Kanal', 'Instrument', 'Abnahme', 'Stativ', 'Notiz', 'Abstand'],
       ],
       body,
-      columnStyles: { 0: { fontStyle: 'bold', cellWidth: 16 }, 5: { halign: 'right', cellWidth: 18 } },
+      columnStyles: { 0: { fontStyle: 'bold', cellWidth: 16 }, 6: { halign: 'right', cellWidth: 18 } },
     })
     y = finalY(doc) + 6
   }
@@ -198,10 +198,10 @@ async function soundPages(doc: jsPDF, project: Project, assignment: Assignment, 
       ...tableBase,
       startY: y,
       head: [
-        [{ content: `Ohne Input  ·  ${inputs.unpatched.length}`, colSpan: 5, styles: { fillColor: RED, textColor: [255, 255, 255], fontSize: 10 } }],
-        ['Port', 'Kanal', 'Instrument', 'Abnahme', 'Notiz'],
+        [{ content: `Ohne Input  ·  ${inputs.unpatched.length}`, colSpan: 6, styles: { fillColor: RED, textColor: [255, 255, 255], fontSize: 10 } }],
+        ['Port', 'Kanal', 'Instrument', 'Abnahme', 'Stativ', 'Notiz'],
       ],
-      body: inputs.unpatched.map((r) => [r.port, r.channel, r.group, r.pickup, r.note]),
+      body: inputs.unpatched.map((r) => [r.port, r.channel, r.group, r.pickup, r.stand, r.note]),
       columnStyles: { 0: { cellWidth: 16 } },
     })
     y = finalY(doc) + 6
@@ -216,11 +216,11 @@ async function soundPages(doc: jsPDF, project: Project, assignment: Assignment, 
         ...tableBase,
         startY: y,
         head: [
-          [{ content: title, colSpan: 4, styles: { fillColor: rgb(t.box.color), textColor: [11, 13, 18], fontSize: 10 } }],
-          ['Port', 'Ziel', 'Art', 'Abstand'],
+          [{ content: title, colSpan: 5, styles: { fillColor: rgb(t.box.color), textColor: [11, 13, 18], fontSize: 10 } }],
+          ['Port', 'Ziel', 'Art', 'Notiz', 'Abstand'],
         ],
-        body: t.rows.map((r, i) => [r.port, t.pinned.has(i) ? `${r.name} (fest)` : r.name, r.kind, r.distance]),
-        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 22 }, 3: { halign: 'right', cellWidth: 18 } },
+        body: t.rows.map((r, i) => [r.port, t.pinned.has(i) ? `${r.name} (fest)` : r.name, r.kind, r.note, r.distance]),
+        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 22 }, 4: { halign: 'right', cellWidth: 18 } },
       })
       y = finalY(doc) + 6
     }
@@ -229,10 +229,10 @@ async function soundPages(doc: jsPDF, project: Project, assignment: Assignment, 
         ...tableBase,
         startY: y,
         head: [
-          [{ content: `Ohne Output  ·  ${outputs.unpatched.length}`, colSpan: 3, styles: { fillColor: RED, textColor: [255, 255, 255], fontSize: 10 } }],
-          ['Port', 'Ziel', 'Art'],
+          [{ content: `Ohne Output  ·  ${outputs.unpatched.length}`, colSpan: 4, styles: { fillColor: RED, textColor: [255, 255, 255], fontSize: 10 } }],
+          ['Port', 'Ziel', 'Art', 'Notiz'],
         ],
-        body: outputs.unpatched.map((r) => [r.port, r.name, r.kind]),
+        body: outputs.unpatched.map((r) => [r.port, r.name, r.kind, r.note]),
         columnStyles: { 0: { cellWidth: 22 } },
       })
       y = finalY(doc) + 6

@@ -307,3 +307,13 @@ erzeugt, `npm run sync:design`) und wird hier nicht von Hand geändert; ein Test
 die Status-Farben (Fehler, Warnung, OK). Flächen, Petrol-Akzent und die Farben des Lichtmodus
 bleiben eigene Werte in `theme.css`, weil sie den Editor und seine zwei Modi ausmachen. Das
 Druck-SVG behält feste Farben (D20).
+
+## D37 – Stativ am Kanal, Notiz am Output
+
+Kanäle haben ein optionales Feld „Stativ“ (`stand`, Freitext mit Vorschlägen wie „Galgen klein“,
+„Clip“), Outputs eine optionale „Notiz“ (`note`, z. B. das Gerät: „Shure PSM“). Beides steht in
+der Input- bzw. Outputliste, im PDF als eigene Spalte und im `patch`-Abschnitt des JSON-Exports
+(`patch.inputs[].stand`, `patch.outputs[].note`), den die AK-Technik-App für die Patchliste liest.
+Der Export bleibt Version 1: Ports werden weiterhin nicht am Kanal gespeichert (D29), der in der
+AK-App entworfene „Export Version 2“ mit fester Port-Zuordnung ist damit überflüssig. Leere Werte
+werden nicht gespeichert.

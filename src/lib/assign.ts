@@ -14,6 +14,7 @@ export interface InputPort {
   groupName: string
   channelName: string
   pickup: string
+  stand?: string
   note?: string
   /** Abstand Gruppe → Box in Metern. */
   distance: number
@@ -256,6 +257,7 @@ export function assign(project: Project, distance: DistanceFn = euclidean): Assi
         pickup: channel.pickup,
         distance: distance(group.pos, box.pos),
       }
+      if (channel.stand) port.stand = channel.stand
       if (channel.note) port.note = channel.note
       return port
     })

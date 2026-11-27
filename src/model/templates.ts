@@ -172,6 +172,9 @@ export function createGroupFromTemplate(
 }
 
 /** Vorschläge für das Abnahme-Feld (Freitext bleibt möglich). */
+/** Vorschläge für das Stativ eines Kanals. */
+export const STAND_SUGGESTIONS = ['Galgen gross', 'Galgen klein', 'Galgen sehr klein', 'Teller', 'Tisch', 'Clip', 'Boden']
+
 export const PICKUP_SUGGESTIONS = [
   'DI',
   'SM57',
